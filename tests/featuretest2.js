@@ -1,0 +1,33 @@
+const { chromium } = require('playwright');
+const SP = process.argv[2];
+(async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true });
+  await p.addInitScript(() => { try { if (!localStorage.getItem('shatterline.lang')) localStorage.setItem('shatterline.lang', 'en'); } catch (e) {} });
+  const errs = [];
+  p.on('pageerror', e => errs.push('PAGEERROR ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
+  await p.goto('file://' + require('path').resolve('dist/index.html'));
+  await p.waitForTimeout(600);
+  await p.evaluate(() => { const S = __TD.Save; S.d.max = 32; for (let i = 1; i < 32; i++) S.d.stars[i] = 2; S.d.loadout = ['nova', 'bolt', 'arc', 'prism']; S.d.known = ['bolt','frost','nova','arc','mint','prism','rail','beacon']; __TD.toMap(); });
+  await p.waitForTimeout(400);
+  await p.evaluate(() => { SAGA.scroll = clampScroll(nodePos(33).y - LH * 0.45); });
+  await p.waitForTimeout(300);
+  await p.screenshot({ path: SP + '/g1-map.png' });
+  await p.evaluate(() => __TD.openCard(32));
+  await p.waitForTimeout(700);
+  await p.screenshot({ path: SP + '/g2-card32.png' });
+  await p.evaluate(() => { __TD.Save.d.loadout = ['nova', 'bolt', 'arc', 'prism']; const h = hits.find(h => h.w === 220 && h.h === 56); h.cb(); });
+  await p.waitForTimeout(400);
+  await p.screenshot({ path: SP + '/g3-confirm32.png' });
+  // mint pulses in a live level
+  await p.evaluate(() => { const T = __TD, G = T.G; T.Save.d.loadout = ['mint', 'nova', 'bolt']; T.startLevel(23); G.gold = 1000;
+    const spots = []; for (let r = 0; r < 13; r++) for (let c = 0; c < 9; c++) if (T.isBuildable(c, r)) spots.push([c, r]);
+    [spots[0], spots[5], spots[spots.length - 1]].forEach(s => { const tw = T.buildTower('mint', ...s); T.upgradeTower(tw); });
+    for (const s of spots.slice(10, 16)) T.buildTower('nova', ...s);
+    T.startWave(false); });
+  await p.waitForTimeout(3300);
+  await p.screenshot({ path: SP + '/g4-mint.png' });
+  console.log(JSON.stringify(await p.evaluate(() => ({ gold: __TD.G.gold, mints: __TD.G.towers.filter(t => t.type === 'mint').map(t => t.cd.toFixed(2)) }))));
+  console.log(errs.length ? errs.join('\n') : 'no errors');
+  await b.close();
+})();

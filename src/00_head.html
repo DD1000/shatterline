@@ -1,0 +1,13 @@
+<title>Shatterline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Chakra+Petch:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap">
+<style>
+  :root { color-scheme: dark; background: #07060f; }
+  html, body { height: 100%; margin: 0; background: #07060f; color: #e8e6ff; overflow: hidden; overscroll-behavior: none; }
+  body { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+  #game { position: fixed; left: 0; right: 0; top: env(safe-area-inset-top, 0px); bottom: env(safe-area-inset-bottom, 0px);
+          width: 100%; height: calc(100% - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); display: block; outline: none; }
+</style>
+<canvas id="game" tabindex="0" aria-label="Shatterline: a tower defense game. Tap tiles to build towers."></canvas>
+<script>
