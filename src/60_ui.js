@@ -145,7 +145,7 @@ function menuLayout(m, full) {
   if (m.kind === 'build') ids = G.loadout.slice();
   else {
     const d = TOWERS[m.tw.type];
-    ids = d.eco || d.support || d.pulse ? ['sell', 'up'] : d.line ? ['sell', 'up', 'turn'] : ['sell', 'up', 'mode'];
+    ids = d.eco || d.support || d.pulse || d.beams ? ['sell', 'up'] : d.line ? ['sell', 'up', 'turn'] : ['sell', 'up', 'mode'];
     if (m.hand < 0) ids.reverse();             // keep Sell on the outside, away from the thumb's reach
   }
   if (m.hand < 0) ids.unshift('close'); else ids.push('close');     // the X sits on the thumb's side
@@ -319,7 +319,7 @@ drawMenuUnder = function () {
 function statLine(a, b) {
   const s = [];
   const f = (k, lab, fmt = v => v) => { if (a[k] != null && b[k] != null && a[k] !== b[k]) s.push(`${lab} ${fmt(a[k])}→${fmt(b[k])}`); };
-  f('dmg', tr('s_dmg')); f('dps', tr('s_dps')); f('gold', tr('s_gold')); f('every', tr('s_every'), v => v + tr('sec')); f('shield', tr('s_shield')); f('buff', tr('s_boost'), v => '+' + Math.round(v * 100) + '%');
+  f('dmg', tr('s_dmg')); f('rate', tr('s_rate'), v => v + '/' + tr('sec')); f('dps', tr('s_dps')); f('gold', tr('s_gold')); f('every', tr('s_every'), v => v + tr('sec')); f('shield', tr('s_shield')); f('buff', tr('s_boost'), v => '+' + Math.round(v * 100) + '%');
   f('chains', tr('s_chain')); f('slow', tr('s_slow'), v => Math.round(v * 100) + '%'); f('splash', tr('s_blast'));
   if (s.length < 2) f('range', tr('s_range'));
   if (b.brittle && !a.brittle) s.push(tr('s_brittle'));
@@ -490,6 +490,8 @@ const TIPS = {
   blink: 'Blinks teleport ahead. Spread your towers along the whole path.',
   mender: 'Menders heal their friends. Set a tower to target STRONG, or snipe with Rail.',
   titan: 'Titans are huge and armored. Stack upgraded towers near one bend.',
+  volt: 'Electrified enemies short out towers right next to them. Keep an EMP a little further back to short them out first, or bring ARC: electricity supercharges it.',
+  yeti: 'Snowballs slow your towers. Put FROST where they walk: snowballs supercharge it, and 3 blasts freeze enemies solid.',
 };
 
 function drawEnd() {
@@ -535,7 +537,8 @@ function drawEnd() {
     const worst = Object.entries(G.leakTypes).sort((p, q) => q[1] - p[1])[0];
     const noMint = G.level && G.level.noBounty && !G.towers.some(t => t.type === 'mint');
     const noShieldTool = G.level && G.level.hasShields && !G.towers.some(t => t.type === 'emp' || t.type === 'prism') && G.shieldLeaks >= Math.max(2, G.leaks * 0.3);
-    const tk = noMint ? 'nobounty' : noShieldTool ? (G.level.hasAegis && !G.level.shieldTypes.length ? 'aegis' : 'shield') : worst ? worst[0] : 'grunt', tip = LANG === 'zh' ? ZH.tips[tk] || TIPS[tk] : TIPS[tk];
+    const wt = worst && worst[0], variantTip = wt && G.level ? ((G.level.elecTypes || []).includes(wt) ? 'volt' : (G.level.iceTypes || []).includes(wt) ? 'yeti' : wt) : wt;
+    const tk = noMint ? 'nobounty' : noShieldTool ? (G.level.hasAegis && !G.level.shieldTypes.length ? 'aegis' : 'shield') : variantTip || 'grunt', tip = LANG === 'zh' ? ZH.tips[tk] || TIPS[tk] : TIPS[tk];
     const bw = Math.min(310, LW - 32), bh = 64;
     roundRect(cx - bw / 2, y + 70, bw, bh, 12); ctx.fillStyle = 'rgba(8,6,22,0.95)'; ctx.fill();
     ctx.lineWidth = 1.2; ctx.strokeStyle = '#ffd23d'; ctx.stroke();

@@ -65,7 +65,7 @@ function vibrate(p) { try { if (!G.demo && navigator.vibrate) navigator.vibrate(
 function resetRun() {
   G.over = false; G.result = null; G.paused = false; G.speed = 1; G.time = 0; G.stars = 0;
   G.lives = G.maxLives = ECON.startLives; G.waveNum = 0; G.awaiting = true; G.nextTimer = null;
-  G.spawners = []; G.waveStats = {}; G.enemies = []; G.towers = []; G.shots = []; G.shells = []; G.missiles = []; G.noBounty = false;
+  G.spawners = []; G.waveStats = {}; G.enemies = []; G.towers = []; G.shots = []; G.shells = []; G.missiles = []; G.snow = []; G.noBounty = false;
   G.grid.fill(null); G.combo = 0; G.comboT = 0; G.bestCombo = 0; G.kills = 0; G.leaks = 0; G.leakTypes = {}; G.shieldLeaks = 0; G.domes = [];
   G.banner = null; G.toast = null; G.shout = null; G.menu = null; G.press = null; G.coins = []; G.confirm = null;
   G.endT = 0; G.slowT = 0; G.flashA = 0; G.demoT = 0; G.endShow = 0; G.starSnd = 0;
@@ -153,12 +153,16 @@ function spawnEnemy(type, wave, lane = 0, dist = 0, jitter = 0) {
     x: 0, y: 0, dir: 0, rot: rand(0, TAU), rot2: 0, flash: 0, punch: 0, slowT: 0, slowAmt: 0, brittle: false,
     age: jitter ? 0.3 : 0, blinkT: rand(1, 5), blink: 0, trailT: 0, alive: true, off: jitter,
     shield: 0, shieldMax: 0, lastHit: -9, dome: 0, domeMax: 0, domeHit: -9, domePing: 0, domeDead: false,
+    elec: false, elecOff: 0, ice: false, snowT: rand(0.4, 1), marks: 0, iceLock: 0,
     warpT: rc.blink ? rc.blink.every * rand(0.7, 1.1) : 0, healT: rc.heal ? rc.heal.every * rand(0.5, 1) : 0,
   };
   const p = path.at(dist); e.x = p.x; e.y = p.y; e.dir = p.ang;
   // shields: this level's shielded types wear their own; an Aegis carries a dome for everyone near it
   if (!G.demo && G.level && G.level.shieldTypes.includes(type)) e.shield = e.shieldMax = e.maxHp * (G.level.shielded ? SHIELD_PCT : SHIELD_PCT_LIGHT);
   if (rc.dome) e.dome = e.domeMax = rc.dome.hp * mul;
+  // electric / ice: the Volt and Yeti always are; on some levels a random enemy type is too
+  e.elec = !!rc.elec || (!G.demo && !!G.level && (G.level.elecTypes || []).includes(type));
+  e.ice = !!rc.ice || (!G.demo && !!G.level && (G.level.iceTypes || []).includes(type));
   G.enemies.push(e); waveStat(wave).alive++;
   if (!jitter) G.portalPulse = 1;
   if (rc.boss && !G.demo) {
@@ -172,7 +176,7 @@ function spawnEnemy(type, wave, lane = 0, dist = 0, jitter = 0) {
 function placeTower(type, c, r) {
   const tw = { type, c, r, x: c * TILE + TILE / 2, y: r * TILE + TILE / 2, lv: 0, cd: 0.3, aim: -Math.PI / 2,
     kick: 0, spawn: 0, mode: 'first', spent: TOWERS[type].cost, retT: 0, target: null, idleT: rand(0, 2),
-    buff: 0, heat: 0, beamT: null, acc: 0, accT: 0, dir: 1, tube: 0 };
+    buff: 0, heat: 0, beamT: null, acc: 0, accT: 0, dir: 1, tube: 0, zapT: 0, chillT: 0 };
   if (type === 'rail') { tw.dir = bestRailDir(c, r, TOWERS.rail.lv[0].range); tw.aim = railAngle(tw.dir); }
   if (type === 'mint') tw.cd = TOWERS.mint.lv[0].every;
   G.towers.push(tw); G.grid[r * COLS + c] = tw; return tw;
@@ -284,7 +288,7 @@ function findTarget(tw, range) {
 function computeBuffs() {
   for (const t of G.towers) t.buff = 0;
   for (const b of G.towers) {
-    if (b.type !== 'beacon' || b.spawn < 1) continue;
+    if (b.type !== 'beacon' || b.spawn < 1 || b.zapT > 0) continue;
     const L = TOWERS.beacon.lv[b.lv];
     for (const t of G.towers) {
       if (t === b || TOWERS[t.type].support || TOWERS[t.type].eco) continue;
@@ -304,14 +308,14 @@ function fire(tw, tg) {
     FX.flash(mx, my, 14, c, 0.08);
     snd('bolt');
   } else if (tw.type === 'arc') {
-    const pts = [{ x: tw.x, y: tw.y + 1 }], hit = new Set();
+    const pts = [{ x: tw.x, y: tw.y + 1 }], hit = new Set(), up = tw.zapT > 0;     // supercharged by electrified enemies
     let cur = tg, dmg = L.dmg * boost;
-    for (let i = 0; i < L.chains && cur; i++) {
+    for (let i = 0; i < L.chains + (up ? ELEC.arcChains : 0) && cur; i++) {
       hit.add(cur); pts.push({ x: cur.x, y: cur.y });
       FX.spark(cur.x, cur.y, c, 3, 140, 0.25);
       damage(cur, dmg, { color: c });
       dmg *= 0.85;
-      let nxt = null, nd = (1.7 * TILE) ** 2;
+      let nxt = null, nd = ((up ? ELEC.arcJump : 1.7) * TILE) ** 2;
       for (const e of G.enemies) {
         if (!e.alive || e.rc.flying || hit.has(e)) continue;
         const dd = (e.x - cur.x) ** 2 + (e.y - cur.y) ** 2;
@@ -319,7 +323,7 @@ function fire(tw, tg) {
       }
       cur = nxt;
     }
-    FX.zap(pts, c, 0.17);
+    FX.zap(pts, up ? '#fff7a8' : c, up ? 0.22 : 0.17);
     snd('arc');
   } else if (tw.type === 'nova') {
     const flight = 0.75;
@@ -331,25 +335,34 @@ function fire(tw, tg) {
     snd('launch');
   } else if (tw.type === 'frost') {
     const range = L.range * TILE;
-    FX.ring(tw.x, tw.y, 6, range, c, 0.5, 3);
+    FX.ring(tw.x, tw.y, 6, range, tw.chillT > 0 ? '#e8fbff' : c, 0.5, tw.chillT > 0 ? 4.5 : 3);
     FX.ring(tw.x, tw.y, 4, range * 0.6, '#ffffff', 0.35, 1.5);
     for (const e of G.enemies) {
       if (!e.alive || e.rc.flying || !inRange(tw, e, range)) continue;
       e.slowT = 1.3; e.slowAmt = Math.max(e.slowAmt, L.slow); if (L.brittle) e.brittle = true;
       for (let i = 0; i < 2; i++) FX.dot(e.x + rand(-6, 6), e.y + rand(-6, 6), '#dfe8ff', 2.2, 0.4, 0, -20);
+      if (tw.chillT > 0 && e.iceLock <= 0 && !e.rc.flying) {          // supercharged by snowballs: mark, then freeze
+        e.marks = Math.min(ICE.marks, e.marks + 1);
+        if (e.marks >= ICE.marks) freezeEnemy(e);
+      }
       damage(e, L.dmg * boost, { pierce: true, quiet: true });
     }
     snd('frost');
   } else if (tw.type === 'emp') {
-    const range = L.range * TILE;
-    FX.ring(tw.x, tw.y, 6, range, c, 0.45, 3.5);
-    FX.ring(tw.x, tw.y, 4, range * 0.55, '#ffffff', 0.3, 1.5);
-    let zaps = 0;
-    for (const e of G.enemies) {
-      if (!e.alive || e.rc.flying || !inRange(tw, e, range)) continue;
-      if (zaps++ < 3 && Math.random() < 0.5) FX.zap([{ x: tw.x, y: tw.y }, { x: e.x, y: e.y }], c, 0.1);
-      damage(e, L.dmg * boost, { pierce: true, quiet: true });
+    // up to L.beams lasers: shielded, domed and electrified enemies first, then whoever is closest to the core
+    const range = L.range * TILE, list = [];
+    // (an Aegis counts as in range as soon as the edge of its dome is)
+    for (const e of G.enemies) if (e.alive && !e.rc.flying && e.age >= 0.15 && inRange(tw, e, range + (e.domeMax > 0 && !e.domeDead ? e.rc.dome.r * TILE * 0.5 : 0))) list.push(e);
+    list.sort((a, b) => (empWants(b) - empWants(a)) || (b.dist / b.path.len - a.dist / a.path.len));
+    const hitList = list.slice(0, L.beams);
+    if (hitList.length) tw.aim = Math.atan2(hitList[0].y - tw.y, hitList[0].x - tw.x);
+    for (const e of hitList) {
+      const want = empWants(e);
+      FX.line(tw.x, tw.y, e.x, e.y, want ? '#8fc0ff' : c, 0.16, want ? 3 : 2);
+      FX.flash(e.x, e.y, want ? 20 : 12, c, 0.12);
+      empHit(e, L.dmg * boost);
     }
+    FX.flash(tw.x, tw.y, 22, c, 0.12);
     snd('emp');
   } else if (tw.type === 'flak') {
     tw.tube ^= 1;
@@ -428,23 +441,45 @@ function domeShatter(a, byEmp) {
   if (a.alive) FX.text(a.x, a.y - R * 0.6, tr('dome_down'), '#9fd6ff', 10, { font: FONT_D, life: 0.8 });
   snd('shield'); addShake(0.06);
 }
-// EMP field: any shield that crosses it is stripped for good (personal shields and whole domes)
-function empField(tw, range) {
-  const c = TOWERS.emp.color;
-  for (const e of G.enemies) {
-    if (!e.alive || e.rc.flying) continue;
-    let zap = false;
-    if (e.shieldMax > 0 && inRange(tw, e, range)) {
-      e.shield = 0; e.shieldMax = 0; zap = true;
-      FX.shards(e.x, e.y, '#9fd6ff', 10, 170, 3); FX.ring(e.x, e.y, e.rc.r, e.rc.r * 3, '#9fd6ff', 0.35, 2);
-      FX.text(e.x, e.y - e.rc.r - 8, tr('stripped'), '#9fd6ff', 9, { font: FONT_D, life: 0.6 });
-    }
-    if (e.domeMax > 0 && !e.domeDead && inRange(tw, e, range + e.rc.dome.r * TILE * 0.5)) { domeShatter(e, true); zap = true; }
-    if (zap) {
-      FX.zap([{ x: tw.x, y: tw.y }, { x: e.x, y: e.y }], c, 0.2); tw.kick = 1;
-      if (G.time - (G.stripSnd || 0) > 0.1) { G.stripSnd = G.time; snd('emp'); }
-    }
+// EMP: does this enemy carry something a laser should take off? (shield, Aegis dome, live electricity)
+const isLiveElec = e => e.elec && e.elecOff <= 0;
+const empWants = e => (e.shieldMax > 0 || (e.domeMax > 0 && !e.domeDead) || isLiveElec(e)) ? 1 : 0;
+function empHit(e, dmg) {
+  if (e.shieldMax > 0) {                               // strip the shield for good
+    e.shield = 0; e.shieldMax = 0;
+    FX.shards(e.x, e.y, '#9fd6ff', 10, 170, 3); FX.ring(e.x, e.y, e.rc.r, e.rc.r * 3, '#9fd6ff', 0.35, 2);
+    FX.text(e.x, e.y - e.rc.r - 8, tr('stripped'), '#9fd6ff', 9, { font: FONT_D, life: 0.6 });
+    snd('shield');
   }
+  if (e.domeMax > 0 && !e.domeDead) domeShatter(e, true);      // pop the Aegis dome for good
+  if (isLiveElec(e)) {                                 // short out the electricity for a while
+    e.elecOff = ELEC.off;
+    FX.spark(e.x, e.y, '#fff7a8', 6, 160, 0.3); FX.ring(e.x, e.y, e.rc.r, ELEC.r * TILE, '#f6ff3d', 0.3, 1.5);
+    FX.text(e.x, e.y - e.rc.r - 8, tr('shorted'), '#f6ff3d', 9, { font: FONT_D, life: 0.6 });
+  }
+  damage(e, dmg, { pierce: true, quiet: true });
+}
+function towerZapped(tw) {
+  const up = tw.type === 'arc';
+  FX.spark(tw.x, tw.y, up ? '#fff7a8' : '#f6ff3d', 8, 170, 0.3);
+  FX.text(tw.x, tw.y - 24, tr(up ? 'supercharged' : 'shorted'), up ? '#fff36a' : '#c9c6e8', 10, { font: FONT_D, life: 0.8 });
+  snd(up ? 'charge' : 'short');
+}
+function throwSnow(e, tw) {
+  const d = Math.hypot(tw.x - e.x, tw.y - e.y);
+  G.snow.push({ sx: e.x, sy: e.y, x: e.x, y: e.y, h: 0, t: 0, dur: 0.3 + d / 420, arc: 12 + d * 0.15, tw });
+}
+function snowHit(tw) {
+  const up = tw.type === 'frost';
+  FX.shards(tw.x, tw.y - 4, '#f2fbff', 7, 110, 3); FX.flash(tw.x, tw.y, 24, '#dff6ff', 0.15);
+  if (tw.chillT <= 0) { FX.text(tw.x, tw.y - 24, tr(up ? 'supercharged' : 'chilled'), up ? '#e8fbff' : '#a9d8ff', 10, { font: FONT_D, life: 0.8 }); if (up) snd('charge'); }
+  tw.chillT = ICE.time;
+}
+function freezeEnemy(e) {
+  e.iceLock = ICE.freeze;
+  FX.shards(e.x, e.y, '#e8fbff', 8, 120, 3); FX.ring(e.x, e.y, e.rc.r, e.rc.r * 2.4, '#e8fbff', 0.3, 2);
+  FX.text(e.x, e.y - e.rc.r - 8, tr('frozen'), '#e8fbff', 9, { font: FONT_D, life: 0.6 });
+  snd('freeze');
 }
 
 function kill(e) {
@@ -551,7 +586,7 @@ function update(dt) {
   if (G.demo) {
     G.demoT -= dt;
     if (G.demoT <= 0 && G.enemies.length < 14) {
-      const pool = ['grunt', 'grunt', 'scout', 'scout', 'brute', 'splitter', 'aegis', 'blink', 'mender', 'titan'];
+      const pool = ['grunt', 'grunt', 'scout', 'scout', 'brute', 'splitter', 'aegis', 'blink', 'mender', 'titan', 'volt', 'yeti'];
       spawnEnemy(pool[Math.floor(Math.random() * pool.length)], 3);
       G.demoT = rand(0.35, 0.9);
     }
@@ -576,12 +611,18 @@ function update(dt) {
   for (const e of G.enemies) {
     if (!e.alive) continue;
     e.age += dt;
+    if (e.elecOff > 0) e.elecOff -= dt;
+    if (e.iceLock > 0) {                              // frozen solid: stays put, then thaws and its frost marks reset
+      e.iceLock -= dt;
+      if (e.iceLock <= 0) { e.marks = 0; FX.shards(e.x, e.y, '#e8fbff', 5, 90, 2.5); }
+    }
+    const held = e.iceLock > 0;
     if (e.slowT > 0) { e.slowT -= dt; if (e.slowT <= 0) { e.slowAmt = 0; e.brittle = false; } }
     const sl = e.slowT > 0 ? 1 - e.slowAmt : 1;
-    e.dist += e.speed * sl * dt;
+    if (!held) e.dist += e.speed * sl * dt;
     // Blink: teleport ahead
     let warped = false;
-    if (e.rc.blink && e.age > 0.8) {
+    if (e.rc.blink && e.age > 0.8 && !held) {
       e.warpT -= dt;
       if (e.warpT <= 0) {
         e.warpT = e.rc.blink.every * rand(0.8, 1.2);
@@ -616,7 +657,7 @@ function update(dt) {
       }
     }
     // Mender: heal pulse
-    if (e.rc.heal) {
+    if (e.rc.heal && !held) {
       e.healT -= dt;
       if (e.healT <= 0) {
         e.healT = e.rc.heal.every;
@@ -631,25 +672,51 @@ function update(dt) {
         if (healed) snd('heal');
       }
     }
+    // Iced: a snowball at every tower in range, once a second
+    if (e.ice && !held && e.age > 0.5) {
+      e.snowT -= dt;
+      if (e.snowT <= 0) {
+        e.snowT = ICE.every;
+        const R2 = (ICE.r * TILE) ** 2; let n = 0;
+        for (const tw of G.towers) if ((tw.x - e.x) ** 2 + (tw.y - e.y) ** 2 <= R2) { throwSnow(e, tw); n++; }
+        if (n) snd('snow');
+      }
+    }
+  }
+  // Electrified enemies short out the towers right next to them (ARC gets supercharged instead).
+  // The effect lasts ELEC.time seconds after the last contact and restarts on every new contact.
+  let volts = null;
+  for (const e of G.enemies) if (e.alive && e.age > 0.3 && isLiveElec(e)) (volts = volts || []).push(e);
+  if (volts) {
+    const R2 = (ELEC.r * TILE) ** 2;
+    for (const tw of G.towers) {
+      if (!volts.some(e => (e.x - tw.x) ** 2 + (e.y - tw.y) ** 2 <= R2)) continue;
+      if (tw.zapT <= 0) towerZapped(tw);
+      tw.zapT = ELEC.time;
+    }
   }
   // towers
   computeBuffs();
   for (const tw of G.towers) {
-    tw.cd -= dt; tw.kick = Math.max(0, tw.kick - dt * 5); tw.spawn = Math.min(1, tw.spawn + dt * 4);
+    if (tw.zapT > 0) tw.zapT -= dt;
+    if (tw.chillT > 0) tw.chillT -= dt;
+    const off = tw.zapT > 0 && tw.type !== 'arc';                                   // shorted out
+    const rm = off ? 0 : (tw.zapT > 0 ? ELEC.arcRate : 1) * (tw.chillT > 0 && tw.type !== 'frost' ? ICE.slow : 1);
+    tw.cd -= dt * rm; tw.kick = Math.max(0, tw.kick - dt * 5); tw.spawn = Math.min(1, tw.spawn + dt * 4);
     const d = TOWERS[tw.type];
     if (d.eco) {
-      if (G.awaiting || G.waveNum === 0 || G.demo) tw.cd += dt;          // only pays while waves run
-      else if (tw.cd <= 0 && tw.spawn >= 1) mintPulse(tw);
+      if (G.awaiting || G.waveNum === 0 || G.demo) tw.cd += dt * rm;     // only pays while waves run
+      else if (tw.cd <= 0 && tw.spawn >= 1 && !off) mintPulse(tw);
       continue;
     }
     if (d.support) continue;
+    if (off) { tw.beamT = null; tw.heat = 0; continue; }
     if (tw.type === 'rail') {
       tw.aim = railAngle(tw.dir);
       if (tw.cd <= 0 && tw.spawn >= 1) { const v = railVictims(tw); if (v.length) fireRail(tw, v); }
       continue;
     }
     const range = towerRange(tw);
-    if (tw.type === 'emp' && tw.spawn >= 1) empField(tw, range);
     tw.retT -= dt;
     const sticky = tw.type === 'prism' && tw.target && tw.target.alive && inRange(tw, tw.target, range);
     if (!sticky && (tw.retT <= 0 || !tw.target || !tw.target.alive)) { tw.target = findTarget(tw, range); tw.retT = 0.1; }
@@ -664,7 +731,7 @@ function update(dt) {
       if (tg && tg.alive && inRange(tw, tg, range) && tw.spawn >= 1) {
         if (tw.beamT !== tg) { tw.beamT = tg; tw.heat = 0; }
         tw.heat = Math.min(1, tw.heat + dt / 2.5);
-        const dmg = L.dps * (1 + (L.heat - 1) * tw.heat) * (1 + tw.buff) * dt;
+        const dmg = L.dps * (1 + (L.heat - 1) * tw.heat) * (1 + tw.buff) * (tw.chillT > 0 ? ICE.slow : 1) * dt;
         tw.acc += dmg; tw.accT -= dt;
         if (tw.accT <= 0) { if (tw.acc >= 1) FX.text(tg.x + rand(-5, 5), tg.y - tg.rc.r - 5, `${Math.round(tw.acc)}`, '#ffb3f7', 10 + tw.heat * 4, { life: 0.5 }); tw.acc = 0; tw.accT = 0.3; }
         if (Math.random() < dt * 25) FX.spark(tg.x, tg.y, d.color, 1, 140, 0.2);
@@ -675,6 +742,13 @@ function update(dt) {
     }
     if (tg && tw.cd <= 0 && tw.spawn >= 1) fire(tw, tg);
     if (tw.type === 'arc') { tw.idleT -= dt; if (tw.idleT <= 0) { tw.idleT = rand(0.4, 1.4); FX.zap([{ x: tw.x, y: tw.y + 1 }, { x: tw.x + rand(-13, 13), y: tw.y + rand(-13, 13) }], '#ffe23d', 0.08); } }
+  }
+  // snowballs: arc over to their tower
+  for (let i = G.snow.length - 1; i >= 0; i--) {
+    const b = G.snow[i]; b.t += dt;
+    const f = Math.min(1, b.t / b.dur);
+    b.x = lerp(b.sx, b.tw.x, f); b.y = lerp(b.sy, b.tw.y, f); b.h = Math.sin(Math.PI * f) * b.arc;
+    if (f >= 1) { G.snow.splice(i, 1); if (G.towers.includes(b.tw)) snowHit(b.tw); }
   }
   // bolts
   for (let i = G.shots.length - 1; i >= 0; i--) {

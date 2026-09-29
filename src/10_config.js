@@ -46,7 +46,7 @@ const ENEMIES = {
               desc:'Armored. Small hits barely hurt it.' },
   boss:     { name:'Warden',  sides:5, star:true, r:22, color:'#ff2e4d', speed:0.5, hp:520, gold:120, armor:6, leak:5, spin:0.5, eye:true, boss:true, orbit:4, inner:{ sides:5, scale:0.45, spin:-1.2 }, intro:10,
               desc:'Boss. Heavy armor and huge health.' },
-  aegis:    { name:'Aegis',   sides:5, r:11,  color:'#4aa8ff', speed:0.85, hp:80,  gold:10, armor:0, leak:1, spin:0.5, eye:true, intro:12, dome:{ r:1.6, hp:100 },
+  aegis:    { name:'Aegis',   sides:5, r:11,  color:'#4aa8ff', speed:0.85, hp:80,  gold:10, armor:0, leak:1, spin:0.5, eye:true, intro:12, dome:{ r:1.6, hp:170 },
               desc:'Projects a dome that travels with it. Enemies inside take 20% damage. EMP pops it.' },
   blink:    { name:'Blink',   sides:4, r:8.5, color:'#f4f2ff', speed:0.9,  hp:44,  gold:8,  armor:0, leak:1, spin:0, eye:true, blink:{ every:3.0, dist:1.5 }, intro:16,
               desc:'Teleports forward every few seconds.' },
@@ -56,8 +56,24 @@ const ENEMIES = {
               desc:'Flies straight over the path. Only FLAK can hit it.' },
   titan:    { name:'Titan',   sides:8, r:17,  color:'#ff8a3d', speed:0.45, hp:420, gold:28, armor:7, leak:3, spin:0.2, eye:true, thick:true, inner:{ sides:4, scale:0.5, spin:0.8 }, intro:25,
               desc:'Huge, slow and heavily armored.' },
+  volt:     { name:'Volt',    sides:3, star:true, r:10, color:'#f6ff3d', speed:1.0, hp:48, gold:8, armor:0, leak:1, spin:1.6, eye:true, elec:true, intro:37,
+              desc:'Electrified: towers right next to it shut down for 4s. ARC gets supercharged instead. EMP shorts it out.' },
+  yeti:     { name:'Yeti',    sides:6, star:true, r:13, color:'#6fd8ff', speed:0.7, hp:130, gold:13, armor:2, leak:2, spin:0.35, eye:true, thick:true, ice:true, inner:{ sides:6, scale:0.45, spin:-0.8 }, intro:45,
+              desc:'Throws snowballs at every tower in range each second. Hit towers fire much slower for 5s. FROST gets supercharged instead.' },
 };
-const ENEMY_ORDER = ['grunt', 'scout', 'splitter', 'brute', 'boss', 'aegis', 'blink', 'mender', 'titan', 'glider'];
+const ENEMY_ORDER = ['grunt', 'scout', 'splitter', 'brute', 'boss', 'aegis', 'blink', 'mender', 'titan', 'glider', 'volt', 'yeti'];
+
+// ---- Electric and ice -----------------------------------------------
+// ELECTRIFIED enemies (the Volt, plus a random enemy type on some levels) short out every tower
+// within ELEC.r tiles: it stops working until 4s after the last electrified enemy touched it.
+// ARC is the exception: it gets supercharged instead (fires faster, chains further).
+// EMP lasers short out an electrified enemy for ELEC.off seconds.
+const ELEC = { r: 1.3, time: 4, off: 4, arcRate: 1.6, arcChains: 3, arcJump: 2.2 };
+// ICED enemies (the Yeti, plus a random type on some levels) throw a snowball at every tower within
+// ICE.r tiles once a second. A hit tower fires at 40% speed for 5s. FROST is the exception: it gets
+// supercharged, and each of its blasts adds a frost mark; 3 marks freeze the enemy solid for 0.5s
+// (the marks reset once it thaws).
+const ICE = { r: 2.0, every: 1, time: 5, slow: 0.4, marks: 3, freeze: 0.5 };
 
 // ---- Tower recipes -------------------------------------------------
 // lv[0] is the base tower, lv[1] and lv[2] are upgrades (with their own cost).
@@ -67,7 +83,7 @@ const TOWERS = {
             lv:[ { dmg:6,  rate:2.8,  range:2.3 },
                  { cost:60,  dmg:10, rate:3.2,  range:2.5 },
                  { cost:120, dmg:16, rate:3.8,  range:2.8 } ] },
-  frost:  { name:'FROST',  color:'#a3b8ff', sides:6, star:true, cost:70, unlock:3, pulse:true, desc:'Freezing pulse. Slows all nearby.',
+  frost:  { name:'FROST',  color:'#a3b8ff', sides:6, star:true, cost:70, unlock:3, pulse:true, desc:'Freezing pulse. Slows all nearby. Snowballs supercharge it.',
             lv:[ { dmg:4,  rate:1.0, range:1.8, slow:0.35 },
                  { cost:80,  dmg:8,  rate:1.0, range:2.0, slow:0.45 },
                  { cost:140, dmg:14, rate:1.1, range:2.2, slow:0.55, brittle:true } ] },
@@ -75,7 +91,7 @@ const TOWERS = {
             lv:[ { dmg:26, rate:0.52, range:3.0, splash:0.9 },
                  { cost:120, dmg:46, rate:0.57, range:3.2, splash:1.02 },
                  { cost:200, dmg:78, rate:0.63, range:3.5, splash:1.2 } ] },
-  arc:    { name:'ARC',    color:'#ffe23d', sides:3, cost:85,  unlock:9, desc:'Lightning that chains between enemies.',
+  arc:    { name:'ARC',    color:'#ffe23d', sides:3, cost:85,  unlock:9, desc:'Lightning that chains between enemies. Electrified enemies supercharge it.',
             lv:[ { dmg:14, rate:0.9,  range:2.3, chains:3 },
                  { cost:100, dmg:24, rate:1.0,  range:2.4, chains:4 },
                  { cost:170, dmg:38, rate:1.15, range:2.6, chains:6 } ] },
@@ -100,16 +116,18 @@ TOWERS.flak = { name:'FLAK', color:'#ff6f61', sides:3, cost:90, unlock:32, air:t
             lv:[ { dmg:16, rate:1.3, range:3.2, splash:0.6 },
                  { cost:100, dmg:28, rate:1.5, range:3.5, splash:0.7 },
                  { cost:160, dmg:46, rate:1.8, range:3.8, splash:0.8 } ] };
-TOWERS.emp = { name:'EMP', color:'#3d7bff', sides:5, cost:75, unlock:12, shieldBreak:true, pulse:true, desc:'Strips every shield that passes through its field, for good.',
-            lv:[ { dmg:4,  rate:0.8, range:2.0 },
-                 { cost:85,  dmg:8,  rate:0.9, range:2.3 },
-                 { cost:140, dmg:14, rate:1.0, range:2.6 } ] };
+// EMP: up to 4 lasers per shot that go for shields first (personal shields, Aegis domes, electrified
+// enemies). A hit strips the shield for good, pops the dome, or shorts out the electricity. Tiny damage.
+TOWERS.emp = { name:'EMP', color:'#3d7bff', sides:5, cost:75, unlock:12, shieldBreak:true, beams:4, desc:'Up to 4 lasers that hunt shields. Strips them, pops domes, shorts out electrified enemies. Barely any damage.',
+            lv:[ { dmg:1,   rate:1.1, range:2.4, beams:4 },
+                 { cost:85,  dmg:1.5, rate:1.4, range:2.7, beams:4 },
+                 { cost:140, dmg:2,   rate:1.8, range:3.0, beams:4 } ] };
 // Shields shrug off ordinary hits: only 20% of normal damage gets into a shield.
 // Two kinds: personal shields (random enemy types per level, worth 60% of their HP)
 // and the Aegis dome (covers every ground enemy near the Aegis while it lives).
-// EMP strips both for good the moment they cross its field; PRISM's beam goes straight through.
+// An EMP laser strips both for good; PRISM's beam goes straight through.
 // Light shield levels use thinner shields (25% of HP) so you can get by without a shield buster.
-const SHIELD_FACTOR = 0.2, SHIELD_PCT = 0.6, SHIELD_PCT_LIGHT = 0.25;
+const SHIELD_FACTOR = 0.2, SHIELD_PCT = 0.9, SHIELD_PCT_LIGHT = 0.25;
 const TOWER_ORDER = ['bolt', 'frost', 'nova', 'arc', 'emp', 'mint', 'prism', 'rail', 'beacon', 'flak'];
 
 // ---- Level conditions ------------------------------------------------

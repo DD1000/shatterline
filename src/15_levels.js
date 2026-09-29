@@ -84,15 +84,18 @@ const LEVEL_MAPS = [
 ];
 
 // Per-level difficulty multipliers, set by bot playtests (tools/calibrate.js)
+// v21: levels 20-80 re-set from tools/expert.js (best of 12 bot strategies), a bit under the HP where a good plan still keeps 7 lives
+// v22: levels changed by the EMP lasers, Volts, Yetis and electric/ice variants rescaled by (new edge / v21 edge); Volt and Yeti intros (37, 45) x0.85;
+//      heavy-shield levels kept at least 10% above the HP where every no-EMP/no-PRISM strategy loses
 const LEVEL_CAL = [
   1.65, 1.45, 1.38, 1.23, 1.36, 0.69, 0.66, 0.77, 0.77, 1.21,
-  0.77, 0.84, 0.74, 0.69, 0.34, 0.55, 0.52, 0.63, 0.7, 0.84,
-  0.1, 0.71, 0.34, 0.44, 0.47, 0.62, 0.3, 0.38, 0.29, 0.35,
-  0.65, 0.1, 0.28, 0.11, 0.29, 0.15, 0.33, 0.31, 0.36, 0.32,
-  0.39, 0.32, 0.24, 0.4, 0.3, 0.37, 0.33, 0.13, 0.4, 0.39,
-  0.47, 0.22, 0.22, 0.42, 0.18, 0.52, 0.12, 0.22, 0.34, 0.25,
-  0.36, 0.28, 0.26, 0.35, 0.32, 0.18, 0.19, 0.28, 0.25, 0.24,
-  0.22, 0.17, 0.28, 0.25, 0.24, 0.28, 0.37, 0.14, 0.34, 0.29,
+  0.77, 0.68, 0.74, 0.69, 0.34, 0.55, 0.52, 0.63, 0.39, 0.79,
+  0.16, 0.71, 0.48, 0.46, 0.5, 0.72, 0.34, 0.43, 0.35, 0.46,
+  0.76, 0.16, 0.44, 0.22, 0.35, 0.2, 0.52, 0.36, 0.3, 0.38,
+  0.37, 0.3, 0.29, 0.35, 0.32, 0.42, 0.26, 0.2, 0.43, 0.32,
+  0.41, 0.44, 0.31, 0.4, 0.2, 0.42, 0.22, 0.22, 0.47, 0.35,
+  0.33, 0.22, 0.25, 0.32, 0.27, 0.33, 0.14, 0.28, 0.28, 0.34,
+  0.28, 0.21, 0.29, 0.36, 0.32, 0.46, 0.35, 0.15, 0.34, 0.34,
 ];
 
 function seeded(seed) { let s = (seed >>> 0) || 1; return () => (s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296; }
@@ -115,8 +118,10 @@ function compressTiles(t) {
 }
 
 // ---- Wave generator: every level gets its own mix from the enemies unlocked so far ----
-const ENEMY_COST = { grunt: 4, scout: 3, splitter: 8, brute: 12, aegis: 14, blink: 8, mender: 12, titan: 30 };
-const ENEMY_GAP  = { grunt: 0.7, scout: 0.4, splitter: 1.1, brute: 1.4, aegis: 0.9, blink: 1.0, mender: 1.6, titan: 3.2 };
+const ENEMY_COST = { grunt: 4, scout: 3, splitter: 8, brute: 12, aegis: 14, blink: 8, mender: 12, titan: 30, volt: 10, yeti: 16 };
+const ENEMY_GAP  = { grunt: 0.7, scout: 0.4, splitter: 1.1, brute: 1.4, aegis: 0.9, blink: 1.0, mender: 1.6, titan: 3.2, volt: 1.3, yeti: 1.8 };
+// special units come in small numbers per group (they change how the fight works, not just its size)
+const groupCap = (t, L, cap) => t === 'aegis' ? 1 + Math.floor(L / 15) : t === 'volt' ? 1 + Math.floor(L / 20) : t === 'yeti' ? 1 + Math.floor(L / 30) : cap;
 
 // ---- Shields -----------------------------------------------------------------
 // From level 21 every level has shielded enemies. Most are LIGHT: one minor enemy type wears a
@@ -180,15 +185,19 @@ function makeWaves(L, twoLanes, air, plan) {
   const pickWeighted = (exclude) => {
     const c = pool.filter(k => !exclude.includes(k));
     if (!c.length) return null;
-    const ws = c.map(k => 1 + 2 * ENEMIES[k].intro / L);
+    const ws = c.map(k => (1 + 2 * ENEMIES[k].intro / L) * (ENEMIES[k].elec || ENEMIES[k].ice ? 0.5 : 1));   // Volts and Yetis: special, so rarer
     let x = R() * ws.reduce((a, b) => a + b, 0);
     for (let i = 0; i < c.length; i++) { x -= ws[i]; if (x <= 0) return c[i]; }
     return c[c.length - 1];
   };
+  // v21: from level 20 the crowd grows: more enemies per wave (x1.35 by level 40, x1.6 by 80),
+  // spawned closer together so levels get denser rather than much longer
+  const crowd = L < 20 ? 1 : 1 + 0.35 * Math.min(1, (L - 20) / 20) + 0.25 * Math.max(0, (L - 40) / 40);
+  const cap = L < 20 ? 30 : 36;
   const waves = [];
   for (let w = 1; w <= n; w++) {
     // counts grow until level 40, then mostly toughness grows (keeps levels short and fair)
-    const fullBudget = (22 + Math.min(L, 40) * 1.4 + Math.max(0, L - 40) * 0.35) * (1 + 0.28 * (w - 1));
+    const fullBudget = crowd * (22 + Math.min(L, 40) * 1.4 + Math.max(0, L - 40) * 0.35) * (1 + 0.28 * (w - 1));
     const budget = air ? fullBudget * 0.72 : fullBudget;     // on Air Raid levels over a quarter of each wave flies
     const types = [];
     if (w === 1) types.push(fresh === 'scout' ? 'scout' : 'grunt');
@@ -202,8 +211,8 @@ function makeWaves(L, twoLanes, air, plan) {
       }
     }
     const groups = types.map((t, i) => {
-      const count = Math.max(1, Math.min(t === 'aegis' ? 1 + Math.floor(L / 15) : 30, Math.round(budget / types.length / ENEMY_COST[t])));
-      const gap = +(ENEMY_GAP[t] * (0.85 + R() * 0.3) * Math.max(L <= 40 ? 0.55 : 0.5, 1 - 0.012 * (L - 1))).toFixed(2);
+      const count = Math.max(1, Math.min(groupCap(t, L, cap), Math.round(budget / types.length / ENEMY_COST[t])));
+      const gap = +(ENEMY_GAP[t] * (0.85 + R() * 0.3) * Math.max(L <= 40 ? 0.55 : 0.5, 1 - 0.012 * (L - 1)) / crowd ** 0.7).toFixed(2);
       return [t, count, gap, twoLanes ? (types.length === 1 ? -1 : i % 2) : 0];
     });
     if (air) groups.push(['glider', Math.max(2, Math.round(fullBudget * 0.28 / 5)), +(0.9 * Math.max(0.5, 1 - 0.01 * (L - 1))).toFixed(2), twoLanes ? -1 : 0]);
@@ -258,6 +267,27 @@ for (const lv of LEVELS) {
   lv.shieldShare = lv.shieldTypes.reduce((a, t) => a + (sh[t] || 0), 0);
   lv.hasShields = lv.hasAegis || lv.shieldTypes.length > 0;
   lv.shielded = lv.hasAegis || lv.shieldShare >= HEAVY_SHIELD_SHARE;     // HEAVY: condition + prompt
+}
+// ---- Electric and ice variants: on some levels one minor enemy type is electrified or iced ----
+// Electrified from level 39, iced from level 47, on about a third of levels (more after 60).
+// Bigger, rarer types are preferred so a variant is a few special enemies, not a whole swarm.
+function variantTypes(L, waves, taken, kind) {
+  if (L < (kind === 'elec' ? 39 : 47)) return [];
+  const R = seeded(Math.imul(L + (kind === 'elec' ? 101 : 707), 2654435761) ^ 0x5bd1e995);
+  R(); R();                                     // (a well-mixed seed, so neighbouring levels don't all roll the same)
+  if (R() >= (L < 60 ? 0.35 : 0.45)) return [];
+  const share = typeShares(waves);
+  let c = Object.keys(share).filter(t => !['aegis', 'mite', 'boss'].concat(kind === 'elec' ? ['titan'] : []).includes(t) && !taken.includes(t) && !ENEMIES[t].elec && !ENEMIES[t].ice && share[t] >= 0.04 && share[t] <= 0.3);
+  const big = c.filter(t => ENEMY_COST[t] >= 8);
+  if (big.length) c = big;
+  return c.length ? [c[Math.floor(R() * c.length)]] : [];
+}
+for (const lv of LEVELS) {
+  lv.elecTypes = variantTypes(lv.n, lv.waves, lv.shieldTypes, 'elec');
+  lv.iceTypes = variantTypes(lv.n, lv.waves, lv.shieldTypes.concat(lv.elecTypes), 'ice');
+  const has = k => lv.waves.some(g => g.some(x => ENEMIES[x[0]][k]));
+  lv.hasElec = lv.elecTypes.length > 0 || has('elec');
+  lv.hasIce = lv.iceTypes.length > 0 || has('ice');
 }
 function levelEnemies(lv) {
   const set = new Set();

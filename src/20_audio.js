@@ -223,6 +223,26 @@ const Sound = (() => {
       noise({ dur:0.22, vol:0.17, type:'bandpass', f0:600, f1:4200, q:3, at:g.at });
       const f = nf(g.ch[0], -3); tone({ type:'square', f0:f, f1:f * 2, dur:0.18, vol:0.06, at:g.at }); tone({ type:'sine', f0:nf(g.ch[2], 2), f1:nf(g.ch[2], 1), dur:0.12, vol:0.04, at:g.at + 0.03 });
     },
+    snow()   {                                 // a soft snowball thump with a chord-tone glint
+      if (!ok('snow', 120)) return; const g = grid(16); if (!slot('snow', g.at)) return;
+      noise({ dur:0.14, vol:0.07, type:'bandpass', f0:1400, f1:500, q:0.9, at:g.at });
+      tone({ type:'sine', f0:nf(pick(g.ch), 2), f1:nf(g.ch[0], 1), dur:0.12, vol:0.035, at:g.at });
+    },
+    freeze() {                                 // frozen solid: an icy chime
+      if (!ok('freeze', 90)) return; const g = grid(32); if (!slot('freeze', g.at)) return;
+      tone({ type:'triangle', f0:nf(g.ch[2], 3), dur:0.22, vol:0.05, at:g.at }); tone({ type:'sine', f0:nf(g.ch[0], 3), dur:0.3, vol:0.04, at:g.at + 0.04 });
+      noise({ dur:0.18, vol:0.08, type:'highpass', f0:7000, at:g.at });
+    },
+    short()  {                                 // a tower shorts out: a falling buzz
+      if (!ok('short', 150)) return; const g = grid(16);
+      noise({ dur:0.2, vol:0.12, type:'bandpass', f0:2400, f1:300, q:2, at:g.at });
+      const f = nf(g.ch[0], -2); tone({ type:'square', f0:f * 2, f1:f / 2, dur:0.25, vol:0.05, at:g.at });
+    },
+    charge() {                                 // ARC or FROST supercharged: a rising zap and two chord notes
+      if (!ok('charge', 150)) return; const g = grid(16);
+      noise({ dur:0.2, vol:0.1, type:'bandpass', f0:600, f1:4000, q:2, at:g.at });
+      [g.ch[0], g.ch[2]].forEach((n, i) => tone({ type:'square', f0:nf(n, 1), dur:0.08, vol:0.04, at:g.at + i * sixteenth() / 2 }));
+    },
     unlock() { const g = grid(0); [g.ch[0], g.ch[1], g.ch[2], g.ch[0] + 12, g.ch[1] + 12, g.ch[2] + 12].forEach((n, i) => tone({ type:'square', f0:nf(n, 1), dur:0.16, vol:0.05, at:i * 0.07 })); tone({ type:'sine', f0:nf(g.ch[0], 3), dur:0.6, vol:0.05, at:0.42 }); },
     star(i)  { const f = [1047, 1319, 1568][i] || 1568; tone({ type:'triangle', f0:f, dur:0.25, vol:0.12 }); tone({ type:'sine', f0:f * 2, dur:0.3, vol:0.05, at:0.03 }); noise({ dur:0.15, vol:0.08, type:'highpass', f0:6000 }); },
     pop()    { tone({ type:'sine', f0:523, f1:1047, dur:0.12, vol:0.1 }); noise({ dur:0.1, vol:0.06, type:'highpass', f0:3000 }); },

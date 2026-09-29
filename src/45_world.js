@@ -45,8 +45,9 @@ function drawWorld() {
   for (const tw of G.towers) {
     const sp = tw.spawn;
     const charge = tw.type === 'mint' && !G.awaiting && G.waveNum > 0 ? 1 - clamp(tw.cd / TOWERS.mint.lv[tw.lv].every, 0, 1) : null;
-    drawTowerGlyph(tw.type, tw.x, tw.y, { lv: tw.lv, aim: tw.aim, kick: tw.kick, t: G.time, heat: tw.heat, charge, scale: 1 + (1 - easeOut(sp)) * 0.8, alpha: Math.min(1, sp * 1.5) });
+    drawTowerGlyph(tw.type, tw.x, tw.y, { lv: tw.lv, aim: tw.aim, kick: tw.kick, t: G.time, heat: tw.heat, charge, scale: 1 + (1 - easeOut(sp)) * 0.8, alpha: Math.min(1, sp * 1.5) * (tw.zapT > 0 && tw.type !== 'arc' ? 0.3 : 1) });
     if (tw.buff > 0) { ctx.beginPath(); ctx.arc(tw.x + 12, tw.y - 12, 3, 0, TAU); ctx.fillStyle = '#f4f0ff'; ctx.fill(); }
+    if (tw.zapT > 0 || tw.chillT > 0) drawTowerState(tw);
   }
   // nova shell shadows
   for (const s of G.shells) {
@@ -75,6 +76,14 @@ function drawWorld() {
       polyPath(a.x + Math.cos(an) * R * 0.86, a.y + Math.sin(an) * R * 0.86, 4.5, 6, an); ctx.stroke();
     }
   }
+  // electrified enemies: the short-out range (towers inside it shut down)
+  ctx.setLineDash([3, 5]); ctx.lineDashOffset = -G.time * 18;
+  for (const e of G.enemies) {
+    if (!e.alive || !isLiveElec(e)) continue;
+    ctx.beginPath(); ctx.arc(e.x, e.y, ELEC.r * TILE, 0, TAU);
+    ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(246,255,61,0.35)'; ctx.stroke();
+  }
+  ctx.setLineDash([]);
   // all ground-enemy glows in one additive pass, then the bodies
   additive(true);
   for (const e of G.enemies) {
@@ -85,7 +94,8 @@ function drawWorld() {
   additive(false);
   for (const e of G.enemies) {
     const sp = e.age < 0.3 ? easeOutBack(e.age / 0.3) : 1;
-    drawGlyph(e.rc, e.x, e.y, { rot: e.rot, rot2: e.rot2, scale: sp * (1 + e.punch * 0.5), flash: e.flash, dir: e.dir, t: G.time + e.id, blink: e.blink > 0, frozen: e.slowT > 0, shield: e.shieldMax ? e.shield / e.shieldMax : 0, ping: e.shieldPing, fast: true, noGlow: !e.rc.flying });
+    drawGlyph(e.rc, e.x, e.y, { rot: e.rot, rot2: e.rot2, scale: sp * (1 + e.punch * 0.5), flash: e.flash, dir: e.dir, t: G.time + e.id, blink: e.blink > 0, frozen: e.slowT > 0, shield: e.shieldMax ? e.shield / e.shieldMax : 0, ping: e.shieldPing, fast: true, noGlow: !e.rc.flying,
+      elec: e.elec ? (isLiveElec(e) ? 1 : 0.3) : 0, ice: e.ice, lock: e.iceLock, marks: e.marks });
     if (e.hp < e.maxHp && !e.rc.boss) {
       const w = Math.max(14, e.rc.r * 2.2), f = Math.max(0, e.hp / e.maxHp), y = e.y - e.rc.r - 7;
       ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(e.x - w / 2 - 1, y - 1, w + 2, 4);
@@ -129,7 +139,13 @@ function drawWorld() {
     glow(s.x, y, 16, s.color, 0.9);
     ctx.beginPath(); ctx.arc(s.x, y, 3.2, 0, TAU); ctx.fillStyle = '#fff4e0'; ctx.fill();
   }
+  for (const b of G.snow) glow(b.x, b.y - b.h, 10, '#dff6ff', 0.6);
   additive(false);
+  for (const b of G.snow) {                                     // snowballs
+    ctx.beginPath(); ctx.ellipse(b.x, b.y, 3, 1.5, 0, 0, TAU); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(b.x, b.y - b.h, 3.6, 0, TAU); ctx.fillStyle = '#f6fcff'; ctx.fill();
+    ctx.lineWidth = 1; ctx.strokeStyle = '#a9d8ff'; ctx.stroke();
+  }
   FX.draw();
 }
 
@@ -153,4 +169,38 @@ function drawFlightLines(t) {
     }
   }
   ctx.restore();
+}
+
+// Tower status: shorted out (grey, crackling, off), ARC supercharged, chilled by snowballs, FROST supercharged.
+// A thin ring counts down the time left.
+function drawTowerState(tw) {
+  const x = tw.x, y = tw.y, zap = tw.zapT > 0, chill = tw.chillT > 0;
+  if (zap && tw.type !== 'arc') {
+    drawElecHalo(x, y, 11, G.time + tw.c * 3, 1);
+    ctx.beginPath(); ctx.moveTo(x + 3, y - 9); ctx.lineTo(x - 4, y + 1); ctx.lineTo(x + 2, y + 1); ctx.lineTo(x - 3, y + 10);   // "no power" bolt
+    ctx.lineJoin = 'round'; ctx.lineWidth = 2.4; ctx.strokeStyle = '#f6ff3d'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - 9, y - 9); ctx.lineTo(x + 9, y + 9); ctx.lineWidth = 2; ctx.strokeStyle = '#ff6a78'; ctx.stroke();
+    timerRing(x, y, tw.zapT / ELEC.time, '#f6ff3d');
+    return;
+  }
+  if (zap) {                                               // ARC, supercharged
+    additive(true); glow(x, y, 34, '#fff36a', 0.45 + 0.2 * Math.sin(G.time * 18)); additive(false);
+    drawElecHalo(x, y, 13, G.time + tw.c, 1);
+    timerRing(x, y, tw.zapT / ELEC.time, '#fff36a');
+  }
+  if (chill && tw.type === 'frost') {                      // FROST, supercharged
+    additive(true); glow(x, y, 34, '#e8fbff', 0.4 + 0.15 * Math.sin(G.time * 6)); additive(false);
+    drawIceHalo(x, y, 14, G.time * 2);
+    timerRing(x, y, tw.chillT / ICE.time, '#e8fbff');
+  } else if (chill) {                                      // chilled: frosted over, fires slowly
+    roundRect(x - 16, y - 16, 32, 32, 7); ctx.fillStyle = 'rgba(200,236,255,0.22)'; ctx.fill();
+    ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(235,250,255,0.75)'; ctx.stroke();
+    ctx.fillStyle = 'rgba(240,252,255,0.85)';
+    for (const [dx, dy] of [[-10, -16], [-2, -16], [7, -16]]) { ctx.beginPath(); ctx.moveTo(x + dx, y + dy); ctx.lineTo(x + dx + 3, y + dy); ctx.lineTo(x + dx + 1.5, y + dy + 6); ctx.fill(); }   // icicles
+    timerRing(x, y, tw.chillT / ICE.time, '#a9d8ff');
+  }
+}
+function timerRing(x, y, f, color) {
+  ctx.beginPath(); ctx.arc(x, y, 20, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(f, 0, 1));
+  ctx.lineWidth = 2; ctx.strokeStyle = hexA(color, 0.8); ctx.stroke();
 }

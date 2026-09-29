@@ -202,6 +202,53 @@ function drawGlyph(rc, x, y, o) {
       ctx.fillStyle = '#0a0817'; ctx.fill();
     }
   }
+  if (o.elec) drawElecHalo(x, y, r, o.t, o.elec);
+  if (o.ice) drawIceHalo(x, y, r, o.t);
+  if (o.lock > 0) {                      // frozen solid: a block of ice around it
+    polyPath(x, y, r + 5, 6, 0.3);
+    ctx.fillStyle = 'rgba(205,240,255,0.42)'; ctx.fill();
+    ctx.lineWidth = 1.8; ctx.strokeStyle = 'rgba(245,252,255,0.95)'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - r * 0.5, y - r * 0.2); ctx.lineTo(x - r * 0.1, y - r * 0.6); ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.stroke();
+  }
+  if (o.marks > 0) {                     // FROST marks: 3 freeze the enemy
+    for (let i = 0; i < 3; i++) {
+      const px = x + (i - 1) * 7, py = y - r - 11;
+      polyPath(px, py, 2.8, 4, Math.PI / 4);
+      ctx.fillStyle = i < o.marks ? '#e8fbff' : 'rgba(20,30,60,0.8)'; ctx.fill();
+      ctx.lineWidth = 1; ctx.strokeStyle = '#a3b8ff'; ctx.stroke();
+    }
+  }
+}
+
+// Electrified: little bolts of lightning crackling around the body (live = 1, shorted out = 0.3)
+function drawElecHalo(x, y, r, t, a) {
+  const R = r + 5, c = a >= 1 ? '#f6ff3d' : '#8a8760';
+  additive(true);
+  if (a >= 1) glow(x, y, r * 2.6, '#f6ff3d', 0.35 + 0.2 * Math.sin(t * 20));
+  ctx.lineWidth = 1.5; ctx.strokeStyle = c; ctx.globalAlpha = a >= 1 ? 1 : 0.5;
+  const n = 3, seed = Math.floor(t * 12);
+  for (let i = 0; i < n; i++) {
+    const a0 = (seed * 1.7 + i * TAU / n) % TAU;
+    ctx.beginPath();
+    for (let k = 0; k <= 3; k++) {
+      const an = a0 + k * 0.28, rr = R + ((seed + i + k) % 2 ? 3 : -2);
+      const px = x + Math.cos(an) * rr, py = y + Math.sin(an) * rr;
+      k ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  additive(false);
+}
+// Iced: a ring of small ice crystals turning around the body
+function drawIceHalo(x, y, r, t) {
+  const R = r + 6;
+  ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(210,245,255,0.45)'; ctx.stroke();
+  for (let i = 0; i < 5; i++) {
+    const an = t * 0.9 + i * TAU / 5;
+    polyPath(x + Math.cos(an) * R, y + Math.sin(an) * R, 2.6, 4, an);
+    ctx.fillStyle = '#e8fbff'; ctx.fill();
+  }
 }
 
 // ---- Tower glyph: crystals that grow with level ---------------------

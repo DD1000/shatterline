@@ -99,7 +99,7 @@ function drawLangPick(cx, py) {
 function sagaDeco() {
   if (SAGA.deco && SAGA.deco.w === LW) return SAGA.deco.items;
   const R = seeded(99), items = [], H = sagaHeight();
-  const kinds = ['grunt', 'scout', 'splitter', 'brute', 'aegis', 'blink', 'mender', 'titan', 'mite'];
+  const kinds = ['grunt', 'scout', 'splitter', 'brute', 'aegis', 'blink', 'mender', 'titan', 'mite', 'volt', 'yeti'];
   for (let i = 0; i < Math.round(70 * LEVELS.length / 40); i++) items.push({ x: R() * LW, y: R() * H, k: kinds[Math.floor(R() * kinds.length)], s: 0.7 + R() * 1.2, ph: R() * 6, sp: 0.2 + R() * 0.6 });
   SAGA.deco = { w: LW, items };
   return items;
@@ -315,20 +315,28 @@ function drawCard(rdt) {
     const rc = ENEMIES[k], ex = cx + (i - (ens.length - 1) / 2) * gap, ey = Y + 192;
     const sel = SAGA.info && SAGA.info.kind === 'enemy' && SAGA.info.key === k;
     if (sel) { ctx.beginPath(); ctx.arc(ex, ey, 20, 0, TAU); ctx.fillStyle = hexA(rc.color, 0.15); ctx.fill(); }
-    const shielded = lv.shieldTypes.includes(k);
+    const shielded = lv.shieldTypes.includes(k), elec = !!rc.elec || lv.elecTypes.includes(k), iced = !!rc.ice || lv.iceTypes.includes(k);
     if (rc.dome) {                         // Aegis: show its dome
       ctx.beginPath(); ctx.arc(ex, ey, 21, 0, TAU); ctx.fillStyle = hexA('#4aa8ff', 0.12); ctx.fill();
       ctx.lineWidth = 1.5; ctx.strokeStyle = hexA('#9fd6ff', 0.55 + Math.sin(G.clock * 3) * 0.2); ctx.stroke();
     }
-    drawGlyph(rc, ex, ey, { rot: G.clock * (rc.spin || 0), rot2: G.clock * (rc.inner ? rc.inner.spin : 0), scale: Math.min(1.1, 12 / rc.r), dir: rc.flying ? -Math.PI / 2 : Math.sin(G.clock + i) * 0.5, t: G.clock + i, shield: shielded ? 1 : 0, ping: shielded ? Math.max(0, Math.sin(G.clock * 2.5 + i)) * 0.04 : 0 });
+    drawGlyph(rc, ex, ey, { rot: G.clock * (rc.spin || 0), rot2: G.clock * (rc.inner ? rc.inner.spin : 0), scale: Math.min(1.1, 12 / rc.r), dir: rc.flying ? -Math.PI / 2 : Math.sin(G.clock + i) * 0.5, t: G.clock + i, shield: shielded ? 1 : 0, ping: shielded ? Math.max(0, Math.sin(G.clock * 2.5 + i)) * 0.04 : 0, elec: elec ? 1 : 0, ice: iced });
     setFont(8.5, FONT_UI); ctx.textAlign = 'center'; ctx.fillStyle = hexA(rc.color, 0.95);
     ctx.fillText(eName(k).toUpperCase(), ex, ey + 26 + (ens.length > 7 && i % 2 ? 10 : 0));   // stagger names when crowded
     let by = ey - 32;
-    if (shielded || rc.dome) {             // blue SHIELD badge: this enemy is protected on this level
-      const bw = LANG === 'zh' ? 28 : 40;
-      roundRect(ex - bw / 2, by, bw, 13, 6.5); ctx.fillStyle = '#2a6fd6'; ctx.fill();
-      ctx.lineWidth = 1; ctx.strokeStyle = '#9fd6ff'; ctx.stroke();
-      setFont(7.5, FONT_UI); ctx.fillStyle = '#ffffff'; ctx.fillText(tr('shield_badge'), ex, by + 6.5); by -= 15;
+    // badges: SHIELD (shielded or a dome carrier), ELECTRIC, ICED. A crowded row shows them as icons.
+    const badges = [];
+    if (shielded || rc.dome) badges.push(['shield', 'shield_badge', '#2a6fd6', '#9fd6ff', '#ffffff']);
+    if (elec) badges.push(['elec', 'elec_badge', '#c9c21a', '#fbff9a', '#141203']);
+    if (iced) badges.push(['ice', 'ice_badge', '#4f8fc2', '#e8fbff', '#ffffff']);
+    const compact = gap < 46;
+    for (const [kind, label, bg, edge, fg] of badges) {
+      setFont(7.5, FONT_UI);
+      const bw = compact ? 15 : Math.max(LANG === 'zh' ? 28 : 34, ctx.measureText(tr(label)).width + 10);
+      roundRect(ex - bw / 2, by, bw, 13, compact ? 4 : 6.5); ctx.fillStyle = bg; ctx.fill();
+      ctx.lineWidth = 1; ctx.strokeStyle = edge; ctx.stroke();
+      if (compact) badgeIcon(kind, ex, by + 6.5, fg); else { ctx.fillStyle = fg; ctx.fillText(tr(label), ex, by + 6.5); }
+      by -= 15;
     }
     if (k === lv.newEnemy) {
       roundRect(ex - 15, by, 30, 13, 6.5); ctx.fillStyle = '#ff3d9a'; ctx.fill();
@@ -339,13 +347,15 @@ function drawCard(rdt) {
   // info line
   let info = null, icol = '#d9d6f5';
   const I = SAGA.info;
-  if (I && I.kind === 'enemy') { info = `${eName(I.key)}: ${eDesc(I.key)}${lv.shieldTypes.includes(I.key) ? '  ' + tr('shielded_note') : ''}`; icol = ENEMIES[I.key].color; }
+  if (I && I.kind === 'enemy') { info = `${eName(I.key)}: ${eDesc(I.key)}${lv.shieldTypes.includes(I.key) ? '  ' + tr('shielded_note') : ''}${lv.elecTypes.includes(I.key) ? '  ' + tr('elec_note') : ''}${lv.iceTypes.includes(I.key) ? '  ' + tr('ice_note') : ''}`; icol = ENEMIES[I.key].color; }
   else if (I && I.kind === 'tower') { const d = TOWERS[I.key]; info = d.unlock > Save.open() ? tr('info_unlock', tName(I.key), d.unlock) : `${tName(I.key)}: ${tDesc(I.key)}`; icol = d.color; }
   else if (I && I.kind === 'msg') { info = I.text; icol = '#ff8a96'; }
   else if (lv.newEnemy) { info = tr('info_new', eName(lv.newEnemy), eDesc(lv.newEnemy)); icol = ENEMIES[lv.newEnemy].color; }
   else if (lv.newTower) { info = tr('info_new_tower', tName(lv.newTower), tDesc(lv.newTower)); icol = TOWERS[lv.newTower].color; }
   else if (lv.twoPortals) { info = tr('info_two'); icol = '#ff3d9a'; }
   else if (lv.boss) { info = tr('info_boss'); icol = '#ff5a6a'; }
+  else if (lv.hasElec) { info = tr('info_elec'); icol = '#f6ff3d'; }
+  else if (lv.hasIce) { info = tr('info_ice'); icol = '#c8f4ff'; }
   else if (lv.hasShields && !lv.shielded) { info = tr('info_light'); icol = '#9fd6ff'; }
   if (info) { setFont(10.5, FONT_UI, 500); ctx.fillStyle = icol; wrapText(info, cx, Y + 244, cw - 36, 13); }
   ctx.fillStyle = hexA(th.edge, 0.4); ctx.fillRect(x0 + 16, Y + 266, cw - 32, 1);
@@ -400,6 +410,14 @@ function drawCard(rdt) {
     if (missing) { SAGA.confirm = missing; Sound.play('deny'); } else go();
   }, { pulse: true, size: 24 });
   if (SAGA.confirm) drawNeedConfirm(SAGA.confirm, x0, y0, cw, ch, go);
+}
+
+function badgeIcon(kind, x, y, color) {
+  ctx.lineWidth = 1.3; ctx.strokeStyle = color; ctx.lineCap = 'round';
+  if (kind === 'shield') { polyPath(x, y, 4.2, 6, 0); ctx.stroke(); }
+  else if (kind === 'elec') { ctx.beginPath(); ctx.moveTo(x + 1.5, y - 4.5); ctx.lineTo(x - 2, y + 0.5); ctx.lineTo(x + 2, y + 0.5); ctx.lineTo(x - 1.5, y + 4.5); ctx.stroke(); }
+  else { ctx.beginPath(); for (let i = 0; i < 3; i++) { const a = i * Math.PI / 3; ctx.moveTo(x - Math.cos(a) * 4.5, y - Math.sin(a) * 4.5); ctx.lineTo(x + Math.cos(a) * 4.5, y + Math.sin(a) * 4.5); } ctx.stroke(); }
+  ctx.lineCap = 'butt';
 }
 
 // "Are you sure?" when a level needs a tower that isn't in the loadout
