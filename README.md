@@ -2,7 +2,7 @@
 
 A neon tower defense game for phones, with 80 short Candy Crush-style levels, 10 towers and an English/Chinese option. Everything is drawn and synthesized in code, so there are no image or audio files.
 
-**Play:** open `index.html`, or the GitHub Pages link for this repo. No account is needed.
+**Play:** https://dd1000.github.io/shatterline/ (works in any phone or desktop browser, no account needed). Locally, just open `index.html`.
 
 ## What's in here
 | Path | What it is |
@@ -16,6 +16,6 @@ A neon tower defense game for phones, with 80 short Candy Crush-style levels, 10
 ## Making a change
 1. Edit files in `src/`.
 2. Run `bash build.sh`.
-3. Upload the new `index.html`. GitHub Pages updates within a minute or two.
+3. Push the change (`git add .`, `git commit -m "..."`, `git push`). GitHub Pages updates the live game within a minute or two.
 
 Tests and tools need Node.js and Playwright (`npm i playwright`).
