@@ -28,7 +28,7 @@ const COLS = 9, ROWS = 13;     // map grid
 const HUD_H = 50, BAR_H = 78;  // top HUD + bottom control bar
 const MIN_H = HUD_H + ROWS * TILE + BAR_H;
 const LEVELS_PER_WORLD = 10;
-const BUILD = 'v38';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
+const BUILD = 'v39';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
 
 // Title-screen showcase map
 const DEMO_PATH = [[1,0],[1,2],[7,2],[7,5],[1,5],[1,8],[7,8],[7,10],[4,10],[4,12]];
@@ -74,7 +74,7 @@ const ENEMIES = {
   titan:    { name:'Titan',   sides:8, r:17,  color:'#ff8a3d', speed:0.45, hp:420, gold:28, armor:7, leak:3, spin:0.2, eye:true, thick:true, inner:{ sides:4, scale:0.5, spin:0.8 }, intro:25,
               desc:'Huge, slow and heavily armored.' },
   volt:     { name:'Volt',    sides:3, star:true, r:10, color:'#f6ff3d', speed:1.0, hp:48, gold:8, armor:0, leak:1, spin:1.6, eye:true, elec:true, intro:37,
-              desc:'Electrified: towers right next to it shut down for 4s. ARC gets supercharged instead. EMP shorts it out. A LIVE WIRE road charges it up.' },
+              desc:'Electrified: towers right next to it shut down for 4s. ARC gets supercharged instead. EMP shorts it out.' },
   yeti:     { name:'Yeti',    sides:6, star:true, r:13, color:'#6fd8ff', speed:0.7, hp:130, gold:13, armor:2, leak:2, spin:0.35, eye:true, thick:true, ice:true, inner:{ sides:6, scale:0.45, spin:-0.8 }, intro:45,
               desc:'Throws snowballs at every tower in range each second. Hit towers fire much slower for 5s. FROST gets supercharged instead.' },
 };
@@ -89,8 +89,7 @@ const ENEMY_ORDER = ['grunt', 'scout', 'splitter', 'brute', 'boss', 'aegis', 'bl
 // within ELEC.r tiles: it stops working until 4s after the last electrified enemy touched it.
 // ARC is the exception: it gets supercharged instead (fires faster, chains further).
 // EMP lasers short out an electrified enemy for ELEC.off seconds.
-const ELEC = { r: 1.3, time: 4, off: 4, arcRate: 1.6, arcChains: 3, arcJump: 2.2,
-  wireR: 2, wireSpeed: 1.2, wireHp: 1.2 };   // v37: on a LIVE WIRE road an electrified enemy reaches 2 more tiles, moves 20% faster and gains 20% health (once)
+const ELEC = { r: 1.3, time: 4, off: 4, arcRate: 1.6, arcChains: 3, arcJump: 2.2 };
 // ICED enemies (the Yeti, plus a random type on some levels) throw a snowball at every tower within
 // ICE.r tiles once a second. A hit tower fires at 40% speed for 5s. FROST is the exception: it gets
 // supercharged, and each of its blasts adds a frost mark; 3 marks freeze the enemy solid for 0.5s
@@ -133,14 +132,14 @@ const TOWERS = {
                  { cost:120, dmg:24.75, rate:0.29, range:3.2, splash:1.02 },
                  { cost:200, dmg:27.23, rate:0.29, range:3.5, splash:1.2 },
                  { cost:300, dmg:29.95, rate:0.29, range:3.8, splash:1.35 } ] },
-  // v37 (user): each upgrade fires 20% faster (0.9 / 1.08 / 1.3 zaps a second). Level 4 transforms into the LIVE WIRE:
-  // no more chain zaps; it electrifies the whole route(s) passing through its range and hits every ground enemy on
-  // them, always at level 3's rate (supercharge and snow don't change it). Electrified enemies feed on it instead (ELEC.wire*).
-  arc:    { name:'ARC',    color:'#ffe23d', sides:3, cost:85,  unlock:9, desc:'Chain lightning; each upgrade fires faster. Electrified enemies supercharge it. Level 4: LIVE WIRE, electrifies its whole road.',
+  // v37 (user): each upgrade fires 20% faster (0.9 / 1.08 / 1.3 / 1.56 zaps a second). Level 4 is the LIVE WIRE (its own look).
+  // v39 (user): the LIVE WIRE's electrified road is gone. It chain-zaps like the other levels, and every 4th hit an enemy
+  // takes from that tower calls down a lightning bolt (bolt damage, x beacon boost) on it.
+  arc:    { name:'ARC',    color:'#ffe23d', sides:3, cost:85,  unlock:9, desc:'Chain lightning; each upgrade fires faster. Electrified enemies supercharge it. Level 4: LIVE WIRE, every 4th hit on an enemy calls down a lightning bolt.',
             lv:[ { dmg:17.5, rate:0.9,  range:2.3, chains:3 },
                  { cost:100, dmg:19.25, rate:1.08, range:2.4, chains:4 },
                  { cost:170, dmg:21.18, rate:1.3, range:2.6, chains:6 },
-                 { cost:260, dmg:2.33, rate:1.3, range:2.8, wire:true } ] },   // v38 (user): road current -90% (was 23.29)
+                 { cost:260, dmg:23.29, rate:1.56, range:2.8, chains:8, bolt:20, boltEvery:4, wire:true } ] },
   mint:   { name:'MINT',   color:'#ffd23d', sides:6, cost:80,  unlock:13, eco:true, desc:'Pulses out gold while waves run.',
             lv:[ { gold:7,  every:3 },
                  { cost:90,  gold:11, every:2.5 },
@@ -245,7 +244,7 @@ const STR = {
   en: {
     combo: 'COMBO', early_call: 'EARLY CALL  +{0}', wave: 'WAVE {0}', boss_incoming: 'BOSS INCOMING', final_wave: 'FINAL WAVE',
     cond_noBounty: 'NO BOUNTY · BUILD MINTS', cond_air: 'AIR RAID · BUILD FLAK', cond_shielded: 'HEAVY SHIELDS · USE EMP OR PRISM',
-    warden: 'WARDEN', armored_boss: 'ARMORED BOSS', warden_x: 'WARDEN ×{0}', tower_lv: 'LEVEL {0}', master_bolt: 'MASTER BOLT', live_wire: 'LIVE WIRE', wire_line: 'Electrifies its whole road: {0} damage to everything on it, {1} times a second. Electrified enemies feed on it.', charged: 'CHARGED', level_n: 'LEVEL {0}',
+    warden: 'WARDEN', armored_boss: 'ARMORED BOSS', warden_x: 'WARDEN ×{0}', tower_lv: 'LEVEL {0}', master_bolt: 'MASTER BOLT', live_wire: 'LIVE WIRE', wire_line: 'Zaps faster ({0}/s) and chains to {1}. Every 4th hit on the same enemy calls down a {2}-damage lightning bolt.', level_n: 'LEVEL {0}',
     m_10: 'NICE', m_25: 'AWESOME', m_50: 'UNREAL', m_100: 'LEGENDARY', m_200: 'GODLIKE',
     combo_gold: '{0} COMBO  +{1} GOLD', combo_only: '{0} COMBO', shattered: 'SHATTERED', warden_down: 'WARDEN DOWN', warden_down_gold: 'WARDEN DOWN  +{0}',
     wave_clear: 'WAVE {0} CLEAR', wave_clear_gold: 'WAVE {0} CLEAR  +{1}',
@@ -279,7 +278,7 @@ const STR = {
     info_light: 'Some enemies carry shields. EMP or PRISM helps, but you can manage without.',
     shield_badge: 'SHIELD', shielded_note: 'Shielded here: takes 20% damage until an EMP strips it.', stripped: 'STRIPPED', dome_down: 'DOME DOWN',
     elec_badge: 'ELECTRIC', ice_badge: 'ICED', shorted: 'SHORTED', supercharged: 'SUPERCHARGED', chilled: 'CHILLED', frozen: 'FROZEN',
-    elec_note: 'Electrified here: towers right next to it shut down for 4s. ARC gets supercharged. EMP shorts it out. A LIVE WIRE road charges it up.',
+    elec_note: 'Electrified here: towers right next to it shut down for 4s. ARC gets supercharged. EMP shorts it out.',
     ice_note: 'Iced here: throws snowballs that slow towers in range for 5s. FROST gets supercharged.',
     info_elec: 'Some enemies are electrified: towers right next to them shut down. ARC and EMP help.',
     info_ice: 'Some enemies are iced: their snowballs slow your towers. FROST loves it.',
@@ -318,7 +317,7 @@ const STR = {
   zh: {
     combo: '连击', early_call: '提前召唤  +{0}', wave: '第 {0} 波', boss_incoming: '首领来袭', final_wave: '最后一波',
     cond_noBounty: '无赏金 · 建造铸币塔', cond_air: '空袭 · 建造防空塔', cond_shielded: '重护盾 · 使用电磁或棱镜',
-    warden: '守卫者', armored_boss: '重甲首领', warden_x: '守卫者 ×{0}', tower_lv: '{0} 级', master_bolt: '大师光弹', live_wire: '高压电网', wire_line: '让整条道路带电：路上所有敌人每秒受到 {1} 次 {0} 伤害。带电敌人会从中充能。', charged: '充能', level_n: '第 {0} 关',
+    warden: '守卫者', armored_boss: '重甲首领', warden_x: '守卫者 ×{0}', tower_lv: '{0} 级', master_bolt: '大师光弹', live_wire: '高压电网', wire_line: '射速更快（每秒 {0} 次），连锁 {1} 个敌人。同一敌人每被击中 4 次，就会召来一道 {2} 伤害的闪电。', level_n: '第 {0} 关',
     m_10: '漂亮', m_25: '太棒了', m_50: '不可思议', m_100: '传奇', m_200: '神级',
     combo_gold: '{0} 连击  +{1} 金币', combo_only: '{0} 连击', shattered: '粉碎！', warden_down: '守卫者被击碎', warden_down_gold: '守卫者被击碎  +{0}',
     wave_clear: '第 {0} 波清除', wave_clear_gold: '第 {0} 波清除  +{1}',
@@ -352,7 +351,7 @@ const STR = {
     info_light: '部分敌人带护盾。电磁或棱镜有帮助，但不带也能应付。',
     shield_badge: '护盾', shielded_note: '本关带护盾：被电磁剥除前只受 20% 伤害。', stripped: '已剥除', dome_down: '护罩破碎',
     elec_badge: '带电', ice_badge: '冰霜', shorted: '短路', supercharged: '超载！', chilled: '冻僵', frozen: '冻结',
-    elec_note: '本关带电：紧挨着它的塔会短路 4 秒。电弧塔反而会超载。电磁能让它短路。高压电网的道路会让它充能。',
+    elec_note: '本关带电：紧挨着它的塔会短路 4 秒。电弧塔反而会超载。电磁能让它短路。',
     ice_note: '本关带冰霜：扔出雪球，让范围内的塔 5 秒内变慢。冰霜塔反而会超载。',
     info_elec: '部分敌人带电：紧挨着它们的塔会短路。电弧和电磁有帮助。',
     info_ice: '部分敌人带冰霜：它们的雪球会让塔变慢。冰霜塔会因此超载。',
@@ -392,7 +391,7 @@ const STR = {
     combo: 'COMBO', early_call: 'ADELANTO  +{0}', wave: 'OLEADA {0}', boss_incoming: 'SE ACERCA EL JEFE', final_wave: 'ÚLTIMA OLEADA',
     cond_noBounty: 'SIN BOTÍN · CONSTRUYE CECAS', cond_air: 'ATAQUE AÉREO · CONSTRUYE FLAK', cond_shielded: 'ESCUDOS PESADOS · USA EMP O PRISMA',
     cond_heat: 'OLA DE CALOR · SIN HIELO', cond_rain: 'TORMENTA · SIN PIRO',
-    warden: 'GUARDIÁN', armored_boss: 'JEFE BLINDADO', warden_x: 'GUARDIÁN ×{0}', tower_lv: 'NIVEL {0}', master_bolt: 'RAYO MAESTRO', live_wire: 'ALTA TENSIÓN', wire_line: 'Electrifica todo su camino: {0} de daño a todo lo que haya en él, {1} veces por segundo. Los eléctricos se alimentan de él.', charged: 'CARGADO', level_n: 'NIVEL {0}',
+    warden: 'GUARDIÁN', armored_boss: 'JEFE BLINDADO', warden_x: 'GUARDIÁN ×{0}', tower_lv: 'NIVEL {0}', master_bolt: 'RAYO MAESTRO', live_wire: 'ALTA TENSIÓN', wire_line: 'Dispara más rápido ({0}/s) y encadena {1}. Cada 4.º golpe al mismo enemigo invoca un rayo de {2} de daño.', level_n: 'NIVEL {0}',
     m_10: 'BIEN', m_25: 'GENIAL', m_50: 'INCREÍBLE', m_100: 'LEGENDARIO', m_200: 'DIVINO',
     combo_gold: 'COMBO {0}  +{1} ORO', combo_only: 'COMBO {0}', shattered: 'HECHO AÑICOS', warden_down: 'GUARDIÁN DERRIBADO', warden_down_gold: 'GUARDIÁN DERRIBADO  +{0}',
     wave_clear: 'OLEADA {0} SUPERADA', wave_clear_gold: 'OLEADA {0} SUPERADA  +{1}',
@@ -426,7 +425,7 @@ const STR = {
     info_light: 'Algunos enemigos llevan escudo. EMP o PRISMA ayudan, pero puedes arreglártelas sin ellos.',
     shield_badge: 'ESCUDO', shielded_note: 'Con escudo aquí: recibe el 20% del daño hasta que un EMP se lo quite.', stripped: 'SIN ESCUDO', dome_down: 'CÚPULA ROTA',
     elec_badge: 'ELÉCTRICO', ice_badge: 'HELADO', shorted: 'APAGADA', supercharged: '¡SOBRECARGA!', chilled: 'ENFRIADA', frozen: 'CONGELADO',
-    elec_note: 'Eléctrico aquí: las torres junto a él se apagan 4 s. ARCO se sobrecarga. EMP lo cortocircuita. Un camino de ALTA TENSIÓN lo carga.',
+    elec_note: 'Eléctrico aquí: las torres junto a él se apagan 4 s. ARCO se sobrecarga. EMP lo cortocircuita.',
     ice_note: 'Helado aquí: lanza bolas de nieve que ralentizan las torres cercanas 5 s. HIELO se sobrecarga.',
     info_elec: 'Algunos enemigos están electrificados: las torres junto a ellos se apagan. ARCO y EMP ayudan.',
     info_ice: 'Algunos enemigos están helados: sus bolas de nieve ralentizan tus torres. A HIELO le encanta.',
@@ -470,7 +469,7 @@ function tr(id, ...a) {
 const ZH = {
   tower: { bolt: '光弹', frost: '冰霜', nova: '新星', arc: '电弧', emp: '电磁', mint: '铸币', prism: '棱镜', rail: '轨道炮', beacon: '信标', flak: '防空', pyro: '烈焰', tide: '潮汐' },
   towerDesc: {
-    bolt: '快速光弹。每第 4 发暴击，每次升级多一发暴击。4 级：大师光弹，射速 +35%。', frost: '冰冻脉冲，减速附近所有敌人。不会着火，还能扑灭紧挨着的塔上的火。', nova: '等离子炸弹，范围伤害，无视护甲。', arc: '连锁闪电，每次升级射速更快。带电敌人会让它超载。4 级：高压电网，让整条道路带电。',
+    bolt: '快速光弹。每第 4 发暴击，每次升级多一发暴击。4 级：大师光弹，射速 +35%。', frost: '冰冻脉冲，减速附近所有敌人。不会着火，还能扑灭紧挨着的塔上的火。', nova: '等离子炸弹，范围伤害，无视护甲。', arc: '连锁闪电，每次升级射速更快。带电敌人会让它超载。4 级：高压电网，同一敌人每被击中 4 次就召来一道闪电。',
     emp: '最多 4 道激光专找护盾：剥除护盾、击破护罩、让带电敌人短路。几乎没有伤害。', mint: '波次进行时不断产出金币。', prism: '光束越烧越强，穿透护甲和护盾。',
     rail: '沿一条固定直线射击，贯穿线上所有敌人。', beacon: '提升相邻塔的伤害。', flak: '防空导弹。唯一能击中飞行敌人的塔。',
     pyro: '短程火焰喷射，带少量溅射。对寒冷敌人造成三倍伤害。', tide: '水柱扑灭着火的塔，并将着火的敌人永久浇灭。几乎没有伤害。',
@@ -480,7 +479,7 @@ const ZH = {
     grunt: '最基础的行走者。', scout: '速度快但很脆弱。', splitter: '被摧毁时分裂成 3 只螨虫。抵达核心会扣 4 条命：它自己加体内的 3 只螨虫。', mite: '小而快。', brute: '重甲：小伤害几乎无效。',
     boss: '首领：厚重护甲，生命值极高。行进时会不断召唤敌人。', aegis: '投射随行护罩，罩内敌人只受 20% 伤害。电磁可将其击破。', blink: '每隔几秒向前瞬移。',
     mender: '治疗附近的敌人。优先消灭它。', titan: '巨大、缓慢且重甲。', glider: '直线飞越道路。只有防空塔能击中。',
-    volt: '带电：紧挨着它的塔会短路 4 秒。电弧塔反而会超载。电磁能让它短路。高压电网的道路会让它充能。',
+    volt: '带电：紧挨着它的塔会短路 4 秒。电弧塔反而会超载。电磁能让它短路。',
     yeti: '每秒向范围内所有塔扔雪球。被击中的塔 5 秒内攻速大减。冰霜塔反而会超载。',
     scorch: '着火：每隔几秒向附近的塔扔一个火球。被击中的塔会烧毁（返还 25%），除非潮汐塔或紧挨着的冰霜塔把火扑灭。',
   },
@@ -517,7 +516,7 @@ const ES = {
   tower: { bolt: 'RAYO', frost: 'HIELO', nova: 'NOVA', arc: 'ARCO', emp: 'EMP', mint: 'CECA', prism: 'PRISMA', rail: 'RIEL', beacon: 'FARO', flak: 'FLAK', pyro: 'PIRO', tide: 'MAREA' },
   towerDesc: {
     bolt: 'Láser rápido. Cada 4.º disparo es crítico; cada mejora añade otro. Nivel 4: RAYO MAESTRO, 35% más rápido.', frost: 'Pulso helado que frena a todos los cercanos. Nunca arde y apaga el fuego de las torres de al lado.',
-    nova: 'Bomba de plasma. Daño en área, atraviesa armadura.', arc: 'Relámpago en cadena; cada mejora dispara más rápido. Los eléctricos lo sobrecargan. Nivel 4: ALTA TENSIÓN, electrifica todo su camino.',
+    nova: 'Bomba de plasma. Daño en área, atraviesa armadura.', arc: 'Relámpago en cadena; cada mejora dispara más rápido. Los eléctricos lo sobrecargan. Nivel 4: ALTA TENSIÓN, cada 4.º golpe a un enemigo invoca un rayo.',
     emp: 'Hasta 4 láseres que buscan escudos: los quita, rompe cúpulas y cortocircuita a los eléctricos. Casi sin daño.',
     mint: 'Genera oro mientras hay oleadas.', prism: 'Rayo que se calienta sobre un objetivo. Atraviesa armadura y escudos.',
     rail: 'Dispara en una línea fija y atraviesa todo lo que hay en ella.', beacon: 'Aumenta el daño de las torres de al lado.',
@@ -530,7 +529,7 @@ const ES = {
     brute: 'Blindado. Los golpes pequeños apenas le hacen nada.', boss: 'Jefe. Blindaje pesado y muchísima vida. Llama a más enemigos mientras avanza.',
     aegis: 'Proyecta una cúpula que viaja con él. Los enemigos dentro reciben el 20% del daño. EMP la revienta.', blink: 'Se teletransporta hacia delante cada pocos segundos.',
     mender: 'Cura a los enemigos cercanos. Acaba con él primero.', titan: 'Enorme, lento y muy blindado.', glider: 'Vuela en línea recta sobre el camino. Solo FLAK lo alcanza.',
-    volt: 'Eléctrico: las torres junto a él se apagan 4 s. ARCO se sobrecarga. EMP lo cortocircuita. Un camino de ALTA TENSIÓN lo carga.',
+    volt: 'Eléctrico: las torres junto a él se apagan 4 s. ARCO se sobrecarga. EMP lo cortocircuita.',
     yeti: 'Lanza bolas de nieve a todas las torres a su alcance cada segundo. Las alcanzadas disparan mucho más lento 5 s. HIELO se sobrecarga.',
     scorch: 'En llamas: cada pocos segundos lanza una bola de fuego a una torre cercana. La torre alcanzada arde hasta caer (se recupera el 25%) salvo que MAREA o un HIELO de al lado la apaguen.',
   },
@@ -2614,12 +2613,13 @@ function upgradeTower(tw) {
     FX.text(tw.x, tw.y - 28, tr('master_bolt'), MASTER_GOLD, 13, { font: FONT_D, life: 1.4 });
     FX.ring(tw.x, tw.y, 12, 70, MASTER_GOLD, 0.6, 4); FX.flash(tw.x, tw.y, 80, MASTER_GOLD, 0.35); FX.shards(tw.x, tw.y, MASTER_GOLD, 14, 170, 3.5);
     addShake(0.25);
-  } else if (TOWERS[tw.type].lv[tw.lv].wire) {               // v37: ARC becomes the LIVE WIRE; the road lights up from the tower outward
+  } else if (TOWERS[tw.type].lv[tw.lv].wire) {               // v37: ARC becomes the LIVE WIRE (lightning strikes it)
     FX.text(tw.x, tw.y - 28, tr('live_wire'), WIRE_BLUE, 13, { font: FONT_D, life: 1.4 });
     FX.ring(tw.x, tw.y, 12, 70, '#fff36a', 0.6, 4); FX.ring(tw.x, tw.y, 6, 46, WIRE_BLUE, 0.45, 2.5);
     FX.flash(tw.x, tw.y, 80, '#fff36a', 0.35); FX.shards(tw.x, tw.y, WIRE_BLUE, 12, 170, 3);
-    tw.wireOn = 0; wireRoutes(tw);
-    if (tw.wireNear) FX.zap([{ x: tw.x, y: tw.y }, tw.wireNear], '#ffffff', 0.35);
+    { const pts = [{ x: tw.x + rand(-20, 20), y: tw.y - 160 }];      // a bolt from the sky onto the tower
+      for (let y = tw.y - 130; y < tw.y - 14; y += 30) pts.push({ x: tw.x + rand(-9, 9), y });
+      pts.push({ x: tw.x, y: tw.y }); FX.zap(pts, '#ffffff', 0.35); }
     G.flashA = Math.max(G.flashA || 0, 0.25); G.flashCol = '#fff7c8';
     addShake(0.25); snd('charge');
   } else FX.text(tw.x, tw.y - 26, tr('tower_lv', tw.lv + 1), c, 12, { font: FONT_D, life: 0.9 });
@@ -2690,11 +2690,16 @@ function fire(tw, tg) {
     snd('bolt');
   } else if (tw.type === 'arc') {
     const pts = [{ x: tw.x, y: tw.y + 1 }], hit = new Set(), up = tw.zapT > 0;     // supercharged by electrified enemies
-    let cur = tg, dmg = L.dmg * boost;
+    let cur = tg, dmg = L.dmg * boost, bolts = 0;
     for (let i = 0; i < L.chains + (up ? ELEC.arcChains : 0) && cur; i++) {
       hit.add(cur); pts.push({ x: cur.x, y: cur.y });
       FX.spark(cur.x, cur.y, c, 3, 140, 0.25);
       damage(cur, dmg, { color: c });
+      if (L.bolt) {                                                     // v39: LIVE WIRE, every 4th hit on this enemy calls a bolt
+        const hits = tw.hits || (tw.hits = new WeakMap()), n = (hits.get(cur) || 0) + 1;
+        hits.set(cur, n);
+        if (n % L.boltEvery === 0 && cur.alive) { skyBolt(cur, L.bolt * boost); bolts++; }
+      }
       dmg *= 0.85;
       let nxt = null, nd = ((up ? ELEC.arcJump : 1.7) * TILE) ** 2;
       for (const e of G.enemies) {
@@ -2704,8 +2709,8 @@ function fire(tw, tg) {
       }
       cur = nxt;
     }
-    FX.zap(pts, up ? '#fff7a8' : c, up ? 0.22 : 0.17);
-    snd('arc');
+    FX.zap(pts, up ? '#fff7a8' : L.wire ? WIRE_BLUE : c, up ? 0.22 : 0.17);
+    snd('arc'); if (bolts) { snd('thunder'); addShake(0.04); }
   } else if (tw.type === 'nova') {
     const flight = 0.75;
     const slow = tg.slowT > 0 ? 1 - tg.slowAmt : 1;
@@ -2899,123 +2904,18 @@ function empHit(e, dmg) {
   }
   damage(e, dmg, { pierce: true, quiet: true });
 }
-// ---- LIVE WIRE (v37) ------------------------------------------------------------------------
-// ARC level 4 electrifies every route (portal -> core) that passes through its range (the nearest one if none does).
-// Every WIRE tick, all ground enemies standing on those road tiles take its damage. Live electrified enemies don't:
-// they feed on it (see ELEC.wire*).
-const isWireTw = tw => tw.type === 'arc' && !!TOWERS.arc.lv[tw.lv].wire;
-const tileKey = e => Math.floor(e.y / TILE) * COLS + Math.floor(e.x / TILE);
-function routeTiles(i) {
-  const pth = MAP.paths[i];
-  return pth.tileSet || (pth.tileSet = new Set(expandTiles(pth.tp).map(([c, r]) => r * COLS + c)));
+// ---- LIVE WIRE bolts (v39) ------------------------------------------------------------------
+// A lightning bolt from the sky onto an enemy (ARC level 4: every 4th hit an enemy takes from that tower).
+function skyBolt(e, amt) {
+  const top = e.y - 150, pts = [{ x: e.x + rand(-24, 24), y: top }];
+  for (let y = top + 30; y < e.y - 12; y += 30) pts.push({ x: e.x + rand(-10, 10), y });
+  pts.push({ x: e.x, y: e.y });
+  FX.zap(pts, '#ffffff', 0.24); FX.zap(pts.map(q => ({ x: q.x + rand(-3, 3), y: q.y })), WIRE_BLUE, 0.2);
+  FX.flash(e.x, e.y, 34, '#fff36a', 0.32); FX.ring(e.x, e.y, 4, 28, '#fff36a', 0.35, 2);
+  FX.spark(e.x, e.y, WIRE_BLUE, 6, 180, 0.3);
+  damage(e, amt, { crit: true, color: '#fff36a' });
 }
-function wireRoutes(tw) {
-  if (tw.wireRoutes && tw.wireMap === MAP.paths) return tw.wireRoutes;
-  const R2 = towerRange(tw) ** 2, out = [], d0 = {};
-  let near = null, nd = Infinity, bestI = 0, bestD = Infinity;
-  MAP.paths.forEach((pth, i) => {
-    let hit = false, md = Infinity, mdist = 0;
-    for (let d = 0; d <= pth.len; d += 6) {
-      const q = pth.at(d), dd = (q.x - tw.x) ** 2 + (q.y - tw.y) ** 2;
-      if (dd < md) { md = dd; mdist = d; }
-      if (dd < nd) { nd = dd; near = { x: q.x, y: q.y }; }
-    }
-    for (const [c, r] of expandTiles(pth.tp)) if (((c + 0.5) * TILE - tw.x) ** 2 + ((r + 0.5) * TILE - tw.y) ** 2 <= R2) { hit = true; break; }
-    d0[i] = mdist;
-    if (hit) out.push(i);
-    if (md < bestD) { bestD = md; bestI = i; }
-  });
-  if (!out.length && MAP.paths.length) out.push(bestI);
-  tw.wireRoutes = out; tw.wireD0 = d0; tw.wireNear = near; tw.wireMap = MAP.paths;
-  return out;
-}
-function wireTiles() {                                         // every tile charged by any LIVE WIRE (null if none)
-  let set = null;
-  for (const tw of G.towers) {
-    if (!isWireTw(tw)) continue;
-    set = set || new Set();
-    for (const i of wireRoutes(tw)) for (const k of routeTiles(i)) set.add(k);
-  }
-  return set;
-}
-function wireUpdate(tw, dt) {
-  const L = TOWERS.arc.lv[tw.lv];
-  tw.wireOn = Math.min(1, (tw.wireOn == null ? 1 : tw.wireOn) + dt * 1.4);
-  tw.wirePulse = Math.max(0, (tw.wirePulse || 0) - dt * 3);
-  tw.wireT = (tw.wireT || 0) - dt;                             // a fixed rate: supercharge and snowballs don't change it
-  if (tw.wireT > 0 || tw.spawn < 1) return;
-  const tiles = new Set();
-  for (const i of wireRoutes(tw)) for (const k of routeTiles(i)) tiles.add(k);
-  const dmg = L.dmg * (1 + tw.buff);
-  let n = 0;
-  for (const e of G.enemies) {
-    if (!e.alive || e.rc.flying || isLiveElec(e) || !tiles.has(tileKey(e))) continue;
-    damage(e, dmg, { color: '#fff36a' });
-    n++;
-    if (Math.random() < 0.6) FX.spark(e.x, e.y, Math.random() < 0.5 ? '#fff36a' : WIRE_BLUE, 2, 120, 0.22);
-  }
-  if (!n) { tw.wireT = 0; return; }                          // nobody on the road yet: strike the moment someone steps on
-  tw.wireT = 1 / L.rate; tw.wirePulse = 1; tw.kick = 1;
-  snd('arc');
-}
-// the charged road: a glowing band, current racing toward the core, and crackling lightning along it
-function drawWire(t) {
-  const spans = new Map();                                     // route -> [[from, to], ...] (the part lit so far)
-  let pulse = 0;
-  for (const tw of G.towers) {
-    if (!isWireTw(tw)) continue;
-    const on = tw.wireOn == null ? 1 : tw.wireOn, e = on * on * (3 - 2 * on);
-    pulse = Math.max(pulse, tw.wirePulse || 0);
-    for (const i of wireRoutes(tw)) {
-      const L = MAP.paths[i].len, reach = e * L;
-      (spans.get(i) || spans.set(i, []).get(i)).push([tw.wireD0[i] - reach, tw.wireD0[i] + reach]);
-    }
-  }
-  if (!spans.size) return;
-  const lo = QUALITY.fx < 1;
-  ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  additive(true);
-  for (const [i, sp] of spans) {
-    const pth = MAP.paths[i], step = 9, lines = [];
-    let cur = null;
-    for (let d = 0; d <= pth.len + step - 1; d += step) {
-      const dd = Math.min(d, pth.len);
-      if (sp.some(([a, b]) => dd >= a && dd <= b)) { const q = pth.at(dd); (cur = cur || []).push(q); }
-      else if (cur) { lines.push(cur); cur = null; }
-    }
-    if (cur) lines.push(cur);
-    for (const pts of lines) {
-      if (pts.length < 2) continue;
-      const trace = () => { ctx.beginPath(); pts.forEach((q, j) => j ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); };
-      trace(); ctx.lineWidth = 24; ctx.strokeStyle = hexA('#ffe23d', 0.12 + pulse * 0.12); ctx.stroke();
-      ctx.lineWidth = 3; ctx.strokeStyle = hexA('#fff36a', 0.3 + pulse * 0.4); ctx.stroke();
-      ctx.setLineDash([5, 19]); ctx.lineDashOffset = -t * 150;
-      ctx.lineWidth = 2.2; ctx.strokeStyle = hexA('#ffffff', 0.7); ctx.stroke(); ctx.setLineDash([]);
-      for (let z = 0; z < (lo ? 1 : 2); z++) {                // two jittery lightning threads, redrawn every frame
-        ctx.beginPath();
-        pts.forEach((q, j) => {
-          const a = q.ang + Math.PI / 2, o = (Math.random() - 0.5) * (7 + pulse * 4);
-          const px = q.x + Math.cos(a) * o, py = q.y + Math.sin(a) * o;
-          j ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
-        });
-        ctx.lineWidth = 1.1 + pulse * 0.6; ctx.strokeStyle = hexA(z ? '#fff36a' : WIRE_BLUE, 0.5 + pulse * 0.4); ctx.stroke();
-      }
-    }
-  }
-  // each LIVE WIRE feeds the road with a flickering bolt
-  for (const tw of G.towers) {
-    if (!isWireTw(tw) || !tw.wireNear) continue;
-    const a = tw.wireNear, n = 5;
-    ctx.beginPath(); ctx.moveTo(tw.x, tw.y);
-    for (let j = 1; j < n; j++) { const f = j / n; ctx.lineTo(lerp(tw.x, a.x, f) + rand(-3.5, 3.5), lerp(tw.y, a.y, f) + rand(-3.5, 3.5)); }
-    ctx.lineTo(a.x, a.y);
-    ctx.lineWidth = 1.6 + pulse; ctx.strokeStyle = hexA('#ffffff', 0.55 + pulse * 0.4); ctx.stroke();
-    glow(a.x, a.y, 12 + pulse * 8, '#fff36a', 0.5 + pulse * 0.4);
-  }
-  additive(false);
-  ctx.restore();
-}
-const elecReach = e => (ELEC.r + (e.charged ? ELEC.wireR : 0)) * TILE;
+const elecReach = () => ELEC.r * TILE;
 function towerZapped(tw) {
   const up = tw.type === 'arc';
   FX.spark(tw.x, tw.y, up ? '#fff7a8' : '#f6ff3d', 8, 170, 0.3);
@@ -3227,18 +3127,10 @@ function update(dt) {
   if (G.musT <= 0 && !G.demo) { G.musT = 0.25; Sound.setIntensity(musicIntensity()); }
   // enemies
   G.domes = G.enemies.filter(a => a.alive && a.domeMax > 0);
-  G.wire = wireTiles();
   for (const e of G.enemies) {
     if (!e.alive) continue;
     e.age += dt;
     if (e.elecOff > 0) e.elecOff -= dt;
-    // v37: a live electrified enemy on a LIVE WIRE road feeds on it: bigger reach and +20% speed while on it, +20% health once
-    e.charged = !!G.wire && !e.rc.flying && isLiveElec(e) && G.wire.has(tileKey(e));
-    if (e.charged && !e.fed) {
-      e.fed = true; e.maxHp *= ELEC.wireHp; e.hp *= ELEC.wireHp;
-      FX.text(e.x, e.y - e.rc.r - 8, tr('charged'), '#fff36a', 10, { font: FONT_D, life: 0.8 });
-      FX.ring(e.x, e.y, e.rc.r, elecReach(e), '#f6ff3d', 0.4, 2);
-    }
     if (e.iceLock > 0) {                              // frozen solid: stays put, then thaws and its frost marks reset
       e.iceLock -= dt;
       if (e.iceLock <= 0) { e.marks = 0; FX.shards(e.x, e.y, '#e8fbff', 5, 90, 2.5); }
@@ -3246,7 +3138,7 @@ function update(dt) {
     const held = e.iceLock > 0;
     if (e.slowT > 0) { e.slowT -= dt; if (e.slowT <= 0) { e.slowAmt = 0; e.brittle = false; } }
     const sl = e.slowT > 0 ? 1 - e.slowAmt : 1;
-    if (!held) e.dist += e.speed * sl * dt * (e.charged ? ELEC.wireSpeed : 1);
+    if (!held) e.dist += e.speed * sl * dt;
     // Blink: teleport ahead
     let warped = false;
     if (e.rc.blink && e.age > 0.8 && !held) {
@@ -3335,7 +3227,6 @@ function update(dt) {
   for (const e of G.enemies) if (e.alive && e.age > 0.3 && isLiveElec(e)) (volts = volts || []).push(e);
   if (volts) {
     for (const tw of G.towers) {
-      if (isWireTw(tw)) continue;                                                  // the LIVE WIRE runs at a fixed rate
       if (!volts.some(e => (e.x - tw.x) ** 2 + (e.y - tw.y) ** 2 <= elecReach(e) ** 2)) continue;
       if (tw.zapT <= 0) towerZapped(tw);
       tw.zapT = ELEC.time;
@@ -3372,7 +3263,6 @@ function update(dt) {
     }
     if (d.support) continue;
     if (off) { tw.beamT = null; tw.heat = 0; continue; }
-    if (isWireTw(tw)) { wireUpdate(tw, dt); continue; }
     if (tw.type === 'rail') {
       tw.aim = railAngle(tw.dir);
       if (tw.cd <= 0 && tw.spawn >= 1) { const v = railVictims(tw); if (v.length) fireRail(tw, v); }
@@ -3560,7 +3450,6 @@ function drawWorld() {
   ctx.setTransform(k, 0, 0, k, (MAP_X + sx) * k, (MAP_Y + sy) * k);
 
   drawPathFlow(th, G.time);
-  drawWire(G.time);
   if ((G.level && G.level.air) || G.enemies.some(e => e.rc.flying)) drawFlightLines(G.time);
   drawPortals(G.time, G.portalPulse);
   drawCore(G.time, G.demo ? G.maxLives : G.lives, G.maxLives, G.coreHit);
@@ -3622,7 +3511,7 @@ function drawWorld() {
   for (const e of G.enemies) {
     if (!e.alive || !isLiveElec(e)) continue;
     ctx.beginPath(); ctx.arc(e.x, e.y, elecReach(e), 0, TAU);
-    ctx.lineWidth = e.charged ? 1.8 : 1.2; ctx.strokeStyle = e.charged ? 'rgba(255,247,120,0.6)' : 'rgba(246,255,61,0.35)'; ctx.stroke();
+    ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(246,255,61,0.35)'; ctx.stroke();
   }
   for (const e of G.enemies) {                                   // burning enemies: the range that sets towers alight
     if (!e.alive || !e.fire || e.doused) continue;
@@ -4258,7 +4147,7 @@ function drawTooltip(L, m) {
       const cost = upgradeCost(tw);
       title = tr('up_title', tw.lv + 2, cost); line2 = statLine(d.lv[tw.lv], d.lv[tw.lv + 1]);
       if (d.lv[tw.lv + 1].master) { title = `${tr('master_bolt')}  ·  ${cost}`; color = MASTER_GOLD; }   // v36
-      if (d.lv[tw.lv + 1].wire) { const W4 = d.lv[tw.lv + 1]; title = `${tr('live_wire')}  ·  ${cost}`; color = WIRE_BLUE; line2 = tr('wire_line', Math.round(W4.dmg * 10) / 10, W4.rate); }   // v37
+      if (d.lv[tw.lv + 1].wire) { const W4 = d.lv[tw.lv + 1]; title = `${tr('live_wire')}  ·  ${cost}`; color = WIRE_BLUE; line2 = tr('wire_line', W4.rate, W4.chains, W4.bolt); }   // v37/v39
       bad = G.gold < cost; line3 = bad ? tr('need_gold', cost - G.gold) : tr('letgo_upgrade');
     } else if (m.sel === 'turn') {
       title = tr('turn_to', ARROWS[(tw.dir + 1) % 4]);
