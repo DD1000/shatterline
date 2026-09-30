@@ -28,7 +28,7 @@ const COLS = 9, ROWS = 13;     // map grid
 const HUD_H = 50, BAR_H = 78;  // top HUD + bottom control bar
 const MIN_H = HUD_H + ROWS * TILE + BAR_H;
 const LEVELS_PER_WORLD = 10;
-const BUILD = 'v32';          // shown in lab analytics reports
+const BUILD = 'v33';          // shown in lab analytics reports
 
 // Title-screen showcase map
 const DEMO_PATH = [[1,0],[1,2],[7,2],[7,5],[1,5],[1,8],[7,8],[7,10],[4,10],[4,12]];
@@ -1123,6 +1123,7 @@ const LAB = LAB_DEFS.map((d, i) => {
 });
 const levelOf = n => n >= LAB_START ? LAB[n - LAB_START] : LEVELS[n - 1];
 const isLab = n => n >= LAB_START;
+const labVer = n => (levelOf(n).lab.v || 1);
 // =====================================================================
 //  AUDIO: every sound is synthesized live with WebAudio (no files)
 // =====================================================================
@@ -2225,6 +2226,7 @@ const Save = {
       if (d && d.max) this.d = Object.assign(this.d, d);
     } catch (e) {}
     this.d.max = clamp(this.d.max | 0, 1, LEVELS.length);
+    this.freshLabs(); this.store();
     // players who had cleared the old final level carry on into the new ones
     if (this.d.done && this.d.max < LEVELS.length && this.stars(this.d.max) > 0) { this.d.max += 1; this.d.done = false; }
   },
@@ -2235,7 +2237,17 @@ const Save = {
   // start over: levels, stars, towers and loadout go back to a fresh install (language and settings stay)
   reset() { this.d = { max: 1, stars: {}, loadout: ['bolt'], known: ['bolt'], done: false, lab: this.d.lab || {}, labLoadout: this.d.labLoadout || ['nova', 'bolt', 'arc', 'frost'] }; this.store(); },
   stars(n) { return isLab(n) ? (this.labRec(n).stars || 0) : this.d.stars[n] || 0; },
-  labRec(n) { this.d.lab = this.d.lab || {}; return this.d.lab[n] || (this.d.lab[n] = { stars: 0, plays: 0, wins: 0 }); },
+  labRec(n) { this.d.lab = this.d.lab || {}; return this.d.lab[n] || (this.d.lab[n] = { stars: 0, plays: 0, wins: 0, v: labVer(n) }); },
+  // v33 (user: "the playtests still aren't cleared"): a lab whose version changed starts over completely.
+  // Stars, wins, plays, last result and the COMPLETED stamp reset; the old runs stay for the analytics report.
+  freshLabs() {
+    const L = this.d.lab || {};
+    for (const lv of LAB) {
+      const r = L[lv.n], v = lv.lab.v || 1;
+      if (r && (r.v || 1) !== v) L[lv.n] = { stars: 0, plays: 0, wins: 0, v, runs: r.runs || [] };
+    }
+    this.d.lab = L;
+  },
   total() { return Object.values(this.d.stars).reduce((a, b) => a + b, 0); },
   unlockedTowers() { return TOWER_ORDER.filter(t => TOWERS[t].unlock <= this.open()); },
   complete(n, stars) {
@@ -4580,8 +4592,8 @@ function labReport() {
     const r = labs[lv.n], d = lv.lab, econ = lv.econ.key === 'payday' ? 'PAYDAY' : `LEAN ${Math.round(lv.econ.bounty * 100)}%`;
     out.push('');
     out.push(`== LAB ${i + 1} · ${STR.en['lab_name_' + d.id]} [${d.id}${d.v ? ' v' + d.v : ''}] · ${econ} · ${lv.waves.length} waves · start ${lv.gold} gold${labDone(lv) ? ' · COMPLETED' : ''}`);
-    if (!r || !r.plays) { out.push('not played yet'); return; }
-    out.push(`${r.wins} wins / ${r.plays} plays${r.quits ? ` · quit ${r.quits}x` : ''} · best ${starStr(r.stars)}`);
+    if (!r || (!r.plays && !(r.runs || []).length)) { out.push('not played yet'); return; }
+    out.push(`this version: ${r.wins} wins / ${r.plays} plays${r.quits ? ` · quit ${r.quits}x` : ''} · best ${starStr(r.stars)}${!r.plays ? ' (older runs below are from before the reset)' : ''}`);
     const a = r.runs || [];
     if (!a.length && r.last) out.push(`last (before tracking): ${r.last.win ? 'WON' : 'LOST'} · lives ${r.last.lives} · wave ${r.last.wave}/${r.last.waves} · gold earned ${r.last.earned} spent ${r.last.spent} left ${Math.floor(r.last.left)}`);
     a.slice().reverse().forEach((x, k) => out.push(...runLines(x, k === 0 ? 'latest run' : `${k + 1} runs back`)));
@@ -4643,7 +4655,7 @@ function toLab() {
 // Lab screen timing (v28): a completed lab's COMPLETED stamp slams down once, the first time you see it
 const LABFX = { t0: 0, last: 0, hit: {}, fall: {} }, STAMP_FALL = 0.2;
 function labDone(lv) { const r = (Save.d.lab || {})[lv.n]; return !!r && r.doneV === (lv.lab.v || 1); }
-function labPlays() { return LAB.reduce((a, lv) => a + (((Save.d.lab || {})[lv.n] || {}).plays || 0), 0); }
+function labPlays() { return LAB.reduce((a, lv) => { const r = (Save.d.lab || {})[lv.n] || {}; return a + (r.plays || 0) + (r.runs || []).length; }, 0); }
 function drawLab() {
   dim(0.8); blocker();
   const now = performance.now(), cardOpen = !!SAGA.card;
