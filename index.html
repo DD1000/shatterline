@@ -28,7 +28,7 @@ const COLS = 9, ROWS = 13;     // map grid
 const HUD_H = 50, BAR_H = 78;  // top HUD + bottom control bar
 const MIN_H = HUD_H + ROWS * TILE + BAR_H;
 const LEVELS_PER_WORLD = 10;
-const BUILD = 'v34';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
+const BUILD = 'v35';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
 
 // Title-screen showcase map
 const DEMO_PATH = [[1,0],[1,2],[7,2],[7,5],[1,5],[1,8],[7,8],[7,10],[4,10],[4,12]];
@@ -112,11 +112,13 @@ const FIRE = { r: 1.95, every: 3.5, burn: 30, refund: 0.25 };
 const TOWERS = {
   // v29 (user): BOLT does 20% less damage per second. It fires 20% slower (was 2.8 / 3.2 / 3.8 / 4.4 shots a second);
   // the damage per hit stays, so armor doesn't hit it any harder than before
-  bolt:   { name:'BOLT',   color:'#2ef2ff', sides:4, cost:50,  crit:0.1, unlock:1, desc:'Rapid laser. Can crit.',
-            lv:[ { dmg:7.5,  rate:2.24, range:2.3 },
-                 { cost:60,  dmg:8.25, rate:2.24, range:2.5 },
-                 { cost:120, dmg:9.08, rate:2.24, range:2.8 },
-                 { cost:200, dmg:9.98, rate:2.24, range:3.0 } ] },
+  // v35 (user): crits follow a pattern instead of a 10% chance. crits = how many of every 4 shots crit (the last ones
+  // in each group of 4): level 1 every 4th shot, each upgrade one more, level 4 every shot. A crit does x2.5 damage.
+  bolt:   { name:'BOLT',   color:'#2ef2ff', sides:4, cost:50,  critMul:2.5, unlock:1, desc:'Rapid laser. Every 4th shot crits; each upgrade crits one more. Level 4: every shot.',
+            lv:[ { dmg:7.5,  rate:2.24, range:2.3, crits:1 },
+                 { cost:60,  dmg:8.25, rate:2.24, range:2.5, crits:2 },
+                 { cost:120, dmg:9.08, rate:2.24, range:2.8, crits:3 },
+                 { cost:200, dmg:9.98, rate:2.24, range:3.0, crits:4 } ] },
   frost:  { name:'FROST',  color:'#a3b8ff', sides:6, star:true, cost:70, unlock:3, pulse:true, desc:'Freezing pulse that slows all nearby. Never burns, and puts out fires right next to it.',
             lv:[ { dmg:5,  rate:1.0, range:1.8, slow:0.35 },
                  { cost:80,  dmg:5.5,  rate:1.0, range:2.0, slow:0.45 },
@@ -277,7 +279,7 @@ const STR = {
     info_elec: 'Some enemies are electrified: towers right next to them shut down. ARC and EMP help.',
     info_ice: 'Some enemies are iced: their snowballs slow your towers. FROST loves it.',
     world_from: 'WORLD {0} · FROM LEVEL {1}', world_n: 'WORLD {0}',
-    s_dmg: 'DMG', s_dps: 'DPS', s_gold: 'GOLD', s_every: 'EVERY', s_boost: 'BOOST', s_chain: 'CHAIN', s_slow: 'SLOW', s_blast: 'BLAST', s_range: 'RANGE', s_shield: 'SHIELD', s_brittle: '+BRITTLE', s_rate: 'RATE', sec: 's',
+    s_dmg: 'DMG', s_dps: 'DPS', s_gold: 'GOLD', s_every: 'EVERY', s_boost: 'BOOST', s_chain: 'CHAIN', s_slow: 'SLOW', s_blast: 'BLAST', s_range: 'RANGE', s_shield: 'SHIELD', s_brittle: '+BRITTLE', s_rate: 'RATE', s_crit: 'CRIT', sec: 's',
     choose_lang: 'CHOOSE LANGUAGE',
     cond_heat: 'HEATWAVE · NO FROST', cond_rain: 'RAINSTORM · NO PYRO',
     struck: 'LIGHTNING!', doused: 'DOUSED', on_fire: 'ON FIRE', burned_down: 'BURNED DOWN  +{0}', fire_badge: 'FIRE',
@@ -350,7 +352,7 @@ const STR = {
     info_elec: '部分敌人带电：紧挨着它们的塔会短路。电弧和电磁有帮助。',
     info_ice: '部分敌人带冰霜：它们的雪球会让塔变慢。冰霜塔会因此超载。',
     world_from: '世界 {0} · 第 {1} 关起', world_n: '世界 {0}',
-    s_dmg: '伤害', s_dps: '秒伤', s_gold: '金币', s_every: '间隔', s_boost: '增益', s_chain: '连锁', s_slow: '减速', s_blast: '爆炸', s_range: '射程', s_shield: '破盾', s_brittle: '+易碎', s_rate: '射速', sec: '秒',
+    s_dmg: '伤害', s_dps: '秒伤', s_gold: '金币', s_every: '间隔', s_boost: '增益', s_chain: '连锁', s_slow: '减速', s_blast: '爆炸', s_range: '射程', s_shield: '破盾', s_brittle: '+易碎', s_rate: '射速', s_crit: '暴击', sec: '秒',
     choose_lang: '选择语言',
     cond_heat: '热浪 · 禁用冰霜', cond_rain: '暴雨 · 禁用烈焰',
     struck: '雷击！', doused: '熄灭', on_fire: '着火', burned_down: '烧毁  +{0}', fire_badge: '着火',
@@ -424,7 +426,7 @@ const STR = {
     info_elec: 'Algunos enemigos están electrificados: las torres junto a ellos se apagan. ARCO y EMP ayudan.',
     info_ice: 'Algunos enemigos están helados: sus bolas de nieve ralentizan tus torres. A HIELO le encanta.',
     world_from: 'MUNDO {0} · DESDE EL NIVEL {1}', world_n: 'MUNDO {0}',
-    s_dmg: 'DAÑO', s_dps: 'DPS', s_gold: 'ORO', s_every: 'CADA', s_boost: 'BONO', s_chain: 'CADENA', s_slow: 'FRENO', s_blast: 'ÁREA', s_range: 'ALCANCE', s_shield: 'ESCUDO', s_brittle: '+FRÁGIL', s_rate: 'RITMO', sec: 's',
+    s_dmg: 'DAÑO', s_dps: 'DPS', s_gold: 'ORO', s_every: 'CADA', s_boost: 'BONO', s_chain: 'CADENA', s_slow: 'FRENO', s_blast: 'ÁREA', s_range: 'ALCANCE', s_shield: 'ESCUDO', s_brittle: '+FRÁGIL', s_rate: 'RITMO', s_crit: 'CRÍTICO', sec: 's',
     choose_lang: 'ELIGE IDIOMA',
     struck: '¡RAYO!', doused: 'APAGADO', on_fire: 'EN LLAMAS', burned_down: 'QUEMADA  +{0}', fire_badge: 'FUEGO',
     fire_note: 'En llamas aquí: lanza bolas de fuego que incendian las torres cercanas. MAREA, o un HIELO justo al lado, apaga el fuego.',
@@ -463,7 +465,7 @@ function tr(id, ...a) {
 const ZH = {
   tower: { bolt: '光弹', frost: '冰霜', nova: '新星', arc: '电弧', emp: '电磁', mint: '铸币', prism: '棱镜', rail: '轨道炮', beacon: '信标', flak: '防空', pyro: '烈焰', tide: '潮汐' },
   towerDesc: {
-    bolt: '快速光弹，可暴击。', frost: '冰冻脉冲，减速附近所有敌人。不会着火，还能扑灭紧挨着的塔上的火。', nova: '等离子炸弹，范围伤害，无视护甲。', arc: '在敌人之间连锁的闪电。带电敌人会让它超载。',
+    bolt: '快速光弹。每第 4 发暴击，每次升级多一发暴击，4 级时发发暴击。', frost: '冰冻脉冲，减速附近所有敌人。不会着火，还能扑灭紧挨着的塔上的火。', nova: '等离子炸弹，范围伤害，无视护甲。', arc: '在敌人之间连锁的闪电。带电敌人会让它超载。',
     emp: '最多 4 道激光专找护盾：剥除护盾、击破护罩、让带电敌人短路。几乎没有伤害。', mint: '波次进行时不断产出金币。', prism: '光束越烧越强，穿透护甲和护盾。',
     rail: '沿一条固定直线射击，贯穿线上所有敌人。', beacon: '提升相邻塔的伤害。', flak: '防空导弹。唯一能击中飞行敌人的塔。',
     pyro: '短程火焰喷射，带少量溅射。对寒冷敌人造成三倍伤害。', tide: '水柱扑灭着火的塔，并将着火的敌人永久浇灭。几乎没有伤害。',
@@ -509,7 +511,7 @@ const ZH = {
 const ES = {
   tower: { bolt: 'RAYO', frost: 'HIELO', nova: 'NOVA', arc: 'ARCO', emp: 'EMP', mint: 'CECA', prism: 'PRISMA', rail: 'RIEL', beacon: 'FARO', flak: 'FLAK', pyro: 'PIRO', tide: 'MAREA' },
   towerDesc: {
-    bolt: 'Láser rápido. Puede hacer críticos.', frost: 'Pulso helado que frena a todos los cercanos. Nunca arde y apaga el fuego de las torres de al lado.',
+    bolt: 'Láser rápido. Cada 4.º disparo es crítico; cada mejora añade otro. Nivel 4: todos.', frost: 'Pulso helado que frena a todos los cercanos. Nunca arde y apaga el fuego de las torres de al lado.',
     nova: 'Bomba de plasma. Daño en área, atraviesa armadura.', arc: 'Relámpago que salta entre enemigos. Los eléctricos lo sobrecargan.',
     emp: 'Hasta 4 láseres que buscan escudos: los quita, rompe cúpulas y cortocircuita a los eléctricos. Casi sin daño.',
     mint: 'Genera oro mientras hay oleadas.', prism: 'Rayo que se calienta sobre un objetivo. Atraviesa armadura y escudos.',
@@ -2589,8 +2591,9 @@ function fire(tw, tg) {
   tw.aim = Math.atan2(tg.y - tw.y, tg.x - tw.x);
   const mx = tw.x + Math.cos(tw.aim) * 14, my = tw.y + Math.sin(tw.aim) * 14;
   if (tw.type === 'bolt') {
-    const crit = Math.random() < d.crit;
-    G.shots.push({ x: mx, y: my, tg, lx: tg.x, ly: tg.y, dmg: L.dmg * boost * (crit ? 2.5 : 1), crit, color: c, sp: 560, vx: 0, vy: 0, src: tw.type });
+    tw.shots = (tw.shots || 0) + 1;                                    // v35: shot k of every 4 crits if k > 4 - crits
+    const crit = ((tw.shots - 1) % 4) >= 4 - (L.crits || 0);
+    G.shots.push({ x: mx, y: my, tg, lx: tg.x, ly: tg.y, dmg: L.dmg * boost * (crit ? d.critMul : 1), crit, color: c, sp: 560, vx: 0, vy: 0, src: tw.type });
     FX.flash(mx, my, 14, c, 0.08);
     snd('bolt');
   } else if (tw.type === 'arc') {
@@ -4019,7 +4022,7 @@ function statLine(a, b) {
   const s = [];
   const f = (k, lab, fmt = v => v) => { if (a[k] != null && b[k] != null && a[k] !== b[k]) s.push(`${lab} ${fmt(a[k])}→${fmt(b[k])}`); };
   f('dmg', tr('s_dmg')); f('rate', tr('s_rate'), v => v + '/' + tr('sec')); f('dps', tr('s_dps')); f('gold', tr('s_gold')); f('every', tr('s_every'), v => v + tr('sec')); f('shield', tr('s_shield')); f('buff', tr('s_boost'), v => '+' + Math.round(v * 100) + '%');
-  f('beams', tr('s_beams')); f('chains', tr('s_chain')); f('slow', tr('s_slow'), v => Math.round(v * 100) + '%'); f('splash', tr('s_blast'));
+  f('crits', tr('s_crit'), v => v + '/4'); f('beams', tr('s_beams')); f('chains', tr('s_chain')); f('slow', tr('s_slow'), v => Math.round(v * 100) + '%'); f('splash', tr('s_blast'));
   if (s.length < 2) f('range', tr('s_range'));
   if (b.brittle && !a.brittle) s.push(tr('s_brittle'));
   return s.slice(0, 3).join('  ·  ');
