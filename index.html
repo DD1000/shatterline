@@ -28,7 +28,7 @@ const COLS = 9, ROWS = 13;     // map grid
 const HUD_H = 50, BAR_H = 78;  // top HUD + bottom control bar
 const MIN_H = HUD_H + ROWS * TILE + BAR_H;
 const LEVELS_PER_WORLD = 10;
-const BUILD = 'v41';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
+const BUILD = 'v42';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
 
 // Title-screen showcase map
 const DEMO_PATH = [[1,0],[1,2],[7,2],[7,5],[1,5],[1,8],[7,8],[7,10],[4,10],[4,12]];
@@ -74,15 +74,57 @@ const ENEMIES = {
   titan:    { name:'Titan',   sides:8, r:17,  color:'#ff8a3d', speed:0.45, hp:420, gold:28, armor:7, leak:3, spin:0.2, eye:true, thick:true, inner:{ sides:4, scale:0.5, spin:0.8 }, intro:25,
               desc:'Huge, slow and heavily armored.' },
   volt:     { name:'Volt',    sides:3, star:true, r:10, color:'#f6ff3d', speed:1.0, hp:48, gold:8, armor:0, leak:1, spin:1.6, eye:true, elec:true, intro:37,
-              desc:'Electrified: towers right next to it shut down for 4s. ARC gets supercharged instead. EMP shorts it out.' },
+              desc:'Electrified: towers right next to it shut down for 4s (not EMP; ARC gets supercharged). Immune to ARC. EMP shorts it out.' },
   yeti:     { name:'Yeti',    sides:6, star:true, r:13, color:'#6fd8ff', speed:0.7, hp:130, gold:13, armor:2, leak:2, spin:0.35, eye:true, thick:true, ice:true, inner:{ sides:6, scale:0.45, spin:-0.8 }, intro:45,
               desc:'Throws snowballs at every tower in range each second. Hit towers fire much slower for 5s. FROST gets supercharged instead.' },
 };
 ENEMIES.scorch = { name:'Scorch', sides:4, star:true, r:10.5, color:'#ff7a1a', speed:1.05, hp:55, gold:9, armor:0, leak:1, spin:1.2, eye:true, fire:true, intro:52,
               desc:'On fire: tosses a fireball at a nearby tower every few seconds. A hit tower burns down (25% refund) unless TIDE or a FROST next to it puts it out.' };
+// ---- v42 (user): a boss version of every regular enemy (lab-only for now: intro 999 keeps them out of the campaign).
+// Each is a giant of its kind with a crown, boss rules (boss music, big shatter, the boss health bar) and its base's trick
+// turned up. summon.n = how many it calls each time. elecR / iceR / fireR / fireEvery: bigger auras than the normal ones.
+Object.assign(ENEMIES, {
+  boss_grunt:    { name:'Block King',   baseOf:'grunt',    sides:4, r:20, color:'#ff3d9a', speed:0.6,  hp:520,  gold:70,  armor:3,  leak:5, spin:0.4, eye:true, thick:true, inner:{ sides:4, scale:0.55, spin:-0.6 },
+                   boss:true, crown:true, intro:999, summon:{ every:3.5, types:['grunt'], n:3 },
+                   desc:'Boss. A giant Block with thick armor. Calls in Blocks as it walks.' },
+  boss_scout:    { name:'Dart Queen',   baseOf:'scout',    sides:3, r:17, color:'#8cff3d', speed:1.35, hp:300,  gold:60,  armor:1,  leak:5, spin:0, eye:true, point:true, trail:true, orbit:2,
+                   boss:true, crown:true, intro:999, summon:{ every:3, types:['scout'], n:3 },
+                   desc:'Boss. Fast and fragile for a boss. Calls in Darts as it runs.' },
+  boss_splitter: { name:'Spore Mother', baseOf:'splitter', sides:0, r:22, color:'#35ffb5', speed:0.6,  hp:480,  gold:70,  armor:0,  leak:5, spin:0, eye:true, orbit:6, inner:{ sides:0, scale:0.62, spin:0 },
+                   split:{ type:'splitter', n:4 }, boss:true, crown:true, intro:999, summon:{ every:3, types:['mite'], n:3 },
+                   desc:'Boss. Drops Mites as it walks and bursts into 4 Spores when destroyed.' },
+  boss_brute:    { name:'Fortress',     baseOf:'brute',    sides:6, r:24, color:'#a066ff', speed:0.42, hp:700,  gold:90,  armor:10, leak:6, spin:0.25, eye:true, thick:true, inner:{ sides:6, scale:0.6, spin:-0.5 },
+                   boss:true, crown:true, intro:999, summon:{ every:6, types:['brute'], n:2 },
+                   desc:'Boss. Enormous armor: small hits barely scratch it. Calls in Bulwarks.' },
+  boss_aegis:    { name:'Bastion',      baseOf:'aegis',    sides:5, r:20, color:'#4aa8ff', speed:0.55, hp:420,  gold:80,  armor:0,  leak:5, spin:0.4, eye:true, inner:{ sides:5, scale:0.55, spin:-0.8 },
+                   dome:{ r:2.6, hp:500 }, boss:true, crown:true, intro:999, summon:{ every:4, types:['grunt'], n:2 },
+                   desc:'Boss. Its huge dome covers everything nearby (they take 20% damage). EMP pops it. Calls in Blocks.' },
+  boss_blink:    { name:'Phantom',      baseOf:'blink',    sides:4, r:18, color:'#f4f2ff', speed:0.65, hp:380,  gold:70,  armor:0,  leak:5, spin:0, eye:true, inner:{ sides:4, scale:0.5, spin:1.2 },
+                   blink:{ every:2.4, dist:2.2 }, boss:true, crown:true, intro:999, summon:{ every:5, types:['blink'], n:2 },
+                   desc:'Boss. Teleports far ahead every few seconds. Calls in Blinks.' },
+  boss_mender:   { name:'Lifebloom',    baseOf:'mender',   sides:0, r:20, color:'#ff9ce0', speed:0.55, hp:420,  gold:80,  armor:0,  leak:5, spin:0, plus:true, orbit:4,
+                   heal:{ every:2, radius:2.8, pct:0.1 }, boss:true, crown:true, intro:999, summon:{ every:4, types:['grunt'], n:2 },
+                   desc:'Boss. Heals every enemy around it every 2 seconds. Calls in Blocks.' },
+  boss_titan:    { name:'Colossus',     baseOf:'titan',    sides:8, r:27, color:'#ff8a3d', speed:0.33, hp:1100, gold:120, armor:9,  leak:8, spin:0.15, eye:true, thick:true, inner:{ sides:4, scale:0.5, spin:0.6 },
+                   boss:true, crown:true, intro:999,
+                   desc:'Boss. Huge, slow and very heavily armored. Takes 8 lives if it reaches the core.' },
+  boss_glider:   { name:'Stormwing',    baseOf:'glider',   sides:3, r:19, color:'#9fe8ff', speed:0.7,  hp:420,  gold:80,  armor:0,  leak:5, spin:0, eye:true, point:true, flying:true,
+                   boss:true, crown:true, intro:999, summon:{ every:4, types:['glider'], n:2 },
+                   desc:'Boss. Flies straight over the path; only FLAK can hit it. Calls in Gliders.' },
+  boss_volt:     { name:'Overload',     baseOf:'volt',     sides:3, star:true, r:19, color:'#f6ff3d', speed:0.75, hp:420, gold:80, armor:0, leak:5, spin:1.2, eye:true, inner:{ sides:3, scale:0.45, spin:-1.6 },
+                   elec:true, elecR:2.5, boss:true, crown:true, intro:999, summon:{ every:5, types:['volt'], n:1 },
+                   desc:'Boss. Electrified with a huge reach: towers within 2.5 tiles shut down (not EMP). Immune to ARC. Calls in Volts.' },
+  boss_yeti:     { name:'Frost Giant',  baseOf:'yeti',     sides:6, star:true, r:22, color:'#6fd8ff', speed:0.5, hp:700, gold:90, armor:3, leak:6, spin:0.3, eye:true, thick:true, inner:{ sides:6, scale:0.45, spin:-0.8 },
+                   ice:true, iceR:3, boss:true, crown:true, intro:999, summon:{ every:7, types:['yeti'], n:1 },
+                   desc:'Boss. Iced: throws snowballs at every tower within 3 tiles. Calls in Yetis.' },
+  boss_scorch:   { name:'Inferno',      baseOf:'scorch',   sides:4, star:true, r:20, color:'#ff7a1a', speed:0.7, hp:480, gold:80, armor:0, leak:5, spin:1, eye:true, inner:{ sides:4, scale:0.45, spin:-1.4 },
+                   fire:true, fireR:2.6, fireEvery:1.75, boss:true, crown:true, intro:999, summon:{ every:6, types:['scorch'], n:1 },
+                   desc:'Boss. On fire: tosses fireballs twice as often and further. Calls in Scorches.' },
+});
+const BOSS_VERSIONS = ['boss_grunt', 'boss_scout', 'boss_splitter', 'boss_brute', 'boss_aegis', 'boss_blink', 'boss_mender', 'boss_titan', 'boss_glider', 'boss_volt', 'boss_yeti', 'boss_scorch'];
 // Carriers pay for what's inside (user, v27): a Spore that reaches the core costs its own life plus one per Mite in it (1 + 3 = 4)
 const coreDamage = rc => rc.leak + (rc.split ? rc.split.n * ENEMIES[rc.split.type].leak : 0);
-const ENEMY_ORDER = ['grunt', 'scout', 'splitter', 'brute', 'boss', 'aegis', 'blink', 'mender', 'titan', 'glider', 'volt', 'yeti', 'scorch'];
+const ENEMY_ORDER = ['grunt', 'scout', 'splitter', 'brute', 'boss', 'aegis', 'blink', 'mender', 'titan', 'glider', 'volt', 'yeti', 'scorch'].concat(BOSS_VERSIONS);
 
 // ---- Electric and ice -----------------------------------------------
 // ELECTRIFIED enemies (the Volt, plus a random enemy type on some levels) short out every tower
@@ -136,7 +178,7 @@ const TOWERS = {
   // v39 (user): the LIVE WIRE's electrified road is gone.
   // v40/v41 (user): the LIVE WIRE chains like level 3 (8 chains, normal targeting), and every zap also sends a pulse down all
   // tracks from the first enemy it hit that deals trackDmg (x beacon boost) to each ground enemy it passes (see PULSE).
-  arc:    { name:'ARC',    color:'#ffe23d', sides:3, cost:85,  unlock:9, desc:'Chain lightning; each upgrade fires faster. Electrified enemies supercharge it. Level 4: LIVE WIRE, each zap also sends a pulse down every track.',
+  arc:    { name:'ARC',    color:'#ffe23d', sides:3, cost:85,  unlock:9, desc:'Chain lightning; each upgrade fires faster. Electrified enemies supercharge it but are immune to it. Level 4: LIVE WIRE, each zap also sends a pulse down every track.',
             lv:[ { dmg:17.5, rate:0.9,  range:2.3, chains:3 },
                  { cost:100, dmg:19.25, rate:1.08, range:2.4, chains:4 },
                  { cost:170, dmg:21.18, rate:1.3, range:2.6, chains:6 },
@@ -170,7 +212,7 @@ TOWERS.flak = { name:'FLAK', color:'#ff6f61', sides:3, cost:90, unlock:32, air:t
                  { cost:240, dmg:26.62, rate:1.3, range:4.1, splash:0.9 } ] };
 // EMP: up to 4 lasers per shot that go for shields first (personal shields, Aegis domes, electrified
 // enemies). A hit strips the shield for good, pops the dome, or shorts out the electricity. Tiny damage.
-TOWERS.emp = { name:'EMP', color:'#3d7bff', sides:5, cost:75, unlock:12, shieldBreak:true, beams:4, desc:'Up to 4 lasers that hunt shields. Strips them, pops domes, shorts out electrified enemies. Barely any damage.',
+TOWERS.emp = { name:'EMP', color:'#3d7bff', sides:5, cost:75, unlock:12, shieldBreak:true, beams:4, desc:'Up to 4 lasers that hunt shields. Strips them, pops domes, shorts out electrified enemies. Barely any damage. Electrified enemies can\'t shut it down.',
             lv:[ { dmg:1.25,   rate:1.1, range:2.4, beams:4 },
                  { cost:85,  dmg:1.38, rate:1.1, range:2.7, beams:4 },
                  { cost:140, dmg:1.51,   rate:1.1, range:3.0, beams:4 },
@@ -245,7 +287,7 @@ const STR = {
   en: {
     combo: 'COMBO', early_call: 'EARLY CALL  +{0}', wave: 'WAVE {0}', boss_incoming: 'BOSS INCOMING', final_wave: 'FINAL WAVE',
     cond_noBounty: 'NO BOUNTY · BUILD MINTS', cond_air: 'AIR RAID · BUILD FLAK', cond_shielded: 'HEAVY SHIELDS · USE EMP OR PRISM',
-    warden: 'WARDEN', armored_boss: 'ARMORED BOSS', warden_x: 'WARDEN ×{0}', tower_lv: 'LEVEL {0}', master_bolt: 'MASTER BOLT', live_wire: 'LIVE WIRE', wire_line: 'Zaps faster ({0}/s) and chains to {1}. Each zap also sends a pulse down every track that deals {2} to each enemy it passes.', level_n: 'LEVEL {0}',
+    warden: 'WARDEN', armored_boss: 'ARMORED BOSS', warden_x: 'WARDEN ×{0}', tower_lv: 'LEVEL {0}', master_bolt: 'MASTER BOLT', boss_word: 'BOSS', boss_down: '{0} DOWN', boss_down_gold: '{0} DOWN  +{1}', bosses_x: 'BOSSES ×{0}', immune: 'IMMUNE', live_wire: 'LIVE WIRE', wire_line: 'Zaps faster ({0}/s) and chains to {1}. Each zap also sends a pulse down every track that deals {2} to each enemy it passes.', level_n: 'LEVEL {0}',
     m_10: 'NICE', m_25: 'AWESOME', m_50: 'UNREAL', m_100: 'LEGENDARY', m_200: 'GODLIKE',
     combo_gold: '{0} COMBO  +{1} GOLD', combo_only: '{0} COMBO', shattered: 'SHATTERED', warden_down: 'WARDEN DOWN', warden_down_gold: 'WARDEN DOWN  +{0}',
     wave_clear: 'WAVE {0} CLEAR', wave_clear_gold: 'WAVE {0} CLEAR  +{1}',
@@ -279,9 +321,9 @@ const STR = {
     info_light: 'Some enemies carry shields. EMP or PRISM helps, but you can manage without.',
     shield_badge: 'SHIELD', shielded_note: 'Shielded here: takes 20% damage until an EMP strips it.', stripped: 'STRIPPED', dome_down: 'DOME DOWN',
     elec_badge: 'ELECTRIC', ice_badge: 'ICED', shorted: 'SHORTED', supercharged: 'SUPERCHARGED', chilled: 'CHILLED', frozen: 'FROZEN',
-    elec_note: 'Electrified here: towers right next to it shut down for 4s. ARC gets supercharged. EMP shorts it out.',
+    elec_note: 'Electrified here: towers right next to it shut down for 4s (not EMP; ARC gets supercharged). Immune to ARC. EMP shorts it out.',
     ice_note: 'Iced here: throws snowballs that slow towers in range for 5s. FROST gets supercharged.',
-    info_elec: 'Some enemies are electrified: towers right next to them shut down. ARC and EMP help.',
+    info_elec: 'Some enemies are electrified: towers right next to them shut down, and ARC can\'t hurt them. EMP keeps working and shorts them out.',
     info_ice: 'Some enemies are iced: their snowballs slow your towers. FROST loves it.',
     world_from: 'WORLD {0} · FROM LEVEL {1}', world_n: 'WORLD {0}',
     s_dmg: 'DMG', s_dps: 'DPS', s_gold: 'GOLD', s_every: 'EVERY', s_boost: 'BOOST', s_chain: 'CHAIN', s_slow: 'SLOW', s_blast: 'BLAST', s_range: 'RANGE', s_shield: 'SHIELD', s_brittle: '+BRITTLE', s_rate: 'RATE', s_crit: 'CRIT', sec: 's',
@@ -303,6 +345,9 @@ const STR = {
     lab_tests_bossrush: 'A Warden every 4 waves, two at wave 20 and two more at the end. Each shields up at 60% and rages at 30%.',
     lab_tests_split: 'Two lanes, and the pressure swaps sides every wave. Cover both, or hold the merge?',
     lab_tests_gauntlet: 'Every threat in the game in 25 waves: flyers, shields, fire, ice, electricity, and a Warden.',
+    lab_name_bosszoo: 'BOSS ZOO I', lab_name_bosszoo2: 'BOSS ZOO II',
+    lab_tests_bosszoo: 'Six new bosses, one at a time: Block King, Dart Queen, Spore Mother, Fortress, Bastion and Phantom. Later they return with shields, fire, ice and electricity.',
+    lab_tests_bosszoo2: 'Six more: Lifebloom, Colossus, Stormwing (bring FLAK), Overload, Frost Giant and Inferno. Electrified enemies are immune to ARC; EMP keeps working next to them.',
     lab_won_s: 'WON · {0} LIVES · {1} LEFT', lab_lost_s: 'LOST · WAVE {0}/{1}',
     lab_tests_counters: 'Hand-made waves, each a different threat. Pick 4 towers that cover them all.',
     lab_tests_payday: 'Kills pay nothing, each wave pays a wage (now a smaller one). Does fixed income make you plan?',
@@ -318,7 +363,7 @@ const STR = {
   zh: {
     combo: '连击', early_call: '提前召唤  +{0}', wave: '第 {0} 波', boss_incoming: '首领来袭', final_wave: '最后一波',
     cond_noBounty: '无赏金 · 建造铸币塔', cond_air: '空袭 · 建造防空塔', cond_shielded: '重护盾 · 使用电磁或棱镜',
-    warden: '守卫者', armored_boss: '重甲首领', warden_x: '守卫者 ×{0}', tower_lv: '{0} 级', master_bolt: '大师光弹', live_wire: '高压电网', wire_line: '射速更快（每秒 {0} 次），连锁 {1} 个敌人。每次攻击还会沿所有道路发出一道脉冲，经过每个敌人时造成 {2} 伤害。', level_n: '第 {0} 关',
+    warden: '守卫者', armored_boss: '重甲首领', warden_x: '守卫者 ×{0}', tower_lv: '{0} 级', master_bolt: '大师光弹', boss_word: '首领', boss_down: '{0} 被击碎', boss_down_gold: '{0} 被击碎  +{1}', bosses_x: '首领 ×{0}', immune: '免疫', live_wire: '高压电网', wire_line: '射速更快（每秒 {0} 次），连锁 {1} 个敌人。每次攻击还会沿所有道路发出一道脉冲，经过每个敌人时造成 {2} 伤害。', level_n: '第 {0} 关',
     m_10: '漂亮', m_25: '太棒了', m_50: '不可思议', m_100: '传奇', m_200: '神级',
     combo_gold: '{0} 连击  +{1} 金币', combo_only: '{0} 连击', shattered: '粉碎！', warden_down: '守卫者被击碎', warden_down_gold: '守卫者被击碎  +{0}',
     wave_clear: '第 {0} 波清除', wave_clear_gold: '第 {0} 波清除  +{1}',
@@ -352,9 +397,9 @@ const STR = {
     info_light: '部分敌人带护盾。电磁或棱镜有帮助，但不带也能应付。',
     shield_badge: '护盾', shielded_note: '本关带护盾：被电磁剥除前只受 20% 伤害。', stripped: '已剥除', dome_down: '护罩破碎',
     elec_badge: '带电', ice_badge: '冰霜', shorted: '短路', supercharged: '超载！', chilled: '冻僵', frozen: '冻结',
-    elec_note: '本关带电：紧挨着它的塔会短路 4 秒。电弧塔反而会超载。电磁能让它短路。',
+    elec_note: '本关带电：紧挨着它的塔会短路 4 秒（电磁除外，电弧塔反而会超载）。免疫电弧。电磁能让它短路。',
     ice_note: '本关带冰霜：扔出雪球，让范围内的塔 5 秒内变慢。冰霜塔反而会超载。',
-    info_elec: '部分敌人带电：紧挨着它们的塔会短路。电弧和电磁有帮助。',
+    info_elec: '部分敌人带电：紧挨着它们的塔会短路，电弧也伤不了它们。电磁不受影响，还能让它们短路。',
     info_ice: '部分敌人带冰霜：它们的雪球会让塔变慢。冰霜塔会因此超载。',
     world_from: '世界 {0} · 第 {1} 关起', world_n: '世界 {0}',
     s_dmg: '伤害', s_dps: '秒伤', s_gold: '金币', s_every: '间隔', s_boost: '增益', s_chain: '连锁', s_slow: '减速', s_blast: '爆炸', s_range: '射程', s_shield: '破盾', s_brittle: '+易碎', s_rate: '射速', s_crit: '暴击', sec: '秒',
@@ -376,6 +421,9 @@ const STR = {
     lab_tests_bossrush: '每 4 波一个守卫者，第 20 波两个，最后再来两个。每个在 60% 时开盾，30% 时狂暴。',
     lab_tests_split: '两条路，每波压力换一边。两边都守，还是守住汇合点？',
     lab_tests_gauntlet: '25 波里有游戏中所有威胁：飞行、护盾、火、冰、电，最后还有守卫者。',
+    lab_name_bosszoo: '首领图鉴 I', lab_name_bosszoo2: '首领图鉴 II',
+    lab_tests_bosszoo: '六个新首领逐一登场：方块之王、飞镖女王、孢子之母、堡垒、神盾主宰和幻影。之后它们会带着护盾、火焰、冰霜和电再次出现。',
+    lab_tests_bosszoo2: '另外六个：生命之花、巨像、风暴之翼（带上防空塔）、超载者、冰霜巨人和炼狱。带电敌人免疫电弧；电磁在它们旁边照常工作。',
     lab_won_s: '胜利 · {0} 条命 · 剩 {1}', lab_lost_s: '失败 · 第 {0}/{1} 波',
     lab_tests_counters: '手工设计的波次，每波都是不同的威胁。选 4 座塔全部应对。',
     lab_tests_payday: '击杀不给金币，每波发工资（现在少一些）。固定收入会让你更有规划吗？',
@@ -392,7 +440,7 @@ const STR = {
     combo: 'COMBO', early_call: 'ADELANTO  +{0}', wave: 'OLEADA {0}', boss_incoming: 'SE ACERCA EL JEFE', final_wave: 'ÚLTIMA OLEADA',
     cond_noBounty: 'SIN BOTÍN · CONSTRUYE CECAS', cond_air: 'ATAQUE AÉREO · CONSTRUYE FLAK', cond_shielded: 'ESCUDOS PESADOS · USA EMP O PRISMA',
     cond_heat: 'OLA DE CALOR · SIN HIELO', cond_rain: 'TORMENTA · SIN PIRO',
-    warden: 'GUARDIÁN', armored_boss: 'JEFE BLINDADO', warden_x: 'GUARDIÁN ×{0}', tower_lv: 'NIVEL {0}', master_bolt: 'RAYO MAESTRO', live_wire: 'ALTA TENSIÓN', wire_line: 'Dispara más rápido ({0}/s) y encadena {1}. Cada ataque también lanza un pulso por todos los caminos que hace {2} de daño a cada enemigo que cruza.', level_n: 'NIVEL {0}',
+    warden: 'GUARDIÁN', armored_boss: 'JEFE BLINDADO', warden_x: 'GUARDIÁN ×{0}', tower_lv: 'NIVEL {0}', master_bolt: 'RAYO MAESTRO', boss_word: 'JEFE', boss_down: '{0} DERRIBADO', boss_down_gold: '{0} DERRIBADO  +{1}', bosses_x: 'JEFES ×{0}', immune: 'INMUNE', live_wire: 'ALTA TENSIÓN', wire_line: 'Dispara más rápido ({0}/s) y encadena {1}. Cada ataque también lanza un pulso por todos los caminos que hace {2} de daño a cada enemigo que cruza.', level_n: 'NIVEL {0}',
     m_10: 'BIEN', m_25: 'GENIAL', m_50: 'INCREÍBLE', m_100: 'LEGENDARIO', m_200: 'DIVINO',
     combo_gold: 'COMBO {0}  +{1} ORO', combo_only: 'COMBO {0}', shattered: 'HECHO AÑICOS', warden_down: 'GUARDIÁN DERRIBADO', warden_down_gold: 'GUARDIÁN DERRIBADO  +{0}',
     wave_clear: 'OLEADA {0} SUPERADA', wave_clear_gold: 'OLEADA {0} SUPERADA  +{1}',
@@ -426,9 +474,9 @@ const STR = {
     info_light: 'Algunos enemigos llevan escudo. EMP o PRISMA ayudan, pero puedes arreglártelas sin ellos.',
     shield_badge: 'ESCUDO', shielded_note: 'Con escudo aquí: recibe el 20% del daño hasta que un EMP se lo quite.', stripped: 'SIN ESCUDO', dome_down: 'CÚPULA ROTA',
     elec_badge: 'ELÉCTRICO', ice_badge: 'HELADO', shorted: 'APAGADA', supercharged: '¡SOBRECARGA!', chilled: 'ENFRIADA', frozen: 'CONGELADO',
-    elec_note: 'Eléctrico aquí: las torres junto a él se apagan 4 s. ARCO se sobrecarga. EMP lo cortocircuita.',
+    elec_note: 'Eléctrico aquí: las torres junto a él se apagan 4 s (menos EMP; ARCO se sobrecarga). Inmune a ARCO. EMP lo cortocircuita.',
     ice_note: 'Helado aquí: lanza bolas de nieve que ralentizan las torres cercanas 5 s. HIELO se sobrecarga.',
-    info_elec: 'Algunos enemigos están electrificados: las torres junto a ellos se apagan. ARCO y EMP ayudan.',
+    info_elec: 'Algunos enemigos están electrificados: las torres junto a ellos se apagan y ARCO no les hace daño. EMP sigue funcionando y los cortocircuita.',
     info_ice: 'Algunos enemigos están helados: sus bolas de nieve ralentizan tus torres. A HIELO le encanta.',
     world_from: 'MUNDO {0} · DESDE EL NIVEL {1}', world_n: 'MUNDO {0}',
     s_dmg: 'DAÑO', s_dps: 'DPS', s_gold: 'ORO', s_every: 'CADA', s_boost: 'BONO', s_chain: 'CADENA', s_slow: 'FRENO', s_blast: 'ÁREA', s_range: 'ALCANCE', s_shield: 'ESCUDO', s_brittle: '+FRÁGIL', s_rate: 'RITMO', s_crit: 'CRÍTICO', sec: 's',
@@ -449,6 +497,9 @@ const STR = {
     lab_tests_bossrush: 'Un Guardián cada 4 oleadas, dos en la oleada 20 y dos más al final. Todos con escudo al 60% y furia al 30%.',
     lab_tests_split: 'Dos caminos, y la presión cambia de lado cada oleada. ¿Cubres los dos o defiendes la unión?',
     lab_tests_gauntlet: 'Todas las amenazas del juego en 25 oleadas: voladores, escudos, fuego, hielo, electricidad y un Guardián.',
+    lab_name_bosszoo: 'ZOO DE JEFES I', lab_name_bosszoo2: 'ZOO DE JEFES II',
+    lab_tests_bosszoo: 'Seis jefes nuevos, uno a uno: Rey Bloque, Reina Dardo, Madre Espora, Fortaleza, Bastión y Fantasma. Luego vuelven con escudos, fuego, hielo y electricidad.',
+    lab_tests_bosszoo2: 'Seis más: Flor de Vida, Coloso, Ala Tormenta (lleva FLAK), Sobrecarga, Gigante Helado e Infierno. Los eléctricos son inmunes a ARCO; EMP sigue funcionando a su lado.',
     lab_won_s: 'GANADA · {0} VIDAS · QUEDA {1}', lab_lost_s: 'PERDIDA · OLEADA {0}/{1}',
     lab_tests_counters: 'Oleadas hechas a mano, cada una una amenaza distinta. Elige 4 torres que las cubran.',
     lab_tests_payday: 'Las bajas no pagan; cada oleada paga un sueldo (ahora menor). ¿Te hace planificar?',
@@ -470,19 +521,25 @@ function tr(id, ...a) {
 const ZH = {
   tower: { bolt: '光弹', frost: '冰霜', nova: '新星', arc: '电弧', emp: '电磁', mint: '铸币', prism: '棱镜', rail: '轨道炮', beacon: '信标', flak: '防空', pyro: '烈焰', tide: '潮汐' },
   towerDesc: {
-    bolt: '快速光弹。每第 4 发暴击，每次升级多一发暴击。4 级：大师光弹，射速 +35%。', frost: '冰冻脉冲，减速附近所有敌人。不会着火，还能扑灭紧挨着的塔上的火。', nova: '等离子炸弹，范围伤害，无视护甲。', arc: '连锁闪电，每次升级射速更快。带电敌人会让它超载。4 级：高压电网，每次攻击还会沿所有道路发出脉冲。',
-    emp: '最多 4 道激光专找护盾：剥除护盾、击破护罩、让带电敌人短路。几乎没有伤害。', mint: '波次进行时不断产出金币。', prism: '光束越烧越强，穿透护甲和护盾。',
+    bolt: '快速光弹。每第 4 发暴击，每次升级多一发暴击。4 级：大师光弹，射速 +35%。', frost: '冰冻脉冲，减速附近所有敌人。不会着火，还能扑灭紧挨着的塔上的火。', nova: '等离子炸弹，范围伤害，无视护甲。', arc: '连锁闪电，每次升级射速更快。带电敌人会让它超载，但免疫它的伤害。4 级：高压电网，每次攻击还会沿所有道路发出脉冲。',
+    emp: '最多 4 道激光专找护盾：剥除护盾、击破护罩、让带电敌人短路。几乎没有伤害。带电敌人无法让它短路。', mint: '波次进行时不断产出金币。', prism: '光束越烧越强，穿透护甲和护盾。',
     rail: '沿一条固定直线射击，贯穿线上所有敌人。', beacon: '提升相邻塔的伤害。', flak: '防空导弹。唯一能击中飞行敌人的塔。',
     pyro: '短程火焰喷射，带少量溅射。对寒冷敌人造成三倍伤害。', tide: '水柱扑灭着火的塔，并将着火的敌人永久浇灭。几乎没有伤害。',
   },
-  enemy: { grunt: '方块', scout: '飞镖', splitter: '孢子', mite: '螨虫', brute: '壁垒', boss: '守卫者', aegis: '神盾', blink: '闪烁', mender: '治愈者', titan: '泰坦', glider: '滑翔者', volt: '伏特', yeti: '雪怪', scorch: '灼焰' },
+  enemy: { grunt: '方块', scout: '飞镖', splitter: '孢子', mite: '螨虫', brute: '壁垒', boss: '守卫者', aegis: '神盾', blink: '闪烁', mender: '治愈者', titan: '泰坦', glider: '滑翔者', volt: '伏特', yeti: '雪怪', scorch: '灼焰', boss_grunt: '方块之王', boss_scout: '飞镖女王', boss_splitter: '孢子之母', boss_brute: '堡垒', boss_aegis: '神盾主宰', boss_blink: '幻影', boss_mender: '生命之花', boss_titan: '巨像', boss_glider: '风暴之翼', boss_volt: '超载者', boss_yeti: '冰霜巨人', boss_scorch: '炼狱' },
   enemyDesc: {
     grunt: '最基础的行走者。', scout: '速度快但很脆弱。', splitter: '被摧毁时分裂成 3 只螨虫。抵达核心会扣 4 条命：它自己加体内的 3 只螨虫。', mite: '小而快。', brute: '重甲：小伤害几乎无效。',
     boss: '首领：厚重护甲，生命值极高。行进时会不断召唤敌人。', aegis: '投射随行护罩，罩内敌人只受 20% 伤害。电磁可将其击破。', blink: '每隔几秒向前瞬移。',
     mender: '治疗附近的敌人。优先消灭它。', titan: '巨大、缓慢且重甲。', glider: '直线飞越道路。只有防空塔能击中。',
-    volt: '带电：紧挨着它的塔会短路 4 秒。电弧塔反而会超载。电磁能让它短路。',
+    volt: '带电：紧挨着它的塔会短路 4 秒（电磁除外，电弧塔反而会超载）。免疫电弧。电磁能让它短路。',
     yeti: '每秒向范围内所有塔扔雪球。被击中的塔 5 秒内攻速大减。冰霜塔反而会超载。',
     scorch: '着火：每隔几秒向附近的塔扔一个火球。被击中的塔会烧毁（返还 25%），除非潮汐塔或紧挨着的冰霜塔把火扑灭。',
+    boss_grunt: '首领。巨大的方块，护甲厚重。行进时召唤方块。', boss_scout: '首领。作为首领速度很快但较脆弱。奔跑时召唤飞镖。',
+    boss_splitter: '首领。行进时放出螨虫，被摧毁时炸成 4 个孢子。', boss_brute: '首领。护甲极厚，小伤害几乎无效。召唤壁垒。',
+    boss_aegis: '首领。巨大的护罩覆盖附近所有敌人（只受 20% 伤害）。电磁可将其击破。召唤方块。', boss_blink: '首领。每隔几秒向前远距离瞬移。召唤闪烁。',
+    boss_mender: '首领。每 2 秒治疗周围所有敌人。召唤方块。', boss_titan: '首领。巨大、缓慢、护甲极重。抵达核心会扣 8 条命。',
+    boss_glider: '首领。直线飞越道路，只有防空塔能击中。召唤滑翔者。', boss_volt: '首领。带电且范围极大：2.5 格内的塔会短路（电磁除外）。免疫电弧。召唤伏特。',
+    boss_yeti: '首领。冰霜：向 3 格内所有塔扔雪球。召唤雪怪。', boss_scorch: '首领。着火：扔火球的频率和距离都翻倍。召唤灼焰。',
   },
   world: ['虚空', '深渊', '余烬', '糖果', '极光', '烈日', '冰川', '剧毒'],
   cond: {
@@ -504,7 +561,7 @@ const ZH = {
     aegis: '神盾的护罩让罩内敌人只受 20% 伤害。把电磁塔放在它经过的地方即可击破，或用棱镜狙击神盾。',
     shield: '带蓝色光环的敌人有护盾，只受 20% 伤害。在它们进场处放一座电磁塔，或用棱镜直接穿透。',
     blink: '闪烁会向前瞬移。把塔分布在整条道路上。',
-    volt: '带电的敌人会让紧挨着它的塔短路。把电磁塔放远一点先让它们短路，或带上电弧塔：电会让它超载。',
+    volt: '带电的敌人会让紧挨着它的塔短路，电弧也伤不了它们。电磁塔在它们旁边照常工作：先用电磁让它们短路，其他塔就都能打了。',
     yeti: '雪球会让你的塔变慢。在它经过的地方放冰霜塔：雪球会让它超载，三次冲击就能把敌人冻住。烈焰塔对它造成三倍伤害。',
     scorch: '着火的敌人会向道路附近的塔扔火球，着火的塔会被烧毁，除非潮汐塔喷到它，或紧挨着的冰霜塔发出冲击。冰霜塔本身不会着火。',
     mender: '治愈者会治疗同伴。把塔设为攻击“最强”，或用轨道炮狙击。',
@@ -517,22 +574,28 @@ const ES = {
   tower: { bolt: 'RAYO', frost: 'HIELO', nova: 'NOVA', arc: 'ARCO', emp: 'EMP', mint: 'CECA', prism: 'PRISMA', rail: 'RIEL', beacon: 'FARO', flak: 'FLAK', pyro: 'PIRO', tide: 'MAREA' },
   towerDesc: {
     bolt: 'Láser rápido. Cada 4.º disparo es crítico; cada mejora añade otro. Nivel 4: RAYO MAESTRO, 35% más rápido.', frost: 'Pulso helado que frena a todos los cercanos. Nunca arde y apaga el fuego de las torres de al lado.',
-    nova: 'Bomba de plasma. Daño en área, atraviesa armadura.', arc: 'Relámpago en cadena; cada mejora dispara más rápido. Los eléctricos lo sobrecargan. Nivel 4: ALTA TENSIÓN, cada ataque también lanza un pulso por todos los caminos.',
-    emp: 'Hasta 4 láseres que buscan escudos: los quita, rompe cúpulas y cortocircuita a los eléctricos. Casi sin daño.',
+    nova: 'Bomba de plasma. Daño en área, atraviesa armadura.', arc: 'Relámpago en cadena; cada mejora dispara más rápido. Los eléctricos lo sobrecargan pero son inmunes a él. Nivel 4: ALTA TENSIÓN, cada ataque también lanza un pulso por todos los caminos.',
+    emp: 'Hasta 4 láseres que buscan escudos: los quita, rompe cúpulas y cortocircuita a los eléctricos. Casi sin daño. Los eléctricos no pueden apagarlo.',
     mint: 'Genera oro mientras hay oleadas.', prism: 'Rayo que se calienta sobre un objetivo. Atraviesa armadura y escudos.',
     rail: 'Dispara en una línea fija y atraviesa todo lo que hay en ella.', beacon: 'Aumenta el daño de las torres de al lado.',
     flak: 'Misiles antiaéreos. La única torre que alcanza a los voladores.',
     pyro: 'Chorro de fuego con algo de área. Triple daño a enemigos fríos.', tide: 'Chorros de agua que apagan torres en llamas, y a los enemigos en llamas para siempre. Casi sin daño.',
   },
-  enemy: { grunt: 'Bloque', scout: 'Dardo', splitter: 'Espora', mite: 'Ácaro', brute: 'Baluarte', boss: 'Guardián', aegis: 'Égida', blink: 'Destello', mender: 'Sanador', titan: 'Titán', glider: 'Planeador', volt: 'Voltio', yeti: 'Yeti', scorch: 'Brasa' },
+  enemy: { grunt: 'Bloque', scout: 'Dardo', splitter: 'Espora', mite: 'Ácaro', brute: 'Baluarte', boss: 'Guardián', aegis: 'Égida', blink: 'Destello', mender: 'Sanador', titan: 'Titán', glider: 'Planeador', volt: 'Voltio', yeti: 'Yeti', scorch: 'Brasa', boss_grunt: 'Rey Bloque', boss_scout: 'Reina Dardo', boss_splitter: 'Madre Espora', boss_brute: 'Fortaleza', boss_aegis: 'Bastión', boss_blink: 'Fantasma', boss_mender: 'Flor de Vida', boss_titan: 'Coloso', boss_glider: 'Ala Tormenta', boss_volt: 'Sobrecarga', boss_yeti: 'Gigante Helado', boss_scorch: 'Infierno' },
   enemyDesc: {
     grunt: 'El caminante básico.', scout: 'Rápido pero frágil.', splitter: 'Se divide en 3 ácaros al destruirlo. Si llega al núcleo quita 4 vidas: ella y los 3 ácaros de dentro.', mite: 'Pequeño y veloz.',
     brute: 'Blindado. Los golpes pequeños apenas le hacen nada.', boss: 'Jefe. Blindaje pesado y muchísima vida. Llama a más enemigos mientras avanza.',
     aegis: 'Proyecta una cúpula que viaja con él. Los enemigos dentro reciben el 20% del daño. EMP la revienta.', blink: 'Se teletransporta hacia delante cada pocos segundos.',
     mender: 'Cura a los enemigos cercanos. Acaba con él primero.', titan: 'Enorme, lento y muy blindado.', glider: 'Vuela en línea recta sobre el camino. Solo FLAK lo alcanza.',
-    volt: 'Eléctrico: las torres junto a él se apagan 4 s. ARCO se sobrecarga. EMP lo cortocircuita.',
+    volt: 'Eléctrico: las torres junto a él se apagan 4 s (menos EMP; ARCO se sobrecarga). Inmune a ARCO. EMP lo cortocircuita.',
     yeti: 'Lanza bolas de nieve a todas las torres a su alcance cada segundo. Las alcanzadas disparan mucho más lento 5 s. HIELO se sobrecarga.',
     scorch: 'En llamas: cada pocos segundos lanza una bola de fuego a una torre cercana. La torre alcanzada arde hasta caer (se recupera el 25%) salvo que MAREA o un HIELO de al lado la apaguen.',
+    boss_grunt: 'Jefe. Un Bloque gigante con armadura gruesa. Invoca Bloques al avanzar.', boss_scout: 'Jefe. Rápida y frágil para ser jefa. Invoca Dardos mientras corre.',
+    boss_splitter: 'Jefe. Suelta Ácaros al avanzar y estalla en 4 Esporas al morir.', boss_brute: 'Jefe. Armadura enorme: los golpes pequeños apenas la rozan. Invoca Baluartes.',
+    boss_aegis: 'Jefe. Su gran cúpula cubre todo lo cercano (reciben un 20% del daño). EMP la rompe. Invoca Bloques.', boss_blink: 'Jefe. Se teletransporta muy lejos cada pocos segundos. Invoca Destellos.',
+    boss_mender: 'Jefe. Cura a todos los enemigos cercanos cada 2 segundos. Invoca Bloques.', boss_titan: 'Jefe. Enorme, lento y con muchísima armadura. Quita 8 vidas si llega al núcleo.',
+    boss_glider: 'Jefe. Vuela en línea recta sobre el camino; solo FLAK lo alcanza. Invoca Planeadores.', boss_volt: 'Jefe. Electrificado y con gran alcance: las torres a 2,5 casillas se apagan (menos EMP). Inmune a ARCO. Invoca Voltios.',
+    boss_yeti: 'Jefe. Helado: lanza bolas de nieve a todas las torres a 3 casillas. Invoca Yetis.', boss_scorch: 'Jefe. En llamas: lanza bolas de fuego el doble de a menudo y más lejos. Invoca Brasas.',
   },
   world: ['VACÍO', 'ABISMO', 'BRASAS', 'DULCE', 'AURORA', 'SOLAR', 'GLACIAR', 'TÓXICO'],
   cond: {
@@ -554,7 +617,7 @@ const ES = {
     aegis: 'La cúpula de la Égida reduce el daño al 20%. Pon un EMP por donde pasa para reventarla, o dispara a la Égida con PRISMA.',
     shield: 'Los enemigos con anillo azul llevan escudo y reciben el 20% del daño. Pon un EMP por donde entran o atraviésalos con PRISMA.',
     blink: 'Los destellos saltan hacia delante. Reparte tus torres por todo el camino.',
-    volt: 'Los enemigos eléctricos apagan las torres de al lado. Pon un EMP un poco apartado para cortocircuitarlos antes, o lleva ARCO: la electricidad lo sobrecarga.',
+    volt: 'Los enemigos eléctricos apagan las torres de al lado y ARCO no les hace daño. EMP sigue funcionando a su lado: úsalo para cortocircuitarlos y todas las torres podrán dañarlos.',
     yeti: 'La nieve ralentiza tus torres. Pon HIELO por donde pasan: la nieve lo sobrecarga y 3 pulsos congelan a los enemigos. PIRO les hace triple daño.',
     scorch: 'Los enemigos en llamas lanzan bolas de fuego a las torres junto al camino. Una torre en llamas cae salvo que MAREA la moje o un HIELO de al lado dispare. HIELO nunca arde.',
     mender: 'Los sanadores curan a sus compañeros. Pon una torre en FUERTE o usa RIEL.',
@@ -757,7 +820,7 @@ function makeWaves(L, twoLanes, air, plan) {
   const boss = L % LEVELS_PER_WORLD === 0;
   // v23: levels get longer as you go: 5 waves at level 1 up to 20 by level 80; v28: boss levels are always 25
   const n = waveCount(L);
-  const pool = ENEMY_ORDER.filter(k => k !== 'boss' && !ENEMIES[k].flying && ENEMIES[k].intro <= L && (k !== 'aegis' || (plan && plan.aegis)));
+  const pool = ENEMY_ORDER.filter(k => !ENEMIES[k].boss && !ENEMIES[k].flying && ENEMIES[k].intro <= L && (k !== 'aegis' || (plan && plan.aegis)));
   const fresh = pool.find(k => ENEMIES[k].intro === L);
   const pickWeighted = (exclude) => {
     const c = pool.filter(k => !exclude.includes(k));
@@ -1102,6 +1165,64 @@ const LAB_DEFS = [
     [['scout', 44, 0.16, -1], ['yeti', 4, 1.4, 0], ['glider', 20, 0.35, -1]],
     [['aegis', 4, 1.7, -1], ['brute', 12, 0.8, 1, { shield: 1 }], ['titan', 3, 2.2, 0], ['volt', 5, 1.0, 0]],
     [['brute', 12, 0.8, -1], ['scorch', 5, 1.0, 1], ['mender', 5, 1.1, 0], ['glider', 16, 0.4, -1], ['boss', 1, 6, 0]],
+  ] },
+  // ---- v42 (user): the new bosses, and bosses with modifiers ----
+  // 11 BOSS ZOO I: Block King, Dart Queen, Spore Mother, Fortress, Bastion and Phantom, then again with shields, fire, ice, electricity
+  { id: 'bosszoo', v: 1, map: 74, ref: 70, world: 2, econ: ECON_LEAN50, gold: 420, cal: 0.28, boss: true, waves: [
+    [['grunt', 18, 0.5, -1]],
+    [['scout', 20, 0.3, 0], ['grunt', 10, 0.5, 0]],
+    [['grunt', 10, 0.5, 0], ['boss_grunt', 1, 6, 0]],
+    [['brute', 6, 1.2, 0], ['scout', 16, 0.3, 0]],
+    [['splitter', 10, 0.8, 0], ['grunt', 14, 0.4, 0]],
+    [['scout', 16, 0.3, 0], ['boss_scout', 1, 6, 0]],
+    [['brute', 8, 1.0, 0], ['grunt', 16, 0.4, 0]],
+    [['splitter', 12, 0.7, 0], ['scout', 20, 0.28, 0]],
+    [['grunt', 14, 0.45, 0], ['boss_splitter', 1, 6, 0]],
+    [['brute', 8, 1.0, 0, { shield: 1 }], ['grunt', 20, 0.35, 0]],
+    [['scout', 26, 0.25, 0], ['splitter', 10, 0.7, 0]],
+    [['grunt', 12, 0.5, 0], ['boss_brute', 1, 6, 0]],
+    [['brute', 10, 0.9, 0], ['scout', 24, 0.25, 0]],
+    [['splitter', 14, 0.6, 0], ['grunt', 24, 0.3, 0]],
+    [['grunt', 16, 0.4, 0], ['boss_aegis', 1, 6, 0]],
+    [['scout', 30, 0.2, 0], ['brute', 8, 1.0, 0, { elec: 1 }]],
+    [['brute', 10, 0.9, 0, { shield: 1 }], ['splitter', 12, 0.6, 0]],
+    [['scout', 16, 0.35, 0], ['boss_blink', 1, 6, 0]],
+    [['grunt', 30, 0.25, 0], ['brute', 10, 0.9, 0]],
+    [['scout', 20, 0.3, 0], ['boss_grunt', 1, 6, 0, { shield: 1 }], ['boss_scout', 1, 6, 0, { fire: 1 }]],
+    [['brute', 12, 0.8, 0], ['splitter', 16, 0.5, 0]],
+    [['grunt', 20, 0.35, 0], ['boss_splitter', 1, 6, 0, { ice: 1 }], ['boss_blink', 1, 6, 0, { elec: 1 }]],
+    [['scout', 36, 0.18, 0], ['brute', 12, 0.8, 0, { shield: 1 }]],
+    [['grunt', 30, 0.25, 0], ['boss_brute', 1, 6, 0, { elec: 1 }], ['boss_aegis', 1, 6, 0, { fire: 1 }]],
+    [['brute', 10, 0.9, 0], ['boss_grunt', 1, 5, 0], ['boss_scout', 1, 5, 0], ['boss_splitter', 1, 5, 0], ['boss_brute', 1, 5, 0], ['boss_aegis', 1, 5, 0], ['boss_blink', 1, 5, 0]],
+  ] },
+  // 12 BOSS ZOO II: Lifebloom, Colossus, Stormwing, Overload, Frost Giant and Inferno on a two-lane map, with electric waves
+  //   to try ARC's immunity problem and EMP working right next to them
+  { id: 'bosszoo2', v: 1, map: 78, ref: 70, world: 6, econ: ECON_LEAN50, gold: 460, cal: 0.28, boss: true, waves: [
+    [['grunt', 18, 0.5, -1]],
+    [['scout', 20, 0.3, -1], ['grunt', 10, 0.5, 0]],
+    [['grunt', 12, 0.5, 0], ['boss_mender', 1, 6, 0]],
+    [['volt', 3, 1.3, 0], ['grunt', 14, 0.45, 1]],
+    [['brute', 6, 1.2, -1, { elec: 1 }], ['scout', 16, 0.3, 1]],
+    [['brute', 6, 1.1, 0], ['boss_titan', 1, 6, 1]],
+    [['glider', 8, 0.8, -1], ['grunt', 16, 0.4, 0]],
+    [['scout', 22, 0.28, 1], ['glider', 8, 0.7, 0]],
+    [['glider', 8, 0.8, 0], ['boss_glider', 1, 6, 0]],
+    [['volt', 5, 1.0, -1], ['scout', 16, 0.3, 0, { elec: 1 }]],
+    [['brute', 8, 1.0, 1], ['grunt', 20, 0.35, 0]],
+    [['volt', 4, 1.1, 0], ['boss_volt', 1, 6, 0]],
+    [['grunt', 20, 0.35, -1], ['glider', 10, 0.6, 1]],
+    [['scout', 20, 0.28, 1, { ice: 1 }], ['brute', 8, 1.0, 0]],
+    [['grunt', 14, 0.45, 1], ['boss_yeti', 1, 6, 1]],
+    [['volt', 5, 1.0, 0], ['grunt', 16, 0.4, 1, { fire: 1 }]],
+    [['glider', 12, 0.5, -1], ['scout', 24, 0.25, 0]],
+    [['grunt', 14, 0.45, 0], ['boss_scorch', 1, 6, 0]],
+    [['volt', 6, 0.9, -1], ['brute', 10, 0.9, 0, { elec: 1 }], ['glider', 12, 0.5, 1]],
+    [['grunt', 20, 0.35, 1], ['boss_mender', 1, 6, 1, { shield: 1 }], ['boss_titan', 1, 6, 0, { elec: 1 }]],
+    [['scout', 30, 0.2, -1], ['brute', 10, 0.9, 0, { shield: 1 }]],
+    [['glider', 16, 0.4, -1], ['boss_glider', 1, 6, 1, { elec: 1 }], ['boss_volt', 1, 6, 0, { shield: 1 }]],
+    [['brute', 12, 0.8, -1], ['volt', 6, 0.9, 0], ['scout', 30, 0.2, 1]],
+    [['brute', 10, 0.9, -1, { elec: 1 }], ['boss_yeti', 1, 6, 0, { shield: 1 }], ['boss_scorch', 1, 6, 1, { elec: 1 }]],
+    [['grunt', 20, 0.35, -1], ['boss_mender', 1, 5, 0], ['boss_titan', 1, 5, 1], ['boss_glider', 1, 5, 0], ['boss_volt', 1, 5, 1], ['boss_yeti', 1, 5, 0], ['boss_scorch', 1, 5, 1]],
   ] },
 ];
 const LAB = LAB_DEFS.map((d, i) => {
@@ -1681,6 +1802,20 @@ function glyphBody(rc, col) {
   c = { cv, half }; glyphCache.set(key, c); return c;
 }
 // o: { rot, rot2, scale, flash, dir, t, blink, frozen, alpha }
+// v42: boss versions wear a crown: a ring of spikes turning slowly, and a faint halo
+function drawCrown(x, y, r, t, col) {
+  const n = 7, a0 = t * 0.35;
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const a = a0 + i * TAU / n, w = 0.2;
+    ctx.moveTo(x + Math.cos(a - w) * r * 1.12, y + Math.sin(a - w) * r * 1.12);
+    ctx.lineTo(x + Math.cos(a) * r * 1.48, y + Math.sin(a) * r * 1.48);
+    ctx.lineTo(x + Math.cos(a + w) * r * 1.12, y + Math.sin(a + w) * r * 1.12);
+  }
+  ctx.fillStyle = hexA(col, 0.85); ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y, r * 1.62, 0, TAU); ctx.setLineDash([2, 5]); ctx.lineDashOffset = -t * 10;
+  ctx.lineWidth = 1.2; ctx.strokeStyle = hexA(col, 0.45); ctx.stroke(); ctx.setLineDash([]);
+}
 function drawGlyph(rc, x, y, o) {
   const s = o.scale == null ? 1 : o.scale;
   if (s <= 0.01) return;
@@ -1721,6 +1856,7 @@ function drawGlyph(rc, x, y, o) {
     ctx.fillStyle = hexA(rc.color, 0.22); ctx.fill();
     neon(col, rc.thick ? 3.2 : 2.2);
   }
+  if (rc.crown) drawCrown(x, y, r, o.t || 0, col);
   if (rc.inner) {
     shapePath(x, y, r * rc.inner.scale, rc.inner.sides, false, o.rot2 || 0);
     ctx.lineWidth = 1.4; ctx.strokeStyle = hexA(rc.color, 0.9); ctx.stroke();
@@ -2454,7 +2590,7 @@ function musicIntensity() {
   const x = 0.12 + 0.4 * waveFrac + 0.45 * crowd + (G.waveNum === n ? 0.1 : 0) + Math.min(0.08, (G.level.ref || G.levelNum) / 500);
   return Math.min(1, x);
 }
-function isBossWave(w) { return w >= 1 && w <= G.waves.length && G.waves[w - 1].some(g => g[0] === 'boss'); }
+function isBossWave(w) { return w >= 1 && w <= G.waves.length && G.waves[w - 1].some(g => ENEMIES[g[0]].boss); }
 
 function startWave(early) {
   if (G.over || G.waveNum >= G.waves.length) return;
@@ -2507,7 +2643,8 @@ function spawnEnemy(type, wave, lane = 0, dist = 0, jitter = 0, mods = null) {
   G.enemies.push(e); waveStat(wave).alive++;
   if (!jitter) G.portalPulse = 1;
   if (rc.boss && !G.demo) {
-    G.shout = { text: tr('warden'), sub: tr('armored_boss'), color: rc.color, t: 0, dur: 1.6 };
+    G.shout = type === 'boss' ? { text: tr('warden'), sub: tr('armored_boss'), color: rc.color, t: 0, dur: 1.6 }
+      : { text: eName(type).toUpperCase(), sub: tr('boss_word'), color: rc.color, t: 0, dur: 1.6 };
     addShake(0.35); Sound.setBoss(true);
   }
   return e;
@@ -2658,6 +2795,7 @@ function findTarget(tw, range) {
   const air = !!TOWERS[tw.type].air;
   for (const e of G.enemies) {
     if (!e.alive || e.age < 0.15 || !!e.rc.flying !== air || !inRange(tw, e, range)) continue;
+    if (tw.type === 'arc' && isLiveElec(e)) continue;                 // v42: electrified enemies are immune to ARC
     const mode = tw.mode;
     const v = mode === 'first' ? e.dist / e.path.len * 1e4 : mode === 'strong' ? e.hp + e.shield : -((e.x - tw.x) ** 2 + (e.y - tw.y) ** 2);
     if (v > bestV) { bestV = v; best = e; }
@@ -2696,11 +2834,11 @@ function fire(tw, tg) {
     for (let i = 0; i < L.chains + (up ? ELEC.arcChains : 0) && cur; i++) {
       hit.add(cur); pts.push({ x: cur.x, y: cur.y });
       FX.spark(cur.x, cur.y, c, 3, 140, 0.25);
-      damage(cur, dmg, { color: c });
+      if (isLiveElec(cur)) immunePop(cur); else damage(cur, dmg, { color: c });
       dmg *= 0.85;
       let nxt = null, nd = ((up ? ELEC.arcJump : 1.7) * TILE) ** 2;
       for (const e of G.enemies) {
-        if (!e.alive || e.rc.flying || hit.has(e)) continue;
+        if (!e.alive || e.rc.flying || hit.has(e) || isLiveElec(e)) continue;
         const dd = (e.x - cur.x) ** 2 + (e.y - cur.y) ** 2;
         if (dd < nd) { nd = dd; nxt = e; }
       }
@@ -2950,6 +3088,7 @@ function updatePulses(dt) {
       const de = pulseAt(g, P.D, ri, e.dist);
       if (de == null || de > P.s || de < P.s - band) continue;
       P.hit.add(e);
+      if (isLiveElec(e)) { immunePop(e); continue; }                   // v42: the pulse passes through electrified enemies
       damage(e, P.dmg, { color: WIRE_BLUE });
       FX.spark(e.x, e.y, Math.random() < 0.5 ? '#ffffff' : WIRE_BLUE, 3, 130, 0.22);
     }
@@ -2980,7 +3119,11 @@ function drawPulses() {
   }
   additive(false);
 }
-const elecReach = () => ELEC.r * TILE;
+const elecReach = e => ((e && e.rc.elecR) || ELEC.r) * TILE;       // v42: Overload reaches further
+function immunePop(e) {                                           // v42: ARC hit an electrified enemy (at most once a second each)
+  if (G.time - (e.immT || -9) < 1) return;
+  e.immT = G.time; FX.text(e.x + rand(-5, 5), e.y - e.rc.r - 6, tr('immune'), '#c9c6e8', 9, { font: FONT_D, life: 0.6 });
+}
 function towerZapped(tw) {
   const up = tw.type === 'arc';
   FX.spark(tw.x, tw.y, up ? '#fff7a8' : '#f6ff3d', 8, 170, 0.3);
@@ -3078,7 +3221,8 @@ function kill(e) {
     G.slowT = 0.9; G.flashA = 0.6; G.flashCol = '#ffffff';
     snd('bossDie'); vibrate([60, 40, 120]);
     FX.shatter(e.x, e.y, '#ffffff', 16, false);
-    G.shout = { text: tr('shattered'), sub: G.noBounty ? tr('warden_down') : tr('warden_down_gold', e.rc.gold), color: e.rc.color, t: 0, dur: 1.6 };
+    const bn = eName(e.type).toUpperCase();
+    G.shout = { text: tr('shattered'), sub: e.type === 'boss' ? (G.noBounty ? tr('warden_down') : tr('warden_down_gold', e.rc.gold)) : (G.noBounty ? tr('boss_down', bn) : tr('boss_down_gold', bn, e.rc.gold)), color: e.rc.color, t: 0, dur: 1.6 };
     Sound.setBoss(bossAlive());
   }
 }
@@ -3248,7 +3392,7 @@ function update(dt) {
         const R2 = (e.rc.heal.radius * TILE) ** 2;
         let healed = 0;
         for (const o of G.enemies) {
-          if (!o.alive || o.hp >= o.maxHp || (o.x - e.x) ** 2 + (o.y - e.y) ** 2 > R2) continue;
+          if (!o.alive || o.hp >= o.maxHp || (o === e && e.rc.boss) || (o.x - e.x) ** 2 + (o.y - e.y) ** 2 > R2) continue;   // (Lifebloom doesn't heal itself)
           o.hp = Math.min(o.maxHp, o.hp + o.maxHp * e.rc.heal.pct); healed++;
           FX.text(o.x, o.y - o.rc.r - 6, '+', e.rc.color, 14, { life: 0.5 });
         }
@@ -3257,7 +3401,7 @@ function update(dt) {
       }
     }
     // lab boss phases: at 60% health the Warden raises a shield (EMP strips it) and calls Bulwarks; at 30% it's enraged
-    if (e.rc.boss && G.level && G.level.bossPhases && !G.demo) wardenPhase(e);
+    if (e.type === 'boss' && G.level && G.level.bossPhases && !G.demo) wardenPhase(e);
     // Warden: calls in a few enemies right behind it every few seconds while it walks
     if (e.rc.summon && !held && !G.demo && e.age > 1) {
       const S = e.rc.summon;
@@ -3265,7 +3409,7 @@ function update(dt) {
       if (e.sumT <= 0) {
         const ref = (G.level && G.level.ref) || G.levelNum;
         e.sumT = Math.max(2.5, S.every - ref / 40) * (e.enraged ? 0.55 : 1);
-        const n = ref >= 50 ? 3 : 2;
+        const n = S.n || (ref >= 50 ? 3 : 2);
         for (let i = 0; i < n; i++) {
           e.sumI = (e.sumI || 0) + 1;
           const m = spawnEnemy(S.types[e.sumI % S.types.length], e.wave, e.lane, Math.max(0, e.dist - 16 - i * 12), 1);
@@ -3280,7 +3424,7 @@ function update(dt) {
       e.snowT -= dt;
       if (e.snowT <= 0) {
         e.snowT = ICE.every;
-        const R2 = (ICE.r * TILE) ** 2; let n = 0;
+        const R2 = ((e.rc.iceR || ICE.r) * TILE) ** 2; let n = 0;
         for (const tw of G.towers) if ((tw.x - e.x) ** 2 + (tw.y - e.y) ** 2 <= R2) { throwSnow(e, tw); n++; }
         if (n) snd('snow');
       }
@@ -3292,6 +3436,7 @@ function update(dt) {
   for (const e of G.enemies) if (e.alive && e.age > 0.3 && isLiveElec(e)) (volts = volts || []).push(e);
   if (volts) {
     for (const tw of G.towers) {
+      if (tw.type === 'emp') continue;                                  // v42: EMP keeps working next to them
       if (!volts.some(e => (e.x - tw.x) ** 2 + (e.y - tw.y) ** 2 <= elecReach(e) ** 2)) continue;
       if (tw.zapT <= 0) towerZapped(tw);
       tw.zapT = ELEC.time;
@@ -3302,12 +3447,12 @@ function update(dt) {
     if (!e.alive || !e.fire || e.doused || e.iceLock > 0 || e.age < 0.5) continue;
     e.fireT -= dt;
     if (e.fireT > 0) continue;
-    const R2 = (FIRE.r * TILE) ** 2; let best = null, bd = R2;
+    const R2 = ((e.rc.fireR || FIRE.r) * TILE) ** 2; let best = null, bd = R2;
     for (const tw of G.towers) {
       if (tw.burning || tw.type === 'frost' || G.fireballs.some(f => f.tw === tw)) continue;
       const dd = (tw.x - e.x) ** 2 + (tw.y - e.y) ** 2; if (dd <= bd) { bd = dd; best = tw; }
     }
-    if (best) { throwFire(e, best); e.fireT = FIRE.every * rand(0.9, 1.1); } else e.fireT = 0.3;
+    if (best) { throwFire(e, best); e.fireT = (e.rc.fireEvery || FIRE.every) * rand(0.9, 1.1); } else e.fireT = 0.3;
   }
   // towers
   computeBuffs();
@@ -3582,7 +3727,7 @@ function drawWorld() {
   }
   for (const e of G.enemies) {                                   // burning enemies: the range that sets towers alight
     if (!e.alive || !e.fire || e.doused) continue;
-    ctx.beginPath(); ctx.arc(e.x, e.y, FIRE.r * TILE, 0, TAU);
+    ctx.beginPath(); ctx.arc(e.x, e.y, (e.rc.fireR || FIRE.r) * TILE, 0, TAU);
     ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(255,122,26,0.4)'; ctx.stroke();
   }
   ctx.setLineDash([]);
@@ -3993,7 +4138,8 @@ function drawBossBar() {
   const hp = bosses.reduce((s, e) => s + Math.max(0, e.hp), 0), max = bosses.reduce((s, e) => s + e.maxHp, 0);
   const w = 220, x = MAP_X + W / 2 - w / 2, y = HUD_H + 14;
   setFont(9, FONT_UI); spacing(2); ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#ff7a8a';
-  ctx.fillText(bosses.length > 1 ? tr('warden_x', bosses.length) : tr('warden'), x, y - 7); spacing(0);
+  const one = bosses.every(b => b.type === bosses[0].type), bn = bosses[0].type === 'boss' ? tr('warden') : eName(bosses[0].type).toUpperCase();
+  ctx.fillText(!one ? tr('bosses_x', bosses.length) : bosses[0].type === 'boss' ? (bosses.length > 1 ? tr('warden_x', bosses.length) : bn) : bosses.length > 1 ? `${bn} ×${bosses.length}` : bn, x, y - 7); spacing(0);
   ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(x - 1, y - 1, w + 2, 7);
   ctx.fillStyle = '#ff2e4d'; ctx.fillRect(x, y, w * hp / max, 5);
   additive(true); glow(x + w * hp / max, y + 2, 12, '#ff2e4d', 0.8); additive(false);
@@ -4385,7 +4531,7 @@ const TIPS = {
   blink: 'Blinks teleport ahead. Spread your towers along the whole path.',
   mender: 'Menders heal their friends. Set a tower to target STRONG, or snipe with Rail.',
   titan: 'Titans are huge and armored. Stack upgraded towers near one bend.',
-  volt: 'Electrified enemies short out towers right next to them. Keep an EMP a little further back to short them out first, or bring ARC: electricity supercharges it.',
+  volt: 'Electrified enemies short out towers right next to them, and ARC can\'t hurt them. EMP keeps working right beside them: short them out with it and every tower can hit them.',
   yeti: 'Snowballs slow your towers. Put FROST where they walk: snowballs supercharge it, and 3 blasts freeze enemies solid. PYRO burns them for triple damage.',
   scorch: 'Burning enemies toss fireballs at towers near the path. A burning tower dies unless TIDE sprays it or a FROST right next to it pulses. FROST itself never catches fire.',
 };
@@ -4438,7 +4584,7 @@ function drawEnd() {
     const worst = Object.entries(G.leakTypes).sort((p, q) => q[1] - p[1])[0];
     const noMint = G.level && G.level.noBounty && !G.towers.some(t => t.type === 'mint');
     const noShieldTool = G.level && G.level.hasShields && !G.towers.some(t => t.type === 'emp' || t.type === 'prism') && G.shieldLeaks >= Math.max(2, G.leaks * 0.3);
-    const wt = worst && worst[0], variantTip = wt && G.level ? ((G.level.elecTypes || []).includes(wt) ? 'volt' : (G.level.iceTypes || []).includes(wt) ? 'yeti' : (G.level.fireTypes || []).includes(wt) ? 'scorch' : wt) : wt;
+    const w0 = worst && worst[0], wt = w0 && ((ENEMIES[w0] && ENEMIES[w0].baseOf) || w0), variantTip = wt && G.level ? ((G.level.elecTypes || []).includes(w0) ? 'volt' : (G.level.iceTypes || []).includes(w0) ? 'yeti' : (G.level.fireTypes || []).includes(w0) ? 'scorch' : wt) : wt;
     const tk = noMint ? 'nobounty' : noShieldTool ? (G.level.hasAegis && !G.level.shieldTypes.length ? 'aegis' : 'shield') : variantTip || 'grunt', tip = (LOC() && LOC().tips[tk]) || TIPS[tk];
     const bw = Math.min(310, LW - 32), bh = 64;
     roundRect(cx - bw / 2, y + 70, bw, bh, 12); ctx.fillStyle = 'rgba(8,6,22,0.95)'; ctx.fill();
@@ -5258,7 +5404,7 @@ function drawCard(rdt) {
     }
     drawGlyph(rc, ex, ey, { rot: G.clock * (rc.spin || 0), rot2: G.clock * (rc.inner ? rc.inner.spin : 0), scale: Math.min(1.1, 12 / rc.r), dir: rc.flying ? -Math.PI / 2 : Math.sin(G.clock + i) * 0.5, t: G.clock + i, shield: shielded ? 1 : 0, ping: shielded ? Math.max(0, Math.sin(G.clock * 2.5 + i)) * 0.04 : 0, elec: elec ? 1 : 0, ice: iced, fire: fiery ? 1 : 0 });
     setFont(8.5, FONT_UI); ctx.textAlign = 'center'; ctx.fillStyle = hexA(rc.color, 0.95);
-    ctx.fillText(eName(k).toUpperCase(), ex, ey + 26 + (ens.length > 7 && i % 2 ? 10 : 0));   // stagger names when crowded
+    if (gap >= 34 || sel) ctx.fillText(eName(k).toUpperCase(), ex, ey + 26 + (ens.length > 7 && i % 2 && !sel ? 10 : 0));   // stagger names when crowded; a very crowded row names only the tapped one
     let by = ey - 32;
     // badges: SHIELD (shielded or a dome carrier), ELECTRIC, ICED. A crowded row shows them as icons.
     const badges = [];
