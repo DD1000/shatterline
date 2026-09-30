@@ -17,7 +17,14 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 | `tools/` | Bot playtesters and helpers: `calibrate.js` (difficulty tuning), `probe.js`, `audit.js` (tower balance), `gen_maps.js` (level paths), `perf*.js` (frame-time profiling). |
 | `tests/` | Automated checks (Playwright). Run from the repo root, e.g. `node tests/smoke.js /tmp`. |
 
-## Current version (v29)
+## Current version (v31)
+- Upgrades add a flat +10% damage each (+10% / +20% / +30% over the built tower) and no longer raise fire rate. Range, splash, chains, beams, FROST's slow and PRISM's heat-up still improve.
+
+### v30
+- NOVA does 30% less damage per hit and fires 15% slower.
+- Every enemy has 10% more health (`ECON.hpScale` 1.1).
+
+### v29
 - BOLT fires 20% slower and PRISM's beam does 20% less damage (both 20% less damage per second).
 
 ### v28
@@ -33,7 +40,7 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 - Restart and retry go back to tower select, with the towers you used already picked.
 - The Playtest Lab and Test Mode ask for a tester password.
 
-**Note:** `src/` is still at v25. The v26, v27 and v28 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
+**Note:** `src/` is still at v25. The v26 to v31 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
 
 ## Making a change
 1. Edit files in `src/`.
