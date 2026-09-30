@@ -17,7 +17,10 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 | `tools/` | Bot playtesters and helpers: `calibrate.js` (difficulty tuning), `probe.js`, `audit.js` (tower balance), `gen_maps.js` (level paths), `perf*.js` (frame-time profiling). |
 | `tests/` | Automated checks (Playwright). Run from the repo root, e.g. `node tests/smoke.js /tmp`. |
 
-## Current version (v42)
+## Current version (v43)
+- AUTO BUILD: every tower action (build, upgrade, sell, rail turn, target mode) and every wave you call is recorded, anchored to the wave it happened in. After a loss, starting that level again asks "AUTO BUILD UNTIL WAVE..." with a grid of every wave's enemies (the wave you lost on is marked) and what the replay will do. The replay repeats your last try at the same moments on the same tiles until the chosen wave begins, then hands over (a pill shows it's running; tap its X to stop). It waits if gold is short and skips anything that no longer fits (tile taken, tower gone, tower not in your loadout). Winning the level forgets the saved try.
+
+### v42
 - Electrified enemies are immune to ARC (it skips them, and its chain and pulse pass through them). ARC still gets supercharged next to them.
 - EMP can't be shut down by electrified enemies, and still shorts them out for 4s (while shorted, ARC can hurt them).
 - Boss versions of all 12 regular enemies (lab-only for now): Block King, Dart Queen, Spore Mother, Fortress, Bastion, Phantom, Lifebloom, Colossus, Stormwing, Overload, Frost Giant and Inferno. Each wears a crown and has its base enemy's trick turned up.
@@ -87,7 +90,7 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 - Restart and retry go back to tower select, with the towers you used already picked.
 - The Playtest Lab and Test Mode ask for a tester password.
 
-**Note:** `src/` is still at v25. The v26 to v42 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
+**Note:** `src/` is still at v25. The v26 to v43 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
 
 ## Making a change
 1. Edit files in `src/`.
