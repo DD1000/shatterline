@@ -17,7 +17,16 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 | `tools/` | Bot playtesters and helpers: `calibrate.js` (difficulty tuning), `probe.js`, `audit.js` (tower balance), `gen_maps.js` (level paths), `perf*.js` (frame-time profiling). |
 | `tests/` | Automated checks (Playwright). Run from the repo root, e.g. `node tests/smoke.js /tmp`. |
 
-## Current version (v39)
+## Current version (v41)
+- ARC level 4 (LIVE WIRE) keeps the original chain lightning: 23.3 damage, 1.56 zaps a second, up to 8 enemies, normal targeting (the target-mode button is back).
+- The only new thing at level 4 is the track pulse: every zap also sends a pulse from the first enemy it hit down every track, dealing 2.3 to each ground enemy it passes.
+
+### v40
+- ARC level 4 (LIVE WIRE) zaps the enemy in front (23.3 damage, 1.56 a second; no chain, no target-mode button).
+- Every zap sends a pulse down every track from the enemy it hit, in both directions and into every branch, at 12 tiles a second. It deals 2.3 damage to each ground enemy it passes (armor and shields apply; flyers are safe).
+- The v39 lightning bolts are gone (replaced by the pulse).
+
+### v39
 - The electrified road is gone. ARC level 4 (LIVE WIRE, same look) chain-zaps like the other levels again: 23.3 damage, 1.56 zaps a second (+20% over level 3), up to 8 enemies.
 - Every 4th hit an enemy takes from a LIVE WIRE calls down a lightning bolt on it for 20 damage (each LIVE WIRE counts its own hits).
 - Electrified enemies no longer feed on anything; Volts supercharge a LIVE WIRE like any ARC.
@@ -71,7 +80,7 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 - Restart and retry go back to tower select, with the towers you used already picked.
 - The Playtest Lab and Test Mode ask for a tester password.
 
-**Note:** `src/` is still at v25. The v26 to v39 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
+**Note:** `src/` is still at v25. The v26 to v41 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
 
 ## Making a change
 1. Edit files in `src/`.
