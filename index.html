@@ -28,7 +28,7 @@ const COLS = 9, ROWS = 13;     // map grid
 const HUD_H = 50, BAR_H = 78;  // top HUD + bottom control bar
 const MIN_H = HUD_H + ROWS * TILE + BAR_H;
 const LEVELS_PER_WORLD = 10;
-const BUILD = 'v43';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
+const BUILD = 'v44';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
 
 // Title-screen showcase map
 const DEMO_PATH = [[1,0],[1,2],[7,2],[7,5],[1,5],[1,8],[7,8],[7,10],[4,10],[4,12]];
@@ -70,7 +70,7 @@ const ENEMIES = {
   mender:   { name:'Mender',  sides:0, r:10,  color:'#ff9ce0', speed:0.85, hp:60,  gold:10, armor:0, leak:1, spin:0, plus:true, heal:{ every:2.6, radius:1.8, pct:0.12 }, intro:21,
               desc:'Heals nearby enemies. Take it out first.' },
   glider:   { name:'Glider',  sides:3, r:9,   color:'#9fe8ff', speed:0.95, hp:36,  gold:5,  armor:0, leak:1, spin:0, eye:true, point:true, flying:true, intro:32,
-              desc:'Flies straight over the path. Only FLAK can hit it.' },
+              desc:'Flies straight over the path. Only FLAK can bring it down (EMP lasers reach it but barely hurt).' },
   titan:    { name:'Titan',   sides:8, r:17,  color:'#ff8a3d', speed:0.45, hp:420, gold:28, armor:7, leak:3, spin:0.2, eye:true, thick:true, inner:{ sides:4, scale:0.5, spin:0.8 }, intro:25,
               desc:'Huge, slow and heavily armored.' },
   volt:     { name:'Volt',    sides:3, star:true, r:10, color:'#f6ff3d', speed:1.0, hp:48, gold:8, armor:0, leak:1, spin:1.6, eye:true, elec:true, intro:37,
@@ -110,7 +110,7 @@ Object.assign(ENEMIES, {
                    desc:'Boss. Huge, slow and very heavily armored. Takes 8 lives if it reaches the core.' },
   boss_glider:   { name:'Stormwing',    baseOf:'glider',   sides:3, r:19, color:'#9fe8ff', speed:0.7,  hp:420,  gold:80,  armor:0,  leak:5, spin:0, eye:true, point:true, flying:true,
                    boss:true, crown:true, intro:999, summon:{ every:4, types:['glider'], n:2 },
-                   desc:'Boss. Flies straight over the path; only FLAK can hit it. Calls in Gliders.' },
+                   desc:'Boss. Flies straight over the path; only FLAK can bring it down. Calls in Gliders.' },
   boss_volt:     { name:'Overload',     baseOf:'volt',     sides:3, star:true, r:19, color:'#f6ff3d', speed:0.75, hp:420, gold:80, armor:0, leak:5, spin:1.2, eye:true, inner:{ sides:3, scale:0.45, spin:-1.6 },
                    elec:true, elecR:2.5, boss:true, crown:true, intro:999, summon:{ every:5, types:['volt'], n:1 },
                    desc:'Boss. Electrified with a huge reach: towers within 2.5 tiles shut down (not EMP). Immune to ARC. Calls in Volts.' },
@@ -205,14 +205,14 @@ const TOWERS = {
                  { cost:160, buff:0.75, range:2.3 },
                  { cost:240, buff:1.0,  range:2.3 } ] },
 };
-TOWERS.flak = { name:'FLAK', color:'#ff6f61', sides:3, cost:90, unlock:32, air:true, desc:'Anti-air missiles. The only tower that hits flyers.',
+TOWERS.flak = { name:'FLAK', color:'#ff6f61', sides:3, cost:90, unlock:32, air:true, desc:'Anti-air missiles. The only tower that can bring flyers down.',
             lv:[ { dmg:20, rate:1.3, range:3.2, splash:0.6 },
                  { cost:100, dmg:22, rate:1.3, range:3.5, splash:0.7 },
                  { cost:160, dmg:24.2, rate:1.3, range:3.8, splash:0.8 },
                  { cost:240, dmg:26.62, rate:1.3, range:4.1, splash:0.9 } ] };
 // EMP: up to 4 lasers per shot that go for shields first (personal shields, Aegis domes, electrified
 // enemies). A hit strips the shield for good, pops the dome, or shorts out the electricity. Tiny damage.
-TOWERS.emp = { name:'EMP', color:'#3d7bff', sides:5, cost:75, unlock:12, shieldBreak:true, beams:4, desc:'Up to 4 lasers that hunt shields. Strips them, pops domes, shorts out electrified enemies. Barely any damage. Electrified enemies can\'t shut it down.',
+TOWERS.emp = { name:'EMP', color:'#3d7bff', sides:5, cost:75, unlock:12, shieldBreak:true, beams:4, desc:'Up to 4 lasers that hunt shields, on the ground or in the air. Strips them, pops domes, shorts out electrified enemies. Barely any damage. Electrified enemies can\'t shut it down.',
             lv:[ { dmg:1.25,   rate:1.1, range:2.4, beams:4 },
                  { cost:85,  dmg:1.38, rate:1.1, range:2.7, beams:4 },
                  { cost:140, dmg:1.51,   rate:1.1, range:3.0, beams:4 },
@@ -238,7 +238,7 @@ const SHIELD_FACTOR = 0.2, SHIELD_PCT = 0.9, SHIELD_PCT_LIGHT = 0.25;
 const TOWER_ORDER = ['bolt', 'frost', 'nova', 'arc', 'emp', 'mint', 'prism', 'rail', 'beacon', 'flak', 'pyro', 'tide'];
 
 // ---- Level conditions ------------------------------------------------
-// NO BOUNTY: enemies drop no gold (Mint is your income). AIR RAID: Gliders fly in (only FLAK hits them).
+// NO BOUNTY: enemies drop no gold (Mint is your income). AIR RAID: Gliders fly in (only FLAK brings them down; EMP reaches them).
 const NO_BOUNTY_LEVELS = [14, 23, 29, 36, 43, 48, 55, 62, 67, 74, 79];
 const AIR_LEVELS = [32, 34, 38, 41, 44, 46, 50, 53, 57, 60, 64, 66, 69, 72, 75, 78, 80];
 // HEATWAVE: FROST can't be used. RAINSTORM: PYRO can't be used, and lightning strikes every new ARC (a free upgrade).
@@ -246,7 +246,7 @@ const HEAT_LEVELS = [24, 28, 35, 42, 56, 65, 71, 77];
 const RAIN_LEVELS = [49, 51, 54, 58, 61, 63, 68, 73, 76];
 const CONDITIONS = {
   noBounty: { tag:'NO BOUNTY', color:'#ffd23d', need:'mint', line:'Enemies drop no gold. MINT is your only income.' },
-  air:      { tag:'AIR RAID',  color:'#9fe8ff', need:'flak', line:'Gliders fly over the path. Only FLAK can hit them.' },
+  air:      { tag:'AIR RAID',  color:'#9fe8ff', need:'flak', line:'Gliders fly over the path. Only FLAK can bring them down.' },
   shielded: { tag:'HEAVY SHIELDS', color:'#4aa8ff', need:['emp', 'prism'], line:'Lots of shielded enemies. Bring EMP or PRISM.' },
   heat:     { tag:'HEATWAVE',  color:'#ff8a3d', ban:'frost', line:'Too hot for FROST: it can\'t be used here.' },
   rain:     { tag:'RAINSTORM', color:'#7fb6ff', ban:'pyro',  line:'No PYRO in the rain. Lightning strikes each new ARC: a free upgrade.' },
@@ -316,7 +316,7 @@ const STR = {
     info_new: 'NEW  {0}: {1}', info_new_tower: 'NEW TOWER  {0}: {1}', info_two: 'NEW  Enemies pour in from two portals!', info_boss: 'A Warden boss arrives in the final wave. It calls in more enemies as it walks.',
     bring: 'BRING', add: 'ADD', play_without: 'PLAY WITHOUT IT',
     confirm_noBounty: 'Enemies drop no gold on this level. Are you sure you want to play without {0}?',
-    confirm_air: 'Gliders fly over the path and only {0} can hit them. Are you sure you want to play without it?',
+    confirm_air: 'Gliders fly over the path and only {0} can bring them down. Are you sure you want to play without it?',
     confirm_shielded: 'This level has heavy shield usage. Are you sure you want to play without {0}?',
     info_light: 'Some enemies carry shields. EMP or PRISM helps, but you can manage without.',
     shield_badge: 'SHIELD', shielded_note: 'Shielded here: takes 20% damage until an EMP strips it.', stripped: 'STRIPPED', dome_down: 'DOME DOWN',
@@ -392,7 +392,7 @@ const STR = {
     info_new: '新  {0}：{1}', info_new_tower: '新塔  {0}：{1}', info_two: '新  敌人从两个传送门涌入！', info_boss: '守卫者首领将在最后一波出现，行进时会不断召唤敌人。',
     bring: '携带', add: '加入', play_without: '不带也开始',
     confirm_noBounty: '本关敌人不掉落金币。确定不带{0}就开始吗？',
-    confirm_air: '滑翔者会飞越道路，只有{0}能击中它们。确定不带就开始吗？',
+    confirm_air: '滑翔者会飞越道路，只有{0}能击落它们。确定不带就开始吗？',
     confirm_shielded: '本关大量敌人带护盾。确定不带{0}就开始吗？',
     info_light: '部分敌人带护盾。电磁或棱镜有帮助，但不带也能应付。',
     shield_badge: '护盾', shielded_note: '本关带护盾：被电磁剥除前只受 20% 伤害。', stripped: '已剥除', dome_down: '护罩破碎',
@@ -469,7 +469,7 @@ const STR = {
     info_new: 'NUEVO  {0}: {1}', info_new_tower: 'NUEVA TORRE  {0}: {1}', info_two: 'NUEVO  ¡Los enemigos llegan por dos portales!', info_boss: 'Un Guardián llega en la última oleada. Llama a más enemigos mientras avanza.',
     bring: 'LLEVA', add: 'AÑADIR', play_without: 'JUGAR SIN ELLA',
     confirm_noBounty: 'En este nivel los enemigos no sueltan oro. ¿Seguro que quieres jugar sin {0}?',
-    confirm_air: 'Los planeadores vuelan sobre el camino y solo {0} puede alcanzarlos. ¿Seguro que quieres jugar sin ella?',
+    confirm_air: 'Los planeadores vuelan sobre el camino y solo {0} puede derribarlos. ¿Seguro que quieres jugar sin ella?',
     confirm_shielded: 'En este nivel hay muchos escudos. ¿Seguro que quieres jugar sin {0}?',
     info_light: 'Algunos enemigos llevan escudo. EMP o PRISMA ayudan, pero puedes arreglártelas sin ellos.',
     shield_badge: 'ESCUDO', shielded_note: 'Con escudo aquí: recibe el 20% del daño hasta que un EMP se lo quite.', stripped: 'SIN ESCUDO', dome_down: 'CÚPULA ROTA',
@@ -522,15 +522,15 @@ const ZH = {
   tower: { bolt: '光弹', frost: '冰霜', nova: '新星', arc: '电弧', emp: '电磁', mint: '铸币', prism: '棱镜', rail: '轨道炮', beacon: '信标', flak: '防空', pyro: '烈焰', tide: '潮汐' },
   towerDesc: {
     bolt: '快速光弹。每第 4 发暴击，每次升级多一发暴击。4 级：大师光弹，射速 +35%。', frost: '冰冻脉冲，减速附近所有敌人。不会着火，还能扑灭紧挨着的塔上的火。', nova: '等离子炸弹，范围伤害，无视护甲。', arc: '连锁闪电，每次升级射速更快。带电敌人会让它超载，但免疫它的伤害。4 级：高压电网，每次攻击还会沿所有道路发出脉冲。',
-    emp: '最多 4 道激光专找护盾：剥除护盾、击破护罩、让带电敌人短路。几乎没有伤害。带电敌人无法让它短路。', mint: '波次进行时不断产出金币。', prism: '光束越烧越强，穿透护甲和护盾。',
-    rail: '沿一条固定直线射击，贯穿线上所有敌人。', beacon: '提升相邻塔的伤害。', flak: '防空导弹。唯一能击中飞行敌人的塔。',
+    emp: '最多 4 道激光专找护盾，地面和空中都能打：剥除护盾、击破护罩、让带电敌人短路。几乎没有伤害。带电敌人无法让它短路。', mint: '波次进行时不断产出金币。', prism: '光束越烧越强，穿透护甲和护盾。',
+    rail: '沿一条固定直线射击，贯穿线上所有敌人。', beacon: '提升相邻塔的伤害。', flak: '防空导弹。唯一能击落飞行敌人的塔。',
     pyro: '短程火焰喷射，带少量溅射。对寒冷敌人造成三倍伤害。', tide: '水柱扑灭着火的塔，并将着火的敌人永久浇灭。几乎没有伤害。',
   },
   enemy: { grunt: '方块', scout: '飞镖', splitter: '孢子', mite: '螨虫', brute: '壁垒', boss: '守卫者', aegis: '神盾', blink: '闪烁', mender: '治愈者', titan: '泰坦', glider: '滑翔者', volt: '伏特', yeti: '雪怪', scorch: '灼焰', boss_grunt: '方块之王', boss_scout: '飞镖女王', boss_splitter: '孢子之母', boss_brute: '堡垒', boss_aegis: '神盾主宰', boss_blink: '幻影', boss_mender: '生命之花', boss_titan: '巨像', boss_glider: '风暴之翼', boss_volt: '超载者', boss_yeti: '冰霜巨人', boss_scorch: '炼狱' },
   enemyDesc: {
     grunt: '最基础的行走者。', scout: '速度快但很脆弱。', splitter: '被摧毁时分裂成 3 只螨虫。抵达核心会扣 4 条命：它自己加体内的 3 只螨虫。', mite: '小而快。', brute: '重甲：小伤害几乎无效。',
     boss: '首领：厚重护甲，生命值极高。行进时会不断召唤敌人。', aegis: '投射随行护罩，罩内敌人只受 20% 伤害。电磁可将其击破。', blink: '每隔几秒向前瞬移。',
-    mender: '治疗附近的敌人。优先消灭它。', titan: '巨大、缓慢且重甲。', glider: '直线飞越道路。只有防空塔能击中。',
+    mender: '治疗附近的敌人。优先消灭它。', titan: '巨大、缓慢且重甲。', glider: '直线飞越道路。只有防空塔能击落它（电磁激光能打到它，但几乎没有伤害）。',
     volt: '带电：紧挨着它的塔会短路 4 秒（电磁除外，电弧塔反而会超载）。免疫电弧。电磁能让它短路。',
     yeti: '每秒向范围内所有塔扔雪球。被击中的塔 5 秒内攻速大减。冰霜塔反而会超载。',
     scorch: '着火：每隔几秒向附近的塔扔一个火球。被击中的塔会烧毁（返还 25%），除非潮汐塔或紧挨着的冰霜塔把火扑灭。',
@@ -538,13 +538,13 @@ const ZH = {
     boss_splitter: '首领。行进时放出螨虫，被摧毁时炸成 4 个孢子。', boss_brute: '首领。护甲极厚，小伤害几乎无效。召唤壁垒。',
     boss_aegis: '首领。巨大的护罩覆盖附近所有敌人（只受 20% 伤害）。电磁可将其击破。召唤方块。', boss_blink: '首领。每隔几秒向前远距离瞬移。召唤闪烁。',
     boss_mender: '首领。每 2 秒治疗周围所有敌人。召唤方块。', boss_titan: '首领。巨大、缓慢、护甲极重。抵达核心会扣 8 条命。',
-    boss_glider: '首领。直线飞越道路，只有防空塔能击中。召唤滑翔者。', boss_volt: '首领。带电且范围极大：2.5 格内的塔会短路（电磁除外）。免疫电弧。召唤伏特。',
+    boss_glider: '首领。直线飞越道路，只有防空塔能击落它。召唤滑翔者。', boss_volt: '首领。带电且范围极大：2.5 格内的塔会短路（电磁除外）。免疫电弧。召唤伏特。',
     boss_yeti: '首领。冰霜：向 3 格内所有塔扔雪球。召唤雪怪。', boss_scorch: '首领。着火：扔火球的频率和距离都翻倍。召唤灼焰。',
   },
   world: ['虚空', '深渊', '余烬', '糖果', '极光', '烈日', '冰川', '剧毒'],
   cond: {
     noBounty: ['无赏金', '敌人不掉落金币。铸币塔是唯一收入。'],
-    air: ['空袭', '滑翔者飞越道路，只有防空塔能击中。'],
+    air: ['空袭', '滑翔者飞越道路，只有防空塔能击落它们。'],
     shielded: ['重护盾', '大量敌人带护盾。带电磁或棱镜。'],
     heat: ['热浪', '太热了，冰霜塔无法使用。'],
     rain: ['暴雨', '雨中不能用烈焰塔。闪电会击中每座新建的电弧塔：免费升级。'],
@@ -566,7 +566,7 @@ const ZH = {
     scorch: '着火的敌人会向道路附近的塔扔火球，着火的塔会被烧毁，除非潮汐塔喷到它，或紧挨着的冰霜塔发出冲击。冰霜塔本身不会着火。',
     mender: '治愈者会治疗同伴。把塔设为攻击“最强”，或用轨道炮狙击。',
     titan: '泰坦巨大且有护甲。在同一个拐角集中升级过的塔。',
-    glider: '滑翔者直线飞向核心。只有防空塔能击中它们。在飞行线下方建造防空塔。',
+    glider: '滑翔者直线飞向核心。只有防空塔能击落它们。在飞行线下方建造防空塔。',
     nobounty: '无赏金关卡：敌人不掉落金币。尽早建造铸币塔并升级，这是你唯一的收入。',
   },
 };
@@ -575,10 +575,10 @@ const ES = {
   towerDesc: {
     bolt: 'Láser rápido. Cada 4.º disparo es crítico; cada mejora añade otro. Nivel 4: RAYO MAESTRO, 35% más rápido.', frost: 'Pulso helado que frena a todos los cercanos. Nunca arde y apaga el fuego de las torres de al lado.',
     nova: 'Bomba de plasma. Daño en área, atraviesa armadura.', arc: 'Relámpago en cadena; cada mejora dispara más rápido. Los eléctricos lo sobrecargan pero son inmunes a él. Nivel 4: ALTA TENSIÓN, cada ataque también lanza un pulso por todos los caminos.',
-    emp: 'Hasta 4 láseres que buscan escudos: los quita, rompe cúpulas y cortocircuita a los eléctricos. Casi sin daño. Los eléctricos no pueden apagarlo.',
+    emp: 'Hasta 4 láseres que buscan escudos, en tierra o en el aire: los quita, rompe cúpulas y cortocircuita a los eléctricos. Casi sin daño. Los eléctricos no pueden apagarlo.',
     mint: 'Genera oro mientras hay oleadas.', prism: 'Rayo que se calienta sobre un objetivo. Atraviesa armadura y escudos.',
     rail: 'Dispara en una línea fija y atraviesa todo lo que hay en ella.', beacon: 'Aumenta el daño de las torres de al lado.',
-    flak: 'Misiles antiaéreos. La única torre que alcanza a los voladores.',
+    flak: 'Misiles antiaéreos. La única torre que puede derribar a los voladores.',
     pyro: 'Chorro de fuego con algo de área. Triple daño a enemigos fríos.', tide: 'Chorros de agua que apagan torres en llamas, y a los enemigos en llamas para siempre. Casi sin daño.',
   },
   enemy: { grunt: 'Bloque', scout: 'Dardo', splitter: 'Espora', mite: 'Ácaro', brute: 'Baluarte', boss: 'Guardián', aegis: 'Égida', blink: 'Destello', mender: 'Sanador', titan: 'Titán', glider: 'Planeador', volt: 'Voltio', yeti: 'Yeti', scorch: 'Brasa', boss_grunt: 'Rey Bloque', boss_scout: 'Reina Dardo', boss_splitter: 'Madre Espora', boss_brute: 'Fortaleza', boss_aegis: 'Bastión', boss_blink: 'Fantasma', boss_mender: 'Flor de Vida', boss_titan: 'Coloso', boss_glider: 'Ala Tormenta', boss_volt: 'Sobrecarga', boss_yeti: 'Gigante Helado', boss_scorch: 'Infierno' },
@@ -586,7 +586,7 @@ const ES = {
     grunt: 'El caminante básico.', scout: 'Rápido pero frágil.', splitter: 'Se divide en 3 ácaros al destruirlo. Si llega al núcleo quita 4 vidas: ella y los 3 ácaros de dentro.', mite: 'Pequeño y veloz.',
     brute: 'Blindado. Los golpes pequeños apenas le hacen nada.', boss: 'Jefe. Blindaje pesado y muchísima vida. Llama a más enemigos mientras avanza.',
     aegis: 'Proyecta una cúpula que viaja con él. Los enemigos dentro reciben el 20% del daño. EMP la revienta.', blink: 'Se teletransporta hacia delante cada pocos segundos.',
-    mender: 'Cura a los enemigos cercanos. Acaba con él primero.', titan: 'Enorme, lento y muy blindado.', glider: 'Vuela en línea recta sobre el camino. Solo FLAK lo alcanza.',
+    mender: 'Cura a los enemigos cercanos. Acaba con él primero.', titan: 'Enorme, lento y muy blindado.', glider: 'Vuela en línea recta sobre el camino. Solo FLAK puede derribarlo (los láseres de EMP lo alcanzan, pero apenas le hacen daño).',
     volt: 'Eléctrico: las torres junto a él se apagan 4 s (menos EMP; ARCO se sobrecarga). Inmune a ARCO. EMP lo cortocircuita.',
     yeti: 'Lanza bolas de nieve a todas las torres a su alcance cada segundo. Las alcanzadas disparan mucho más lento 5 s. HIELO se sobrecarga.',
     scorch: 'En llamas: cada pocos segundos lanza una bola de fuego a una torre cercana. La torre alcanzada arde hasta caer (se recupera el 25%) salvo que MAREA o un HIELO de al lado la apaguen.',
@@ -594,13 +594,13 @@ const ES = {
     boss_splitter: 'Jefe. Suelta Ácaros al avanzar y estalla en 4 Esporas al morir.', boss_brute: 'Jefe. Armadura enorme: los golpes pequeños apenas la rozan. Invoca Baluartes.',
     boss_aegis: 'Jefe. Su gran cúpula cubre todo lo cercano (reciben un 20% del daño). EMP la rompe. Invoca Bloques.', boss_blink: 'Jefe. Se teletransporta muy lejos cada pocos segundos. Invoca Destellos.',
     boss_mender: 'Jefe. Cura a todos los enemigos cercanos cada 2 segundos. Invoca Bloques.', boss_titan: 'Jefe. Enorme, lento y con muchísima armadura. Quita 8 vidas si llega al núcleo.',
-    boss_glider: 'Jefe. Vuela en línea recta sobre el camino; solo FLAK lo alcanza. Invoca Planeadores.', boss_volt: 'Jefe. Electrificado y con gran alcance: las torres a 2,5 casillas se apagan (menos EMP). Inmune a ARCO. Invoca Voltios.',
+    boss_glider: 'Jefe. Vuela en línea recta sobre el camino; solo FLAK puede derribarlo. Invoca Planeadores.', boss_volt: 'Jefe. Electrificado y con gran alcance: las torres a 2,5 casillas se apagan (menos EMP). Inmune a ARCO. Invoca Voltios.',
     boss_yeti: 'Jefe. Helado: lanza bolas de nieve a todas las torres a 3 casillas. Invoca Yetis.', boss_scorch: 'Jefe. En llamas: lanza bolas de fuego el doble de a menudo y más lejos. Invoca Brasas.',
   },
   world: ['VACÍO', 'ABISMO', 'BRASAS', 'DULCE', 'AURORA', 'SOLAR', 'GLACIAR', 'TÓXICO'],
   cond: {
     noBounty: ['SIN BOTÍN', 'Los enemigos no sueltan oro. CECA es tu único ingreso.'],
-    air: ['ATAQUE AÉREO', 'Los planeadores vuelan sobre el camino. Solo FLAK los alcanza.'],
+    air: ['ATAQUE AÉREO', 'Los planeadores vuelan sobre el camino. Solo FLAK puede derribarlos.'],
     shielded: ['ESCUDOS PESADOS', 'Muchos enemigos con escudo. Lleva EMP o PRISMA.'],
     heat: ['OLA DE CALOR', 'Demasiado calor para HIELO: aquí no se puede usar.'],
     rain: ['TORMENTA', 'Sin PIRO con lluvia. Cada ARCO nuevo recibe un rayo: mejora gratis.'],
@@ -622,7 +622,7 @@ const ES = {
     scorch: 'Los enemigos en llamas lanzan bolas de fuego a las torres junto al camino. Una torre en llamas cae salvo que MAREA la moje o un HIELO de al lado dispare. HIELO nunca arde.',
     mender: 'Los sanadores curan a sus compañeros. Pon una torre en FUERTE o usa RIEL.',
     titan: 'Los titanes son enormes y blindados. Junta torres mejoradas en una curva.',
-    glider: 'Los planeadores vuelan directos a tu núcleo. Solo FLAK los alcanza. Constrúyela bajo la línea de vuelo.',
+    glider: 'Los planeadores vuelan directos a tu núcleo. Solo FLAK puede derribarlos. Constrúyela bajo la línea de vuelo.',
     nobounty: 'Nivel sin botín: los enemigos no sueltan oro. Construye CECAS pronto y mejóralas: son tu único ingreso.',
   },
 };
@@ -2958,9 +2958,9 @@ function inRange(tw, e, range) {
 }
 function findTarget(tw, range) {
   let best = null, bestV = -Infinity;
-  const air = !!TOWERS[tw.type].air;
+  const air = !!TOWERS[tw.type].air, both = tw.type === 'emp';            // v44: EMP lasers reach flyers as well
   for (const e of G.enemies) {
-    if (!e.alive || e.age < 0.15 || !!e.rc.flying !== air || !inRange(tw, e, range)) continue;
+    if (!e.alive || e.age < 0.15 || (!both && !!e.rc.flying !== air) || !inRange(tw, e, range)) continue;
     if (tw.type === 'arc' && isLiveElec(e)) continue;                 // v42: electrified enemies are immune to ARC
     const mode = tw.mode;
     const v = mode === 'first' ? e.dist / e.path.len * 1e4 : mode === 'strong' ? e.hp + e.shield : -((e.x - tw.x) ** 2 + (e.y - tw.y) ** 2);
@@ -3041,14 +3041,15 @@ function fire(tw, tg) {
     // up to L.beams lasers: shielded, domed and electrified enemies first, then whoever is closest to the core
     const range = L.range * TILE, list = [];
     // (an Aegis counts as in range as soon as the edge of its dome is)
-    for (const e of G.enemies) if (e.alive && !e.rc.flying && e.age >= 0.15 && inRange(tw, e, range + (e.domeMax > 0 && !e.domeDead ? e.rc.dome.r * TILE * 0.5 : 0))) list.push(e);
+    for (const e of G.enemies) if (e.alive && e.age >= 0.15 && inRange(tw, e, range + (e.domeMax > 0 && !e.domeDead ? e.rc.dome.r * TILE * 0.5 : 0))) list.push(e);   // v44: flyers too
     list.sort((a, b) => (empWants(b) - empWants(a)) || (b.dist / b.path.len - a.dist / a.path.len));
     const hitList = list.slice(0, L.beams);
     if (hitList.length) tw.aim = Math.atan2(hitList[0].y - tw.y, hitList[0].x - tw.x);
     for (const e of hitList) {
       const want = empWants(e);
-      FX.line(tw.x, tw.y, e.x, e.y, want ? '#8fc0ff' : c, 0.16, want ? 3 : 2);
-      FX.flash(e.x, e.y, want ? 20 : 12, c, 0.12);
+      const ey = e.rc.flying ? e.y - 5 : e.y;                          // (a flyer hovers above its shadow)
+      FX.line(tw.x, tw.y, e.x, ey, want ? '#8fc0ff' : c, 0.16, want ? 3 : 2);
+      FX.flash(e.x, ey, want ? 20 : 12, c, 0.12);
       empHit(e, L.dmg * boost);
     }
     FX.flash(tw.x, tw.y, 22, c, 0.12);
@@ -4686,7 +4687,7 @@ function drawPause() {
 }
 
 const TIPS = {
-  glider: 'Gliders fly straight to your core. Only FLAK towers can hit them. Build FLAK under the flight line.',
+  glider: 'Gliders fly straight to your core. Only FLAK can bring them down. Build FLAK under the flight line.',
   nobounty: 'No Bounty level: enemies drop no gold. Build Mints early and upgrade them. They are your only income.',
   grunt: 'Build at bends in the path. One tower there covers two lanes.',
   scout: 'Darts are fast. Frost slows them so your towers get more shots.',
