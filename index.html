@@ -28,7 +28,7 @@ const COLS = 9, ROWS = 13;     // map grid
 const HUD_H = 50, BAR_H = 78;  // top HUD + bottom control bar
 const MIN_H = HUD_H + ROWS * TILE + BAR_H;
 const LEVELS_PER_WORLD = 10;
-const BUILD = 'v35';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
+const BUILD = 'v36';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
 
 // Title-screen showcase map
 const DEMO_PATH = [[1,0],[1,2],[7,2],[7,5],[1,5],[1,8],[7,8],[7,10],[4,10],[4,12]];
@@ -113,12 +113,13 @@ const TOWERS = {
   // v29 (user): BOLT does 20% less damage per second. It fires 20% slower (was 2.8 / 3.2 / 3.8 / 4.4 shots a second);
   // the damage per hit stays, so armor doesn't hit it any harder than before
   // v35 (user): crits follow a pattern instead of a 10% chance. crits = how many of every 4 shots crit (the last ones
-  // in each group of 4): level 1 every 4th shot, each upgrade one more, level 4 every shot. A crit does x2.5 damage.
-  bolt:   { name:'BOLT',   color:'#2ef2ff', sides:4, cost:50,  critMul:2.5, unlock:1, desc:'Rapid laser. Every 4th shot crits; each upgrade crits one more. Level 4: every shot.',
+  // in each group of 4): level 1 every 4th shot, level 2 the 3rd and 4th, level 3 the 2nd to 4th. A crit does x2.5 damage.
+  // v36 (user): level 4 is the MASTER BOLT: it keeps 3 of 4 crits, fires 35% faster and looks different (gold, twin barrels).
+  bolt:   { name:'BOLT',   color:'#2ef2ff', sides:4, cost:50,  critMul:2.5, unlock:1, desc:'Rapid laser. Every 4th shot crits; each upgrade crits one more. Level 4: MASTER BOLT, 35% faster.',
             lv:[ { dmg:7.5,  rate:2.24, range:2.3, crits:1 },
                  { cost:60,  dmg:8.25, rate:2.24, range:2.5, crits:2 },
                  { cost:120, dmg:9.08, rate:2.24, range:2.8, crits:3 },
-                 { cost:200, dmg:9.98, rate:2.24, range:3.0, crits:4 } ] },
+                 { cost:200, dmg:9.98, rate:3.02, range:3.0, crits:3, master:true } ] },
   frost:  { name:'FROST',  color:'#a3b8ff', sides:6, star:true, cost:70, unlock:3, pulse:true, desc:'Freezing pulse that slows all nearby. Never burns, and puts out fires right next to it.',
             lv:[ { dmg:5,  rate:1.0, range:1.8, slow:0.35 },
                  { cost:80,  dmg:5.5,  rate:1.0, range:2.0, slow:0.45 },
@@ -240,7 +241,7 @@ const STR = {
   en: {
     combo: 'COMBO', early_call: 'EARLY CALL  +{0}', wave: 'WAVE {0}', boss_incoming: 'BOSS INCOMING', final_wave: 'FINAL WAVE',
     cond_noBounty: 'NO BOUNTY · BUILD MINTS', cond_air: 'AIR RAID · BUILD FLAK', cond_shielded: 'HEAVY SHIELDS · USE EMP OR PRISM',
-    warden: 'WARDEN', armored_boss: 'ARMORED BOSS', warden_x: 'WARDEN ×{0}', tower_lv: 'LEVEL {0}', level_n: 'LEVEL {0}',
+    warden: 'WARDEN', armored_boss: 'ARMORED BOSS', warden_x: 'WARDEN ×{0}', tower_lv: 'LEVEL {0}', master_bolt: 'MASTER BOLT', level_n: 'LEVEL {0}',
     m_10: 'NICE', m_25: 'AWESOME', m_50: 'UNREAL', m_100: 'LEGENDARY', m_200: 'GODLIKE',
     combo_gold: '{0} COMBO  +{1} GOLD', combo_only: '{0} COMBO', shattered: 'SHATTERED', warden_down: 'WARDEN DOWN', warden_down_gold: 'WARDEN DOWN  +{0}',
     wave_clear: 'WAVE {0} CLEAR', wave_clear_gold: 'WAVE {0} CLEAR  +{1}',
@@ -313,7 +314,7 @@ const STR = {
   zh: {
     combo: '连击', early_call: '提前召唤  +{0}', wave: '第 {0} 波', boss_incoming: '首领来袭', final_wave: '最后一波',
     cond_noBounty: '无赏金 · 建造铸币塔', cond_air: '空袭 · 建造防空塔', cond_shielded: '重护盾 · 使用电磁或棱镜',
-    warden: '守卫者', armored_boss: '重甲首领', warden_x: '守卫者 ×{0}', tower_lv: '{0} 级', level_n: '第 {0} 关',
+    warden: '守卫者', armored_boss: '重甲首领', warden_x: '守卫者 ×{0}', tower_lv: '{0} 级', master_bolt: '大师光弹', level_n: '第 {0} 关',
     m_10: '漂亮', m_25: '太棒了', m_50: '不可思议', m_100: '传奇', m_200: '神级',
     combo_gold: '{0} 连击  +{1} 金币', combo_only: '{0} 连击', shattered: '粉碎！', warden_down: '守卫者被击碎', warden_down_gold: '守卫者被击碎  +{0}',
     wave_clear: '第 {0} 波清除', wave_clear_gold: '第 {0} 波清除  +{1}',
@@ -387,7 +388,7 @@ const STR = {
     combo: 'COMBO', early_call: 'ADELANTO  +{0}', wave: 'OLEADA {0}', boss_incoming: 'SE ACERCA EL JEFE', final_wave: 'ÚLTIMA OLEADA',
     cond_noBounty: 'SIN BOTÍN · CONSTRUYE CECAS', cond_air: 'ATAQUE AÉREO · CONSTRUYE FLAK', cond_shielded: 'ESCUDOS PESADOS · USA EMP O PRISMA',
     cond_heat: 'OLA DE CALOR · SIN HIELO', cond_rain: 'TORMENTA · SIN PIRO',
-    warden: 'GUARDIÁN', armored_boss: 'JEFE BLINDADO', warden_x: 'GUARDIÁN ×{0}', tower_lv: 'NIVEL {0}', level_n: 'NIVEL {0}',
+    warden: 'GUARDIÁN', armored_boss: 'JEFE BLINDADO', warden_x: 'GUARDIÁN ×{0}', tower_lv: 'NIVEL {0}', master_bolt: 'RAYO MAESTRO', level_n: 'NIVEL {0}',
     m_10: 'BIEN', m_25: 'GENIAL', m_50: 'INCREÍBLE', m_100: 'LEGENDARIO', m_200: 'DIVINO',
     combo_gold: 'COMBO {0}  +{1} ORO', combo_only: 'COMBO {0}', shattered: 'HECHO AÑICOS', warden_down: 'GUARDIÁN DERRIBADO', warden_down_gold: 'GUARDIÁN DERRIBADO  +{0}',
     wave_clear: 'OLEADA {0} SUPERADA', wave_clear_gold: 'OLEADA {0} SUPERADA  +{1}',
@@ -465,7 +466,7 @@ function tr(id, ...a) {
 const ZH = {
   tower: { bolt: '光弹', frost: '冰霜', nova: '新星', arc: '电弧', emp: '电磁', mint: '铸币', prism: '棱镜', rail: '轨道炮', beacon: '信标', flak: '防空', pyro: '烈焰', tide: '潮汐' },
   towerDesc: {
-    bolt: '快速光弹。每第 4 发暴击，每次升级多一发暴击，4 级时发发暴击。', frost: '冰冻脉冲，减速附近所有敌人。不会着火，还能扑灭紧挨着的塔上的火。', nova: '等离子炸弹，范围伤害，无视护甲。', arc: '在敌人之间连锁的闪电。带电敌人会让它超载。',
+    bolt: '快速光弹。每第 4 发暴击，每次升级多一发暴击。4 级：大师光弹，射速 +35%。', frost: '冰冻脉冲，减速附近所有敌人。不会着火，还能扑灭紧挨着的塔上的火。', nova: '等离子炸弹，范围伤害，无视护甲。', arc: '在敌人之间连锁的闪电。带电敌人会让它超载。',
     emp: '最多 4 道激光专找护盾：剥除护盾、击破护罩、让带电敌人短路。几乎没有伤害。', mint: '波次进行时不断产出金币。', prism: '光束越烧越强，穿透护甲和护盾。',
     rail: '沿一条固定直线射击，贯穿线上所有敌人。', beacon: '提升相邻塔的伤害。', flak: '防空导弹。唯一能击中飞行敌人的塔。',
     pyro: '短程火焰喷射，带少量溅射。对寒冷敌人造成三倍伤害。', tide: '水柱扑灭着火的塔，并将着火的敌人永久浇灭。几乎没有伤害。',
@@ -511,7 +512,7 @@ const ZH = {
 const ES = {
   tower: { bolt: 'RAYO', frost: 'HIELO', nova: 'NOVA', arc: 'ARCO', emp: 'EMP', mint: 'CECA', prism: 'PRISMA', rail: 'RIEL', beacon: 'FARO', flak: 'FLAK', pyro: 'PIRO', tide: 'MAREA' },
   towerDesc: {
-    bolt: 'Láser rápido. Cada 4.º disparo es crítico; cada mejora añade otro. Nivel 4: todos.', frost: 'Pulso helado que frena a todos los cercanos. Nunca arde y apaga el fuego de las torres de al lado.',
+    bolt: 'Láser rápido. Cada 4.º disparo es crítico; cada mejora añade otro. Nivel 4: RAYO MAESTRO, 35% más rápido.', frost: 'Pulso helado que frena a todos los cercanos. Nunca arde y apaga el fuego de las torres de al lado.',
     nova: 'Bomba de plasma. Daño en área, atraviesa armadura.', arc: 'Relámpago que salta entre enemigos. Los eléctricos lo sobrecargan.',
     emp: 'Hasta 4 láseres que buscan escudos: los quita, rompe cúpulas y cortocircuita a los eléctricos. Casi sin daño.',
     mint: 'Genera oro mientras hay oleadas.', prism: 'Rayo que se calienta sobre un objetivo. Atraviesa armadura y escudos.',
@@ -1813,8 +1814,10 @@ function drawIceHalo(x, y, r, t) {
 
 // ---- Tower glyph: crystals that grow with level ---------------------
 // o: { lv, aim, kick, t, scale, alpha, ghost }
+const MASTER_GOLD = '#ffd23d';
 function drawTowerGlyph(type, x, y, o) {
-  const d = TOWERS[type], c = d.color, lv = o.lv || 0, t = o.t || 0;
+  const d = TOWERS[type], lv = o.lv || 0, t = o.t || 0;
+  const master = !!(d.lv[lv] && d.lv[lv].master), c = master ? MASTER_GOLD : d.color;   // v36: MASTER BOLT turns gold
   const s = o.scale == null ? 1 : o.scale;
   const k = 1 + (o.kick || 0) * 0.14;
   const pa = ctx.globalAlpha;
@@ -1823,7 +1826,7 @@ function drawTowerGlyph(type, x, y, o) {
   // plate
   roundRect(x - 15 * s, y - 15 * s, 30 * s, 30 * s, 7 * s);
   ctx.fillStyle = '#0b0a1a'; ctx.fill();
-  ctx.lineWidth = 1.2; ctx.strokeStyle = hexA(c, 0.4); ctx.stroke();
+  ctx.lineWidth = master ? 2 : 1.2; ctx.strokeStyle = hexA(c, master ? 0.85 : 0.4); ctx.stroke();
   // LV2+: rotating outer ring
   if (lv >= 1) {
     shapePath(x, y, 14.5 * s, d.sides === 3 ? 6 : d.sides, false, t * 0.5 * (type === 'frost' ? -1 : 1));
@@ -1831,7 +1834,22 @@ function drawTowerGlyph(type, x, y, o) {
   }
   const aim = o.aim == null ? -Math.PI / 2 : o.aim;
   const ax = Math.cos(aim), ay = Math.sin(aim);
-  if (type === 'bolt') {
+  if (master) {                                          // MASTER BOLT: twin gold barrels, a star body, the old cyan diamond at its heart
+    const back = (o.kick || 0) * 3, nx = -ay, ny = ax, cy = d.color;
+    ctx.lineCap = 'round';
+    for (const sd of [-3.2, 3.2]) {
+      ctx.beginPath(); ctx.moveTo(x + nx * sd - ax * back, y + ny * sd - ay * back);
+      ctx.lineTo(x + nx * sd + ax * (16 - back) * s, y + ny * sd + ay * (16 - back) * s);
+      ctx.lineWidth = 5 * s; ctx.strokeStyle = '#0b0a1a'; ctx.stroke(); neon(c, 2.6 * s);
+    }
+    ctx.lineCap = 'butt';
+    starPath(x, y, 11.5 * s * k, 5 * s, 4, aim + Math.PI / 4);
+    ctx.fillStyle = '#0b0a1a'; ctx.fill(); ctx.fillStyle = hexA(c, 0.35); ctx.fill(); neon(c, 2);
+    shapePath(x, y, 5.5 * s * k, 4, false, aim + Math.PI / 2);
+    ctx.fillStyle = hexA(cy, 0.55); ctx.fill(); neon(cy, 1.4);
+    additive(true); glow(x, y, 9 + Math.sin(t * 6) * 2, '#ffffff', 0.9); additive(false);
+    ctx.beginPath(); ctx.arc(x, y, 2.4 + Math.sin(t * 6) * 0.5, 0, TAU); ctx.fillStyle = '#ffffff'; ctx.fill();
+  } else if (type === 'bolt') {
     const back = (o.kick || 0) * 3;
     ctx.beginPath(); ctx.moveTo(x - ax * back, y - ay * back); ctx.lineTo(x + ax * (14 - back) * s, y + ay * (14 - back) * s);
     ctx.lineCap = 'round'; neon(c, 3.2); ctx.lineCap = 'butt';
@@ -1935,14 +1953,30 @@ function drawTowerGlyph(type, x, y, o) {
     ctx.lineWidth = 1.6; ctx.strokeStyle = '#d8fff6'; ctx.stroke();
   }
   // LV3: orbiting shards
-  if (lv >= 2) {
+  if (lv >= 2 && !master) {
     for (let i = 0; i < 3; i++) {
       const a = t * 1.8 + i * TAU / 3, ox = x + Math.cos(a) * 19, oy = y + Math.sin(a) * 19;
       polyPath(ox, oy, 3, 4, a); ctx.fillStyle = c; ctx.fill();
     }
   }
+  // MASTER BOLT: a spiked gold crown, a cyan dashed halo and four white shards
+  if (master) {
+    additive(true); glow(x, y, 36, c, 0.32 + Math.sin(t * 3) * 0.1); additive(false);
+    for (let i = 0; i < 4; i++) {
+      const a = t * 0.9 + i * TAU / 4;
+      ctx.beginPath(); ctx.moveTo(x + Math.cos(a - 0.24) * 17, y + Math.sin(a - 0.24) * 17);
+      ctx.lineTo(x + Math.cos(a) * 24, y + Math.sin(a) * 24); ctx.lineTo(x + Math.cos(a + 0.24) * 17, y + Math.sin(a + 0.24) * 17); ctx.closePath();
+      ctx.fillStyle = hexA(c, 0.95); ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(x, y, 20.5, 0, TAU); ctx.setLineDash([2, 3]); ctx.lineDashOffset = t * 14;
+    ctx.lineWidth = 1.3; ctx.strokeStyle = hexA(d.color, 0.8); ctx.stroke(); ctx.setLineDash([]);
+    for (let i = 0; i < 4; i++) {
+      const a = -t * 1.6 + i * TAU / 4 + Math.PI / 4, ox = x + Math.cos(a) * 20.5, oy = y + Math.sin(a) * 20.5;
+      polyPath(ox, oy, 2.2, 4, a); ctx.fillStyle = '#ffffff'; ctx.fill();
+    }
+  }
   // LV4: a bright crown ring and a second, counter-turning set of shards
-  if (lv >= 3) {
+  if (lv >= 3 && !master) {
     additive(true); glow(x, y, 30, c, 0.25 + Math.sin(t * 3) * 0.08); additive(false);
     ctx.beginPath(); ctx.arc(x, y, 23, 0, TAU); ctx.setLineDash([3, 4]); ctx.lineDashOffset = -t * 12;
     ctx.lineWidth = 1.4; ctx.strokeStyle = hexA(c, 0.75); ctx.stroke(); ctx.setLineDash([]);
@@ -2532,7 +2566,11 @@ function upgradeTower(tw) {
   const c = TOWERS[tw.type].color;
   FX.ring(tw.x, tw.y, 10, 44, c, 0.5, 3.5); FX.ring(tw.x, tw.y, 4, 26, '#ffffff', 0.3, 2);
   for (let i = 0; i < 14; i++) FX.dot(tw.x + rand(-14, 14), tw.y + rand(-6, 10), c, 2.5, rand(0.4, 0.8), 0, rand(-90, -40));
-  FX.text(tw.x, tw.y - 26, tr('tower_lv', tw.lv + 1), c, 12, { font: FONT_D, life: 0.9 });
+  if (TOWERS[tw.type].lv[tw.lv].master) {                   // v36: MASTER BOLT
+    FX.text(tw.x, tw.y - 28, tr('master_bolt'), MASTER_GOLD, 13, { font: FONT_D, life: 1.4 });
+    FX.ring(tw.x, tw.y, 12, 70, MASTER_GOLD, 0.6, 4); FX.flash(tw.x, tw.y, 80, MASTER_GOLD, 0.35); FX.shards(tw.x, tw.y, MASTER_GOLD, 14, 170, 3.5);
+    addShake(0.25);
+  } else FX.text(tw.x, tw.y - 26, tr('tower_lv', tw.lv + 1), c, 12, { font: FONT_D, life: 0.9 });
   addShake(0.1); snd('upgrade'); vibrate(20);
   return true;
 }
@@ -2593,8 +2631,10 @@ function fire(tw, tg) {
   if (tw.type === 'bolt') {
     tw.shots = (tw.shots || 0) + 1;                                    // v35: shot k of every 4 crits if k > 4 - crits
     const crit = ((tw.shots - 1) % 4) >= 4 - (L.crits || 0);
-    G.shots.push({ x: mx, y: my, tg, lx: tg.x, ly: tg.y, dmg: L.dmg * boost * (crit ? d.critMul : 1), crit, color: c, sp: 560, vx: 0, vy: 0, src: tw.type });
-    FX.flash(mx, my, 14, c, 0.08);
+    let sx = mx, sy = my, sc = c;
+    if (L.master) { tw.tube ^= 1; const sd = tw.tube ? 3 : -3; sx = mx - Math.sin(tw.aim) * sd; sy = my + Math.cos(tw.aim) * sd; sc = MASTER_GOLD; }   // twin barrels
+    G.shots.push({ x: sx, y: sy, tg, lx: tg.x, ly: tg.y, dmg: L.dmg * boost * (crit ? d.critMul : 1), crit, color: sc, sp: L.master ? 640 : 560, vx: 0, vy: 0, src: tw.type });
+    FX.flash(sx, sy, 14, sc, 0.08);
     snd('bolt');
   } else if (tw.type === 'arc') {
     const pts = [{ x: tw.x, y: tw.y + 1 }], hit = new Set(), up = tw.zapT > 0;     // supercharged by electrified enemies
@@ -4038,6 +4078,7 @@ function drawTooltip(L, m) {
     if (m.sel === 'up') {
       const cost = upgradeCost(tw);
       title = tr('up_title', tw.lv + 2, cost); line2 = statLine(d.lv[tw.lv], d.lv[tw.lv + 1]);
+      if (d.lv[tw.lv + 1].master) { title = `${tr('master_bolt')}  ·  ${cost}`; color = MASTER_GOLD; }   // v36
       bad = G.gold < cost; line3 = bad ? tr('need_gold', cost - G.gold) : tr('letgo_upgrade');
     } else if (m.sel === 'turn') {
       title = tr('turn_to', ARROWS[(tw.dir + 1) % 4]);

@@ -17,7 +17,11 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 | `tools/` | Bot playtesters and helpers: `calibrate.js` (difficulty tuning), `probe.js`, `audit.js` (tower balance), `gen_maps.js` (level paths), `perf*.js` (frame-time profiling). |
 | `tests/` | Automated checks (Playwright). Run from the repo root, e.g. `node tests/smoke.js /tmp`. |
 
-## Current version (v35)
+## Current version (v36)
+- BOLT crits: every 4th shot at level 1, the 3rd and 4th at level 2, the 2nd, 3rd and 4th at level 3 (x2.5 damage).
+- Level 4 is the MASTER BOLT: it keeps the level 3 crit pattern, fires 35% faster (3.02 shots a second) and looks different: gold, twin barrels that alternate, a star-shaped body, a spiked rotating crown and gold shots. Upgrading to it gets its own MASTER BOLT burst.
+
+### v35
 - BOLT crits on a pattern: every 4th shot at level 1, and each upgrade makes one more shot of every 4 crit. At level 4 every shot crits (x2.5 damage).
 
 ### v34
@@ -53,7 +57,7 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 - Restart and retry go back to tower select, with the towers you used already picked.
 - The Playtest Lab and Test Mode ask for a tester password.
 
-**Note:** `src/` is still at v25. The v26 to v35 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
+**Note:** `src/` is still at v25. The v26 to v36 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
 
 ## Making a change
 1. Edit files in `src/`.
