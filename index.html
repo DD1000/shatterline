@@ -28,7 +28,7 @@ const COLS = 9, ROWS = 13;     // map grid
 const HUD_H = 50, BAR_H = 78;  // top HUD + bottom control bar
 const MIN_H = HUD_H + ROWS * TILE + BAR_H;
 const LEVELS_PER_WORLD = 10;
-const BUILD = 'v31';          // shown in lab analytics reports
+const BUILD = 'v32';          // shown in lab analytics reports
 
 // Title-screen showcase map
 const DEMO_PATH = [[1,0],[1,2],[7,2],[7,5],[1,5],[1,8],[7,8],[7,10],[4,10],[4,12]];
@@ -105,34 +105,35 @@ const FIRE = { r: 1.95, every: 3.5, burn: 30, refund: 0.25 };
 // ---- Tower recipes -------------------------------------------------
 // lv[0] is the base tower, lv[1..3] are upgrades (with their own cost).
 // range in tiles, rate = shots per second. unlock = first level you can bring it.
-// v31 (user): an upgrade adds a flat +10% damage (+10% / +20% / +30% over the tower you built) and no longer
-// makes it fire faster. Range, splash, chains, beams, FROST's slow and PRISM's heat-up still improve; costs are unchanged.
-// (Before v31 each upgrade added about +70-100% damage per second.)
+// v31 (user): upgrades no longer make a tower fire faster. Range, splash, chains, beams, FROST's slow and PRISM's
+// heat-up still improve; costs are unchanged. (Before v31 each upgrade added about +70-100% damage per second.)
+// v32 (user): every tower's base damage is 25% higher than in v31, and each upgrade adds 10% of the tower's
+// current damage: level 2 = x1.1, level 3 = x1.21, level 4 = x1.331 of the level-1 damage.
 const TOWERS = {
   // v29 (user): BOLT does 20% less damage per second. It fires 20% slower (was 2.8 / 3.2 / 3.8 / 4.4 shots a second);
   // the damage per hit stays, so armor doesn't hit it any harder than before
   bolt:   { name:'BOLT',   color:'#2ef2ff', sides:4, cost:50,  crit:0.1, unlock:1, desc:'Rapid laser. Can crit.',
-            lv:[ { dmg:6,  rate:2.24, range:2.3 },
-                 { cost:60,  dmg:6.6, rate:2.24, range:2.5 },
-                 { cost:120, dmg:7.2, rate:2.24, range:2.8 },
-                 { cost:200, dmg:7.8, rate:2.24, range:3.0 } ] },
+            lv:[ { dmg:7.5,  rate:2.24, range:2.3 },
+                 { cost:60,  dmg:8.25, rate:2.24, range:2.5 },
+                 { cost:120, dmg:9.08, rate:2.24, range:2.8 },
+                 { cost:200, dmg:9.98, rate:2.24, range:3.0 } ] },
   frost:  { name:'FROST',  color:'#a3b8ff', sides:6, star:true, cost:70, unlock:3, pulse:true, desc:'Freezing pulse that slows all nearby. Never burns, and puts out fires right next to it.',
-            lv:[ { dmg:4,  rate:1.0, range:1.8, slow:0.35 },
-                 { cost:80,  dmg:4.4,  rate:1.0, range:2.0, slow:0.45 },
-                 { cost:140, dmg:4.8, rate:1.0, range:2.2, slow:0.55, brittle:true },
-                 { cost:220, dmg:5.2, rate:1.0, range:2.4, slow:0.65, brittle:true } ] },
+            lv:[ { dmg:5,  rate:1.0, range:1.8, slow:0.35 },
+                 { cost:80,  dmg:5.5,  rate:1.0, range:2.0, slow:0.45 },
+                 { cost:140, dmg:6.05, rate:1.0, range:2.2, slow:0.55, brittle:true },
+                 { cost:220, dmg:6.66, rate:1.0, range:2.4, slow:0.65, brittle:true } ] },
   // v27 (user): NOVA fires 35% slower (was 0.52 / 0.57 / 0.63 / 0.7 shots a second)
   // v30 (user): 30% less damage per hit (was 26 / 46 / 78 / 120) and 15% slower again (was 0.34 / 0.37 / 0.41 / 0.46)
   nova:   { name:'NOVA',   color:'#ff7a2e', sides:6, cost:110, unlock:6, desc:'Plasma bomb. Splash, pierces armor.',
-            lv:[ { dmg:18, rate:0.29, range:3.0, splash:0.9 },
-                 { cost:120, dmg:19.8, rate:0.29, range:3.2, splash:1.02 },
-                 { cost:200, dmg:21.6, rate:0.29, range:3.5, splash:1.2 },
-                 { cost:300, dmg:23.4, rate:0.29, range:3.8, splash:1.35 } ] },
+            lv:[ { dmg:22.5, rate:0.29, range:3.0, splash:0.9 },
+                 { cost:120, dmg:24.75, rate:0.29, range:3.2, splash:1.02 },
+                 { cost:200, dmg:27.23, rate:0.29, range:3.5, splash:1.2 },
+                 { cost:300, dmg:29.95, rate:0.29, range:3.8, splash:1.35 } ] },
   arc:    { name:'ARC',    color:'#ffe23d', sides:3, cost:85,  unlock:9, desc:'Lightning that chains between enemies. Electrified enemies supercharge it.',
-            lv:[ { dmg:14, rate:0.9,  range:2.3, chains:3 },
-                 { cost:100, dmg:15.4, rate:0.9,  range:2.4, chains:4 },
-                 { cost:170, dmg:16.8, rate:0.9, range:2.6, chains:6 },
-                 { cost:260, dmg:18.2, rate:0.9,  range:2.8, chains:8 } ] },
+            lv:[ { dmg:17.5, rate:0.9,  range:2.3, chains:3 },
+                 { cost:100, dmg:19.25, rate:0.9,  range:2.4, chains:4 },
+                 { cost:170, dmg:21.18, rate:0.9, range:2.6, chains:6 },
+                 { cost:260, dmg:23.29, rate:0.9,  range:2.8, chains:8 } ] },
   mint:   { name:'MINT',   color:'#ffd23d', sides:6, cost:80,  unlock:13, eco:true, desc:'Pulses out gold while waves run.',
             lv:[ { gold:7,  every:3 },
                  { cost:90,  gold:11, every:2.5 },
@@ -140,15 +141,15 @@ const TOWERS = {
                  { cost:220, gold:20, every:1.8 } ] },
   prism:  { name:'PRISM',  color:'#ff5cf0', sides:4, star:true, cost:120, unlock:17, desc:'Beam heats up on one target. Goes through armor and shields.',
             // v29 (user): PRISM does 20% less damage per second (was 16 / 27 / 44 / 68 before heating up)
-            lv:[ { dps:12.8, range:2.3, heat:3 },
-                 { cost:130, dps:14.08, range:2.5, heat:3.5 },
-                 { cost:200, dps:15.36, range:2.7, heat:4 },
-                 { cost:300, dps:16.64, range:2.9, heat:4.5 } ] },
+            lv:[ { dps:16, range:2.3, heat:3 },
+                 { cost:130, dps:17.6, range:2.5, heat:3.5 },
+                 { cost:200, dps:19.36, range:2.7, heat:4 },
+                 { cost:300, dps:21.3, range:2.9, heat:4.5 } ] },
   rail:   { name:'RAIL',   color:'#6dff8e', sides:4, cost:130, unlock:22, line:true, desc:'Fires down one fixed line, piercing all on it.',
-            lv:[ { dmg:64,  rate:0.46, range:4.5 },
-                 { cost:140, dmg:70.4, rate:0.46,  range:5.0 },
-                 { cost:210, dmg:76.8, rate:0.46, range:5.5 },
-                 { cost:320, dmg:83.2, rate:0.46,  range:6.0 } ] },
+            lv:[ { dmg:80,  rate:0.46, range:4.5 },
+                 { cost:140, dmg:88, rate:0.46,  range:5.0 },
+                 { cost:210, dmg:96.8, rate:0.46, range:5.5 },
+                 { cost:320, dmg:106.48, rate:0.46,  range:6.0 } ] },
   beacon: { name:'BEACON', color:'#f4f0ff', sides:8, cost:90, unlock:27, support:true, desc:'Boosts damage of towers next to it.',
             lv:[ { buff:0.3,  range:1.5 },
                  { cost:100, buff:0.5,  range:1.5 },
@@ -156,29 +157,29 @@ const TOWERS = {
                  { cost:240, buff:1.0,  range:2.3 } ] },
 };
 TOWERS.flak = { name:'FLAK', color:'#ff6f61', sides:3, cost:90, unlock:32, air:true, desc:'Anti-air missiles. The only tower that hits flyers.',
-            lv:[ { dmg:16, rate:1.3, range:3.2, splash:0.6 },
-                 { cost:100, dmg:17.6, rate:1.3, range:3.5, splash:0.7 },
-                 { cost:160, dmg:19.2, rate:1.3, range:3.8, splash:0.8 },
-                 { cost:240, dmg:20.8, rate:1.3, range:4.1, splash:0.9 } ] };
+            lv:[ { dmg:20, rate:1.3, range:3.2, splash:0.6 },
+                 { cost:100, dmg:22, rate:1.3, range:3.5, splash:0.7 },
+                 { cost:160, dmg:24.2, rate:1.3, range:3.8, splash:0.8 },
+                 { cost:240, dmg:26.62, rate:1.3, range:4.1, splash:0.9 } ] };
 // EMP: up to 4 lasers per shot that go for shields first (personal shields, Aegis domes, electrified
 // enemies). A hit strips the shield for good, pops the dome, or shorts out the electricity. Tiny damage.
 TOWERS.emp = { name:'EMP', color:'#3d7bff', sides:5, cost:75, unlock:12, shieldBreak:true, beams:4, desc:'Up to 4 lasers that hunt shields. Strips them, pops domes, shorts out electrified enemies. Barely any damage.',
-            lv:[ { dmg:1,   rate:1.1, range:2.4, beams:4 },
-                 { cost:85,  dmg:1.1, rate:1.1, range:2.7, beams:4 },
-                 { cost:140, dmg:1.2,   rate:1.1, range:3.0, beams:4 },
-                 { cost:200, dmg:1.3,   rate:1.1, range:3.3, beams:4 } ] };
+            lv:[ { dmg:1.25,   rate:1.1, range:2.4, beams:4 },
+                 { cost:85,  dmg:1.38, rate:1.1, range:2.7, beams:4 },
+                 { cost:140, dmg:1.51,   rate:1.1, range:3.0, beams:4 },
+                 { cost:200, dmg:1.66,   rate:1.1, range:3.3, beams:4 } ] };
 // PYRO (fire): a short flame jet with a little splash; burns cold enemies (Yetis, iced enemies) for triple damage.
 TOWERS.pyro = { name:'PYRO', color:'#ff4a12', sides:3, cost:95, unlock:47, cold:3, desc:'Flame jet with a little splash. Triple damage to cold enemies.',
-            lv:[ { dmg:9,  rate:2.0, range:2.0, splash:0.6 },
-                 { cost:90,  dmg:9.9, rate:2.0, range:2.1, splash:0.65 },
-                 { cost:150, dmg:10.8, rate:2.0, range:2.3, splash:0.7 },
-                 { cost:230, dmg:11.7, rate:2.0, range:2.5, splash:0.8 } ] };
+            lv:[ { dmg:11.25,  rate:2.0, range:2.0, splash:0.6 },
+                 { cost:90,  dmg:12.38, rate:2.0, range:2.1, splash:0.65 },
+                 { cost:150, dmg:13.61, rate:2.0, range:2.3, splash:0.7 },
+                 { cost:230, dmg:14.97, rate:2.0, range:2.5, splash:0.8 } ] };
 // TIDE (water): water jets that go for burning enemies first and put their flames out for good. Tiny damage.
 TOWERS.tide = { name:'TIDE', color:'#1ec8a5', sides:6, cost:80, unlock:52, douse:true, beams:2, desc:'Water jets that put out burning towers, and burning enemies for good. Barely any damage.',
-            lv:[ { dmg:3,  rate:1.0, range:2.4, beams:2 },
-                 { cost:80,  dmg:3.3,  rate:1.0, range:2.6, beams:2 },
-                 { cost:130, dmg:3.6,  rate:1.0, range:2.8, beams:3 },
-                 { cost:200, dmg:3.9, rate:1.0, range:3.0, beams:3 } ] };
+            lv:[ { dmg:3.75,  rate:1.0, range:2.4, beams:2 },
+                 { cost:80,  dmg:4.12,  rate:1.0, range:2.6, beams:2 },
+                 { cost:130, dmg:4.54,  rate:1.0, range:2.8, beams:3 },
+                 { cost:200, dmg:4.99, rate:1.0, range:3.0, beams:3 } ] };
 // Shields shrug off ordinary hits: only 20% of normal damage gets into a shield.
 // Two kinds: personal shields (random enemy types per level, worth 60% of their HP)
 // and the Aegis dome (covers every ground enemy near the Aegis while it lives).
@@ -910,9 +911,10 @@ const ECON_LEAN45 = { key: 'lean', bounty: 0.45, combo: true, clean: w => 12 + 3
 const ECON_LEAN50 = { key: 'lean', bounty: 0.5, combo: true, clean: w => 14 + 4 * w, dirty: () => 0 };
 // PAYDAY: kills pay nothing; every wave pays a wage, less if anything leaked (v26: Lab 3 left 904 gold, so wages are lower)
 const ECON_PAYDAY = { key: 'payday', bounty: 0, combo: false, clean: w => 50 + 9 * w, dirty: w => 32 + 6 * w };
+// v32 (user): every lab's version was bumped to clear the COMPLETED stamps after the v29-v32 rebalance
 const LAB_DEFS = [
-  { id: 'lean66', map: 66, ref: 66, clone: 66, econ: ECON_LEAN45, gold: 404 },
-  { id: 'counters', map: 65, ref: 66, world: 4, econ: ECON_LEAN, gold: 350, cal: 0.32, waves: [
+  { id: 'lean66', v: 2, map: 66, ref: 66, clone: 66, econ: ECON_LEAN45, gold: 404 },
+  { id: 'counters', v: 2, map: 65, ref: 66, world: 4, econ: ECON_LEAN, gold: 350, cal: 0.32, waves: [
     [['grunt', 18, 0.6, 0]],
     [['scout', 22, 0.32, 1]],
     [['brute', 6, 1.4, 0], ['grunt', 12, 0.5, 1]],
@@ -928,7 +930,7 @@ const LAB_DEFS = [
     [['brute', 6, 1.0, 0, { fire: 1 }], ['yeti', 3, 1.6, 1], ['blink', 16, 0.6, 1]],
     [['titan', 4, 2.4, -1], ['mender', 6, 1.0, -1], ['splitter', 14, 0.6, 0], ['scorch', 4, 1.0, 1], ['volt', 4, 1.0, 0], ['scout', 30, 0.2, 1]],
   ] },
-  { id: 'payday', map: 61, ref: 66, world: 5, econ: ECON_PAYDAY, gold: 380, cal: 0.34, waves: [
+  { id: 'payday', v: 2, map: 61, ref: 66, world: 5, econ: ECON_PAYDAY, gold: 380, cal: 0.34, waves: [
     [['grunt', 20, 0.5, 0]],
     [['brute', 4, 1.5, 0, { shield: 1 }], ['grunt', 12, 0.45, 0]],
     [['scout', 26, 0.28, 0]],
@@ -945,7 +947,7 @@ const LAB_DEFS = [
     [['aegis', 4, 1.8, 0], ['brute', 12, 0.7, 0, { shield: 1 }], ['grunt', 40, 0.2, 0], ['titan', 3, 2.4, 0]],
   ] },
   // v28 (user: every boss level is 25 waves): Wardens at 8 and 16, two at the end (waves 15-24 are new)
-  { id: 'warden', v: 2, grewAt: 15, map: 70, ref: 70, world: 7, econ: ECON_LEAN50, gold: 400, cal: 0.31, boss: true, bossPhases: true, waves: [
+  { id: 'warden', v: 3, grewAt: 15, map: 70, ref: 70, world: 7, econ: ECON_LEAN50, gold: 400, cal: 0.31, boss: true, bossPhases: true, waves: [
     [['grunt', 20, 0.5, -1]],
     [['scout', 22, 0.3, 0], ['grunt', 12, 0.5, 1]],
     [['brute', 6, 1.3, -1], ['grunt', 12, 0.45, 0]],
@@ -974,7 +976,7 @@ const LAB_DEFS = [
   ] },
   // ---- v26: six more hand-made labs (the user: "Lab 2 was perfection", "the boss fight was nice") ----
   // 5 WILDFIRE: burning enemies toss fireballs; FROST never burns and puts out its neighbours, TIDE sprays towers and enemies
-  { id: 'wildfire', map: 44, ref: 66, world: 2, econ: ECON_LEAN, gold: 360, cal: 0.425, waves: [
+  { id: 'wildfire', v: 2, map: 44, ref: 66, world: 2, econ: ECON_LEAN, gold: 360, cal: 0.425, waves: [
     [['grunt', 18, 0.55, 0]],
     [['scorch', 3, 1.4, 0], ['grunt', 14, 0.45, 0]],
     [['splitter', 10, 0.8, 0], ['scout', 16, 0.3, 0]],
@@ -990,7 +992,7 @@ const LAB_DEFS = [
     [['scorch', 8, 0.8, 0], ['titan', 3, 2.4, 0, { fire: 1 }], ['splitter', 14, 0.55, 0], ['scout', 26, 0.2, 0]],
   ] },
   // 6 SKYFALL: Gliders every wave on a two-lane map, paid by the wave (PAYDAY)
-  { id: 'skyfall', map: 57, ref: 66, world: 3, econ: ECON_PAYDAY, gold: 470, cal: 0.3, waves: [
+  { id: 'skyfall', v: 2, map: 57, ref: 66, world: 3, econ: ECON_PAYDAY, gold: 470, cal: 0.3, waves: [
     [['grunt', 16, 0.55, -1]],
     [['scout', 16, 0.3, 0], ['glider', 4, 1.3, 0]],
     [['grunt', 14, 0.45, 1], ['glider', 6, 1.0, 1]],
@@ -1006,7 +1008,7 @@ const LAB_DEFS = [
     [['glider', 30, 0.28, -1], ['splitter', 14, 0.6, 0], ['brute', 8, 1.0, 1]],
   ] },
   // 7 SHORT CIRCUIT: Volts and electrified enemies shut towers down; EMP keeps them shorted while it hits them, ARC loves it
-  { id: 'circuit', map: 71, ref: 66, world: 1, econ: ECON_LEAN, gold: 360, cal: 0.5, waves: [
+  { id: 'circuit', v: 2, map: 71, ref: 66, world: 1, econ: ECON_LEAN, gold: 360, cal: 0.5, waves: [
     [['grunt', 18, 0.5, 0]],
     [['volt', 3, 1.4, 0], ['grunt', 14, 0.45, 0]],
     [['scout', 22, 0.28, 0], ['blink', 6, 0.9, 0, { elec: 1 }]],
@@ -1022,7 +1024,7 @@ const LAB_DEFS = [
   ] },
   // 8 BOSS RUSH: a Warden every 4 waves, two at wave 20 and two at the end, all with the shield and rage phases
   //   (v28, user: every boss level is 25 waves; it was 12, with Wardens at 4, 8 and two at 12)
-  { id: 'bossrush', v: 2, grewAt: 12, map: 75, ref: 70, world: 6, econ: ECON_LEAN, gold: 450, cal: 0.27, boss: true, bossPhases: true, waves: [
+  { id: 'bossrush', v: 3, grewAt: 12, map: 75, ref: 70, world: 6, econ: ECON_LEAN, gold: 450, cal: 0.27, boss: true, bossPhases: true, waves: [
     [['grunt', 20, 0.5, -1]],
     [['scout', 20, 0.3, 0], ['brute', 4, 1.4, 1]],
     [['splitter', 10, 0.8, -1], ['grunt', 14, 0.4, 1]],
@@ -1050,7 +1052,7 @@ const LAB_DEFS = [
     [['brute', 10, 0.9, -1], ['grunt', 24, 0.3, 0], ['boss', 2, 8, -1]],
   ] },
   // 9 SPLIT PUSH: two lanes, and the pressure swaps sides from wave to wave
-  { id: 'split', map: 47, ref: 66, world: 4, econ: ECON_LEAN, gold: 380, cal: 0.36, waves: [
+  { id: 'split', v: 2, map: 47, ref: 66, world: 4, econ: ECON_LEAN, gold: 380, cal: 0.36, waves: [
     [['grunt', 16, 0.5, 0]],
     [['grunt', 16, 0.5, 1]],
     [['scout', 22, 0.28, 0], ['brute', 5, 1.3, 1]],
@@ -1067,7 +1069,7 @@ const LAB_DEFS = [
   ] },
   // 10 THE GAUNTLET: every threat in the game, flyers and shields included, and a Warden to finish
   //   (v28, user: every boss level is 25 waves; it was 16, waves 16-24 are new)
-  { id: 'gauntlet', v: 2, grewAt: 16, map: 80, ref: 70, world: 0, econ: ECON_LEAN, gold: 560, cal: 0.2, boss: true, bossPhases: true, waves: [
+  { id: 'gauntlet', v: 3, grewAt: 16, map: 80, ref: 70, world: 0, econ: ECON_LEAN, gold: 560, cal: 0.2, boss: true, bossPhases: true, waves: [
     [['grunt', 20, 0.45, -1]],
     [['scout', 24, 0.26, 0], ['glider', 5, 1.0, 1]],
     [['brute', 6, 1.2, 0, { shield: 1 }], ['grunt', 14, 0.4, 1]],

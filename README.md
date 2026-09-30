@@ -17,7 +17,11 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 | `tools/` | Bot playtesters and helpers: `calibrate.js` (difficulty tuning), `probe.js`, `audit.js` (tower balance), `gen_maps.js` (level paths), `perf*.js` (frame-time profiling). |
 | `tests/` | Automated checks (Playwright). Run from the repo root, e.g. `node tests/smoke.js /tmp`. |
 
-## Current version (v31)
+## Current version (v32)
+- Every tower's base damage is 25% higher, and each upgrade adds 10% of the tower's current damage (x1.1, x1.21, x1.331). Upgrades still don't raise fire rate.
+- All Playtest Lab COMPLETED stamps were cleared so the labs can be replayed under the new balance.
+
+### v31
 - Upgrades add a flat +10% damage each (+10% / +20% / +30% over the built tower) and no longer raise fire rate. Range, splash, chains, beams, FROST's slow and PRISM's heat-up still improve.
 
 ### v30
@@ -40,7 +44,7 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 - Restart and retry go back to tower select, with the towers you used already picked.
 - The Playtest Lab and Test Mode ask for a tester password.
 
-**Note:** `src/` is still at v25. The v26 to v31 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
+**Note:** `src/` is still at v25. The v26 to v32 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
 
 ## Making a change
 1. Edit files in `src/`.
