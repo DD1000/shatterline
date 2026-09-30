@@ -17,7 +17,10 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 | `tools/` | Bot playtesters and helpers: `calibrate.js` (difficulty tuning), `probe.js`, `audit.js` (tower balance), `gen_maps.js` (level paths), `perf*.js` (frame-time profiling). |
 | `tests/` | Automated checks (Playwright). Run from the repo root, e.g. `node tests/smoke.js /tmp`. |
 
-## Current version (v28)
+## Current version (v29)
+- BOLT fires 20% slower and PRISM's beam does 20% less damage (both 20% less damage per second).
+
+### v28
 - Every boss level (10, 20 ... 80, plus the Warden Trial, Boss Rush and Gauntlet labs) is 25 waves long.
 - Every finished level is logged: towers built, upgraded and sold, gold, lives, damage by tower, leaks, and a line per wave.
 - A won lab gets greyed out under a COMPLETED stamp, and SEND LAB ANALYTICS copies a report to paste into chat.
