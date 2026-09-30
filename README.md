@@ -17,7 +17,12 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 | `tools/` | Bot playtesters and helpers: `calibrate.js` (difficulty tuning), `probe.js`, `audit.js` (tower balance), `gen_maps.js` (level paths), `perf*.js` (frame-time profiling). |
 | `tests/` | Automated checks (Playwright). Run from the repo root, e.g. `node tests/smoke.js /tmp`. |
 
-## Current version (v27)
+## Current version (v28)
+- Every boss level (10, 20 ... 80, plus the Warden Trial, Boss Rush and Gauntlet labs) is 25 waves long.
+- Every finished level is logged: towers built, upgraded and sold, gold, lives, damage by tower, leaks, and a line per wave.
+- A won lab gets greyed out under a COMPLETED stamp, and SEND LAB ANALYTICS copies a report to paste into chat.
+
+### v27
 - 12 towers, 80 levels, 10 Playtest Lab levels (including a boss).
 - Fire rework and strategy pause.
 - Spores cost 4 lives at the core: 1 for the Spore plus 1 for each Mite inside.
@@ -25,7 +30,7 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 - Restart and retry go back to tower select, with the towers you used already picked.
 - The Playtest Lab and Test Mode ask for a tester password.
 
-**Note:** `src/` is still at v25. The v26 and v27 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
+**Note:** `src/` is still at v25. The v26, v27 and v28 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
 
 ## Making a change
 1. Edit files in `src/`.

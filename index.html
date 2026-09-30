@@ -28,6 +28,7 @@ const COLS = 9, ROWS = 13;     // map grid
 const HUD_H = 50, BAR_H = 78;  // top HUD + bottom control bar
 const MIN_H = HUD_H + ROWS * TILE + BAR_H;
 const LEVELS_PER_WORLD = 10;
+const BUILD = 'v28';          // shown in lab analytics reports
 
 // Title-screen showcase map
 const DEMO_PATH = [[1,0],[1,2],[7,2],[7,5],[1,5],[1,8],[7,8],[7,10],[4,10],[4,12]];
@@ -284,18 +285,20 @@ const STR = {
     lab_tests_wildfire: 'Burning enemies toss fireballs. FROST never burns and puts out its neighbours; TIDE sprays the fires.',
     lab_tests_skyfall: 'Gliders in every wave across two lanes, paid by the wave. How much FLAK is enough?',
     lab_tests_circuit: 'Volts and electrified enemies shut your towers down. EMP keeps them shorted; ARC loves the charge.',
-    lab_tests_bossrush: 'A Warden at waves 4 and 8, two at the end. Every one shields up at 60% and rages at 30%.',
+    lab_tests_bossrush: 'A Warden every 4 waves, two at wave 20 and two more at the end. Each shields up at 60% and rages at 30%.',
     lab_tests_split: 'Two lanes, and the pressure swaps sides every wave. Cover both, or hold the merge?',
-    lab_tests_gauntlet: 'Every threat in the game in 16 waves: flyers, shields, fire, ice, electricity, and a Warden.',
+    lab_tests_gauntlet: 'Every threat in the game in 25 waves: flyers, shields, fire, ice, electricity, and a Warden.',
     lab_won_s: 'WON · {0} LIVES · {1} LEFT', lab_lost_s: 'LOST · WAVE {0}/{1}',
     lab_tests_counters: 'Hand-made waves, each a different threat. Pick 4 towers that cover them all.',
     lab_tests_payday: 'Kills pay nothing, each wave pays a wage (now a smaller one). Does fixed income make you plan?',
-    lab_tests_warden: 'A Warden at wave 8, two at the end. At 60% health: shield. At 30%: enraged.',
+    lab_tests_warden: 'A Warden at waves 8 and 16, two at the end of 25. At 60% health: shield. At 30%: enraged.',
     wave_clean: 'WAVE {0} CLEAN  +{1}', wave_leaky: 'WAVE {0} LEAKED  +{1}', wave_leaky0: 'WAVE {0} LEAKED · NO BONUS',
     next_wave_label: 'NEXT · WAVE {0}', end_gold: 'GOLD  EARNED {0} · SPENT {1} · LEFT {2}',
     warden_shield: 'SHIELD UP', warden_shield_sub: 'EMP STRIPS IT', warden_rage: 'ENRAGED', warden_rage_sub: 'FASTER · MORE SUMMONS',
     paused_build: 'YOU CAN STILL BUILD', menu: 'MENU', fire_out: 'PUT OUT',
     pw_title: 'ENTER PASSWORD', pw_locked: 'PASSWORD NEEDED', pw_wrong: 'WRONG PASSWORD', pw_ok: 'UNLOCK', pw_cancel: 'CANCEL',
+    lab_done: 'COMPLETED', an_send: 'SEND LAB ANALYTICS', an_sub: '{0}/{1} COMPLETED · COPIES A REPORT FOR CHAT', an_title: 'LAB ANALYTICS',
+    an_lead: 'Copy this and paste it into the chat.', an_copy: 'COPY', an_copied: 'COPIED! PASTE IT IN THE CHAT', an_copy_fail: 'SELECT ALL THE TEXT AND COPY IT', an_close: 'CLOSE',
   },
   zh: {
     combo: '连击', early_call: '提前召唤  +{0}', wave: '第 {0} 波', boss_incoming: '首领来袭', final_wave: '最后一波',
@@ -355,18 +358,20 @@ const STR = {
     lab_tests_wildfire: '着火的敌人会扔火球。冰霜塔不会着火并能扑灭邻塔的火，潮汐塔负责喷水灭火。',
     lab_tests_skyfall: '双路地图，每波都有滑翔者，按波发工资。防空塔要多少才够？',
     lab_tests_circuit: '伏特和带电敌人会让你的塔短路。电磁能让它们一直短路，电弧塔最爱这种电。',
-    lab_tests_bossrush: '第 4、8 波各一个守卫者，最后两个。每个在 60% 时开盾，30% 时狂暴。',
+    lab_tests_bossrush: '每 4 波一个守卫者，第 20 波两个，最后再来两个。每个在 60% 时开盾，30% 时狂暴。',
     lab_tests_split: '两条路，每波压力换一边。两边都守，还是守住汇合点？',
-    lab_tests_gauntlet: '16 波里有游戏中所有威胁：飞行、护盾、火、冰、电，最后还有守卫者。',
+    lab_tests_gauntlet: '25 波里有游戏中所有威胁：飞行、护盾、火、冰、电，最后还有守卫者。',
     lab_won_s: '胜利 · {0} 条命 · 剩 {1}', lab_lost_s: '失败 · 第 {0}/{1} 波',
     lab_tests_counters: '手工设计的波次，每波都是不同的威胁。选 4 座塔全部应对。',
     lab_tests_payday: '击杀不给金币，每波发工资（现在少一些）。固定收入会让你更有规划吗？',
-    lab_tests_warden: '第 8 波一个守卫者，最后两个。60% 生命时开盾，30% 时狂暴。',
+    lab_tests_warden: '第 8、16 波各一个守卫者，第 25 波最后两个。60% 生命时开盾，30% 时狂暴。',
     wave_clean: '第 {0} 波 无漏怪  +{1}', wave_leaky: '第 {0} 波 有漏怪  +{1}', wave_leaky0: '第 {0} 波 有漏怪 · 无奖励',
     next_wave_label: '下一波 · 第 {0} 波', end_gold: '金币  获得 {0} · 花费 {1} · 剩余 {2}',
     warden_shield: '护盾开启', warden_shield_sub: '电磁可剥除', warden_rage: '狂暴', warden_rage_sub: '更快 · 召唤更多',
     paused_build: '暂停时仍可建造', menu: '菜单', fire_out: '已灭火',
     pw_title: '输入密码', pw_locked: '需要密码', pw_wrong: '密码错误', pw_ok: '解锁', pw_cancel: '取消',
+    lab_done: '已完成', an_send: '发送实验数据', an_sub: '已完成 {0}/{1} · 复制报告发到聊天', an_title: '实验数据',
+    an_lead: '复制下面的内容，粘贴到聊天中。', an_copy: '复制', an_copied: '已复制！粘贴到聊天中', an_copy_fail: '请全选文字并复制', an_close: '关闭',
   },
   es: {
     combo: 'COMBO', early_call: 'ADELANTO  +{0}', wave: 'OLEADA {0}', boss_incoming: 'SE ACERCA EL JEFE', final_wave: 'ÚLTIMA OLEADA',
@@ -426,18 +431,20 @@ const STR = {
     lab_tests_wildfire: 'Los enemigos en llamas lanzan bolas de fuego. HIELO nunca arde y apaga a sus vecinas; MAREA moja el fuego.',
     lab_tests_skyfall: 'Planeadores en cada oleada por dos caminos, con sueldo por oleada. ¿Cuánto FLAK basta?',
     lab_tests_circuit: 'Voltios y enemigos eléctricos apagan tus torres. EMP los mantiene cortocircuitados; a ARCO le encanta.',
-    lab_tests_bossrush: 'Un Guardián en las oleadas 4 y 8, y dos al final. Todos con escudo al 60% y furia al 30%.',
+    lab_tests_bossrush: 'Un Guardián cada 4 oleadas, dos en la oleada 20 y dos más al final. Todos con escudo al 60% y furia al 30%.',
     lab_tests_split: 'Dos caminos, y la presión cambia de lado cada oleada. ¿Cubres los dos o defiendes la unión?',
-    lab_tests_gauntlet: 'Todas las amenazas del juego en 16 oleadas: voladores, escudos, fuego, hielo, electricidad y un Guardián.',
+    lab_tests_gauntlet: 'Todas las amenazas del juego en 25 oleadas: voladores, escudos, fuego, hielo, electricidad y un Guardián.',
     lab_won_s: 'GANADA · {0} VIDAS · QUEDA {1}', lab_lost_s: 'PERDIDA · OLEADA {0}/{1}',
     lab_tests_counters: 'Oleadas hechas a mano, cada una una amenaza distinta. Elige 4 torres que las cubran.',
     lab_tests_payday: 'Las bajas no pagan; cada oleada paga un sueldo (ahora menor). ¿Te hace planificar?',
-    lab_tests_warden: 'Un Guardián en la oleada 8 y dos al final. Al 60%: escudo. Al 30%: furia.',
+    lab_tests_warden: 'Un Guardián en las oleadas 8 y 16, y dos al final de la 25. Al 60%: escudo. Al 30%: furia.',
     wave_clean: 'OLEADA {0} LIMPIA  +{1}', wave_leaky: 'OLEADA {0} CON FUGAS  +{1}', wave_leaky0: 'OLEADA {0} CON FUGAS · SIN BONO',
     next_wave_label: 'SIGUIENTE · OLEADA {0}', end_gold: 'ORO  GANADO {0} · GASTADO {1} · QUEDA {2}',
     warden_shield: 'ESCUDO', warden_shield_sub: 'EL EMP LO QUITA', warden_rage: 'FURIA', warden_rage_sub: 'MÁS RÁPIDO · MÁS INVOCACIONES',
     paused_build: 'PUEDES SEGUIR CONSTRUYENDO', menu: 'MENÚ', fire_out: 'APAGADA',
     pw_title: 'INTRODUCE LA CONTRASEÑA', pw_locked: 'SE NECESITA CONTRASEÑA', pw_wrong: 'CONTRASEÑA INCORRECTA', pw_ok: 'DESBLOQUEAR', pw_cancel: 'CANCELAR',
+    lab_done: 'COMPLETADO', an_send: 'ENVIAR DATOS DEL LAB', an_sub: '{0}/{1} COMPLETADOS · COPIA UN INFORME PARA EL CHAT', an_title: 'DATOS DEL LAB',
+    an_lead: 'Cópialo y pégalo en el chat.', an_copy: 'COPIAR', an_copied: '¡COPIADO! PÉGALO EN EL CHAT', an_copy_fail: 'SELECCIONA TODO EL TEXTO Y CÓPIALO', an_close: 'CERRAR',
   },
 };
 function tr(id, ...a) {
@@ -640,14 +647,15 @@ const LEVEL_MAPS = [
 // v22: levels changed by the EMP lasers, Volts, Yetis and electric/ice variants rescaled by (new edge / v21 edge); Volt and Yeti intros (37, 45) x0.85;
 //      boss levels keep their values, so the Warden really is 40% tougher (and summons); checked still beatable
 //      heavy-shield levels kept at least 10% above the HP where every no-EMP/no-PRISM strategy loses
+// v28: boss levels are 25 waves; 20, 60 and 70 got easier for the bots, so they are toughened back (0.84 > 0.9, 0.27 > 0.29, 0.28 > 0.335)
 const LEVEL_CAL = [
   1.5, 1.42, 1.28, 1.12, 1.33, 0.67, 0.65, 0.76, 0.78, 1.39,
-  0.75, 0.67, 0.71, 0.69, 0.34, 0.55, 0.5, 0.63, 0.41, 0.84,
+  0.75, 0.67, 0.71, 0.69, 0.34, 0.55, 0.5, 0.63, 0.41, 0.9,
   0.22, 0.73, 0.48, 0.57, 0.52, 0.56, 0.33, 0.45, 0.34, 0.51,
   0.86, 0.15, 0.43, 0.13, 0.43, 0.22, 0.52, 0.36, 0.33, 0.36,
   0.41, 0.32, 0.33, 0.36, 0.22, 0.39, 0.25, 0.15, 0.56, 0.3,
-  0.48, 0.24, 0.24, 0.54, 0.11, 0.42, 0.16, 0.24, 0.39, 0.27,
-  0.4, 0.17, 0.26, 0.29, 0.38, 0.27, 0.15, 0.33, 0.13, 0.28,
+  0.48, 0.24, 0.24, 0.54, 0.11, 0.42, 0.16, 0.24, 0.39, 0.29,
+  0.4, 0.17, 0.26, 0.29, 0.38, 0.27, 0.15, 0.33, 0.13, 0.335,
   0.29, 0.2, 0.29, 0.33, 0.2, 0.41, 0.27, 0.16, 0.26, 0.29,
 ];
 
@@ -732,7 +740,7 @@ function pickShieldTypes(L, waves, plan, calmStart) {
 function makeWaves(L, twoLanes, air, plan) {
   const R = seeded(L * 7919 + 13);
   const boss = L % LEVELS_PER_WORLD === 0;
-  // v23: levels get longer as you go: 5 waves at level 1 up to 20 by level 80; boss levels add 5 (up to 25)
+  // v23: levels get longer as you go: 5 waves at level 1 up to 20 by level 80; v28: boss levels are always 25
   const n = waveCount(L);
   const pool = ENEMY_ORDER.filter(k => k !== 'boss' && !ENEMIES[k].flying && ENEMIES[k].intro <= L && (k !== 'aegis' || (plan && plan.aegis)));
   const fresh = pool.find(k => ENEMIES[k].intro === L);
@@ -800,7 +808,9 @@ function makeWaves(L, twoLanes, air, plan) {
 
 const levelHp = L => 1 + 0.035 * (L - 1);
 const LATE_RAMP = 1.6;
-const waveCount = L => { const base = Math.min(20, Math.round(5 + (L - 1) * 15 / 79)); return L % LEVELS_PER_WORLD === 0 ? Math.min(25, base + 5) : base; };
+// v28 (user): every boss level (10, 20 ... 80) is 25 waves long
+const BOSS_WAVES = 25;
+const waveCount = L => L % LEVELS_PER_WORLD === 0 ? BOSS_WAVES : Math.min(20, Math.round(5 + (L - 1) * 15 / 79));
 // per-wave growth, tuned for 8-wave levels; longer levels grow a bit more slowly per wave but further overall
 const waveGrowth = (n, g) => g * Math.sqrt(7 / Math.max(1, n - 1));
 
@@ -927,7 +937,8 @@ const LAB_DEFS = [
     [['titan', 4, 2.2, 0], ['splitter', 16, 0.5, 0], ['scorch', 3, 1.2, 0]],
     [['aegis', 4, 1.8, 0], ['brute', 12, 0.7, 0, { shield: 1 }], ['grunt', 40, 0.2, 0], ['titan', 3, 2.4, 0]],
   ] },
-  { id: 'warden', map: 70, ref: 70, world: 7, econ: ECON_LEAN50, gold: 400, cal: 0.31, boss: true, bossPhases: true, waves: [
+  // v28 (user: every boss level is 25 waves): Wardens at 8 and 16, two at the end (waves 15-24 are new)
+  { id: 'warden', v: 2, grewAt: 15, map: 70, ref: 70, world: 7, econ: ECON_LEAN50, gold: 400, cal: 0.31, boss: true, bossPhases: true, waves: [
     [['grunt', 20, 0.5, -1]],
     [['scout', 22, 0.3, 0], ['grunt', 12, 0.5, 1]],
     [['brute', 6, 1.3, -1], ['grunt', 12, 0.45, 0]],
@@ -942,6 +953,16 @@ const LAB_DEFS = [
     [['scout', 40, 0.18, -1], ['brute', 8, 1.0, 0, { elec: 1 }]],
     [['mender', 5, 1.1, 1], ['titan', 3, 2.6, 1], ['grunt', 30, 0.25, 0]],
     [['aegis', 4, 1.8, -1], ['blink', 20, 0.45, 0], ['yeti', 3, 1.6, 1]],
+    [['brute', 10, 0.9, -1], ['scorch', 4, 1.2, 1], ['scout', 24, 0.22, 0]],
+    [['aegis', 2, 2.6, 0], ['grunt', 20, 0.35, 1], ['boss', 1, 6, 0]],
+    [['yeti', 4, 1.5, -1], ['splitter', 14, 0.55, 0]],
+    [['volt', 5, 1.0, 1], ['blink', 18, 0.45, 0, { elec: 1 }]],
+    [['titan', 3, 2.5, 0], ['mender', 5, 1.1, 0], ['scout', 30, 0.2, 1]],
+    [['brute', 12, 0.8, -1, { shield: 1 }], ['aegis', 3, 2.0, 1]],
+    [['scorch', 6, 0.9, 0], ['splitter', 16, 0.5, 1], ['grunt', 30, 0.22, -1]],
+    [['titan', 4, 2.3, -1], ['yeti', 3, 1.5, 0], ['blink', 20, 0.4, 1]],
+    [['mender', 6, 1.0, -1], ['brute', 12, 0.8, 0], ['scout', 40, 0.16, 1]],
+    [['aegis', 4, 1.8, -1], ['titan', 4, 2.2, 0], ['volt', 5, 1.0, 1], ['grunt', 36, 0.2, -1]],
     [['brute', 10, 1.0, -1], ['aegis', 3, 2.0, 0], ['scout', 30, 0.2, 1], ['boss', 2, 6, -1]],
   ] },
   // ---- v26: six more hand-made labs (the user: "Lab 2 was perfection", "the boss fight was nice") ----
@@ -992,8 +1013,9 @@ const LAB_DEFS = [
     [['blink', 18, 0.45, 0, { elec: 1 }], ['yeti', 3, 1.6, 0]],
     [['volt', 8, 0.8, 0], ['titan', 3, 2.4, 0], ['brute', 8, 0.9, 0, { elec: 1 }], ['scout', 30, 0.2, 0]],
   ] },
-  // 8 BOSS RUSH: a Warden at waves 4 and 8, two at the end, all with the shield and rage phases
-  { id: 'bossrush', map: 75, ref: 70, world: 6, econ: ECON_LEAN, gold: 450, cal: 0.27, boss: true, bossPhases: true, waves: [
+  // 8 BOSS RUSH: a Warden every 4 waves, two at wave 20 and two at the end, all with the shield and rage phases
+  //   (v28, user: every boss level is 25 waves; it was 12, with Wardens at 4, 8 and two at 12)
+  { id: 'bossrush', v: 2, grewAt: 12, map: 75, ref: 70, world: 6, econ: ECON_LEAN, gold: 450, cal: 0.27, boss: true, bossPhases: true, waves: [
     [['grunt', 20, 0.5, -1]],
     [['scout', 20, 0.3, 0], ['brute', 4, 1.4, 1]],
     [['splitter', 10, 0.8, -1], ['grunt', 14, 0.4, 1]],
@@ -1005,6 +1027,19 @@ const LAB_DEFS = [
     [['yeti', 3, 1.8, 0], ['splitter', 12, 0.7, 1]],
     [['titan', 3, 2.8, -1], ['volt', 4, 1.1, 0]],
     [['aegis', 3, 2.2, -1], ['blink', 18, 0.45, 0], ['scorch', 3, 1.3, 1]],
+    [['brute', 8, 1.0, -1], ['grunt', 18, 0.35, 0], ['boss', 1, 6, 1]],
+    [['splitter', 14, 0.6, 0], ['mender', 4, 1.2, 1], ['scout', 22, 0.25, 1]],
+    [['titan', 3, 2.6, 1], ['brute', 8, 1.0, 0, { shield: 1 }]],
+    [['yeti', 3, 1.6, -1], ['blink', 18, 0.45, 0], ['grunt', 24, 0.3, 1]],
+    [['aegis', 2, 2.6, 0], ['scout', 26, 0.22, 1], ['boss', 1, 6, 0]],
+    [['scorch', 5, 1.1, -1], ['splitter', 14, 0.55, 1]],
+    [['titan', 3, 2.5, 0], ['volt', 5, 1.0, 1], ['grunt', 28, 0.25, -1]],
+    [['mender', 5, 1.1, -1], ['brute', 10, 0.9, 0], ['blink', 20, 0.4, 1]],
+    [['grunt', 24, 0.3, -1], ['boss', 2, 8, -1]],
+    [['aegis', 3, 2.0, -1], ['scout', 36, 0.18, 0], ['yeti', 3, 1.5, 1]],
+    [['titan', 4, 2.3, -1], ['splitter', 16, 0.5, 0], ['scorch', 4, 1.0, 1]],
+    [['brute', 12, 0.8, 0, { shield: 1 }], ['mender', 5, 1.0, 1], ['volt', 5, 1.0, 1]],
+    [['aegis', 4, 1.8, -1], ['blink', 22, 0.38, 0], ['titan', 3, 2.2, 1], ['grunt', 30, 0.22, -1]],
     [['brute', 10, 0.9, -1], ['grunt', 24, 0.3, 0], ['boss', 2, 8, -1]],
   ] },
   // 9 SPLIT PUSH: two lanes, and the pressure swaps sides from wave to wave
@@ -1024,7 +1059,8 @@ const LAB_DEFS = [
     [['titan', 3, 2.4, 1], ['splitter', 16, 0.5, 0], ['volt', 5, 1.0, 1], ['scorch', 4, 1.1, 0]],
   ] },
   // 10 THE GAUNTLET: every threat in the game, flyers and shields included, and a Warden to finish
-  { id: 'gauntlet', map: 80, ref: 70, world: 0, econ: ECON_LEAN, gold: 560, cal: 0.2, boss: true, bossPhases: true, waves: [
+  //   (v28, user: every boss level is 25 waves; it was 16, waves 16-24 are new)
+  { id: 'gauntlet', v: 2, grewAt: 16, map: 80, ref: 70, world: 0, econ: ECON_LEAN, gold: 560, cal: 0.2, boss: true, bossPhases: true, waves: [
     [['grunt', 20, 0.45, -1]],
     [['scout', 24, 0.26, 0], ['glider', 5, 1.0, 1]],
     [['brute', 6, 1.2, 0, { shield: 1 }], ['grunt', 14, 0.4, 1]],
@@ -1040,7 +1076,16 @@ const LAB_DEFS = [
     [['brute', 10, 0.9, 0, { shield: 1 }], ['volt', 5, 1.0, 1], ['scorch', 5, 1.0, 0]],
     [['titan', 4, 2.3, -1], ['aegis', 3, 2.0, -1], ['grunt', 36, 0.2, 0]],
     [['blink', 20, 0.4, -1, { elec: 1 }], ['glider', 18, 0.4, -1], ['splitter', 16, 0.5, 1]],
-    [['brute', 12, 0.8, -1], ['scorch', 5, 1.0, 1], ['mender', 5, 1.1, 0], ['boss', 1, 6, 0]],
+    [['splitter', 14, 0.55, 0, { ice: 1 }], ['glider', 12, 0.5, 1], ['mender', 4, 1.2, 0]],
+    [['scorch', 6, 0.9, -1], ['brute', 10, 0.9, 1, { shield: 1 }]],
+    [['glider', 24, 0.35, -1], ['grunt', 30, 0.22, 0]],
+    [['yeti', 4, 1.5, 0], ['titan', 3, 2.5, 1, { fire: 1 }], ['scout', 30, 0.2, -1]],
+    [['aegis', 4, 1.8, -1], ['blink', 22, 0.38, 0], ['volt', 5, 1.0, 1]],
+    [['mender', 6, 1.0, -1], ['brute', 12, 0.8, 0, { elec: 1 }], ['glider', 16, 0.4, 1]],
+    [['titan', 4, 2.2, -1], ['splitter', 18, 0.45, 0], ['scorch', 5, 1.0, 1]],
+    [['scout', 44, 0.16, -1], ['yeti', 4, 1.4, 0], ['glider', 20, 0.35, -1]],
+    [['aegis', 4, 1.7, -1], ['brute', 12, 0.8, 1, { shield: 1 }], ['titan', 3, 2.2, 0], ['volt', 5, 1.0, 0]],
+    [['brute', 12, 0.8, -1], ['scorch', 5, 1.0, 1], ['mender', 5, 1.1, 0], ['glider', 16, 0.4, -1], ['boss', 1, 6, 0]],
   ] },
 ];
 const LAB = LAB_DEFS.map((d, i) => {
@@ -1052,7 +1097,8 @@ const LAB = LAB_DEFS.map((d, i) => {
     heat: false, rain: false, banned: [], cal: base ? LEVEL_CAL[d.clone - 1] : d.cal,
   };
   // a clone keeps its level's waves and toughness (so only the rules change); authored levels grow 4% a wave
-  lv.hp = base ? (w => base.hp(w) / LEVEL_CAL[d.clone - 1] * lv.cal) : (w => levelHp(lv.ref) * (1 + 0.04 * (w - 1)) * lv.cal);
+  const k = d.grewAt ? d.grewAt - 1 : 1e9;        // v28: waves added past the old length toughen more gently
+  lv.hp = base ? (w => base.hp(w) / LEVEL_CAL[d.clone - 1] * lv.cal) : (w => levelHp(lv.ref) * (1 + 0.04 * Math.min(w - 1, k) + 0.02 * Math.max(0, w - 1 - k)) * lv.cal);
   if (base) {
     for (const k of ['air', 'noBounty', 'shielded', 'shieldTypes', 'elecTypes', 'iceTypes', 'fireTypes', 'hasAegis', 'hasShields', 'shieldShare', 'hasElec', 'hasIce', 'hasFire']) lv[k] = base[k];
   } else {
@@ -1311,6 +1357,11 @@ const Sound = (() => {
     burnDown() {                               // a tower burns out: a crumbling thump
       const g = grid(8), f = nf(g.ch[0], -3);
       noise({ dur:0.6, vol:0.22, type:'lowpass', f0:1400, f1:120, at:g.at }); tone({ type:'sine', f0:f * 2, f1:f / 2, dur:0.5, vol:0.2, at:g.at });
+    },
+    stamp() {                                  // lab COMPLETED stamp: a sharp crack and a heavy thud
+      noise({ dur:0.05, vol:0.4, type:'highpass', f0:2800 });
+      noise({ dur:0.55, vol:0.5, type:'lowpass', f0:1900, f1:70, q:0.8 });
+      tone({ type:'sine', f0:160, f1:36, dur:0.5, vol:0.75 }); tone({ type:'square', f0:95, f1:44, dur:0.12, vol:0.12 });
     },
     thunder() {                                // RAINSTORM: a crack and a long rumble
       if (!ok('thunder', 400)) return;
@@ -2182,6 +2233,7 @@ const Save = {
     const prev = this.stars(n);
     if (isLab(n)) {                   // lab: remember the result, never touch campaign progress
       const r = this.labRec(n); r.plays++; if (stars > 0) r.wins++; r.stars = Math.max(r.stars || 0, stars);
+      const v = levelOf(n).lab.v || 1; if (stars > 0 && r.doneV !== v) { r.doneV = v; r.stamped = false; }   // v28: COMPLETED (the stamp slams down next time you see the lab)
       r.last = { win: G.result === 'win', lives: G.lives, wave: G.waveNum, waves: G.waves.length, earned: G.earned, spent: G.spent, left: G.gold };
       this.store(); return { first: false, prev };
     }
@@ -2227,6 +2279,11 @@ const G = {
 };
 const theme = () => THEMES[G.theme];
 const waveStat = w => G.waveStats[w] || (G.waveStats[w] = { alive: 0, toSpawn: 0, cleared: false });
+// v28 run analytics: what the player did this run (saved when the level ends; see recordRun)
+const newRun = () => ({ built: {}, ups: {}, sold: {}, burned: {}, spend: {}, dmg: {}, killBy: {}, waves: [], early: 0, earlyGold: 0,
+  refund: 0, g0: 0, peakGold: 0, peakTowers: 0, shields: 0, ignited: 0, doused: 0, lo: [], t0: Date.now(), recorded: false });
+const bump = (o, k, v = 1) => { o[k] = (o[k] || 0) + v; };
+const tracking = () => !G.demo && !!G.run;
 const snd = (name, ...a) => { if (!G.demo || G.demoSound) Sound.play(name, ...a); };
 const isBuildable = (c, r) => c >= 0 && r >= 0 && c < COLS && r < ROWS && !MAP.tiles.has(r * COLS + c);
 const bossAlive = () => G.enemies.some(e => e.alive && e.rc.boss);
@@ -2241,6 +2298,7 @@ function resetRun() {
   G.grid.fill(null); G.combo = 0; G.comboT = 0; G.bestCombo = 0; G.kills = 0; G.leaks = 0; G.leakTypes = {}; G.shieldLeaks = 0; G.domes = [];
   G.banner = null; G.toast = null; G.shout = null; G.menu = null; G.press = null; G.coins = []; G.confirm = null;
   G.endT = 0; G.slowT = 0; G.flashA = 0; G.demoT = 0; G.endShow = 0; G.starSnd = 0;
+  G.run = newRun();
   FX.clear();
 }
 
@@ -2266,6 +2324,7 @@ function startLevel(n) {
   G.econ = lv.econ || null; G.earned = 0; G.spent = 0;
   G.loadout = Save.lo().filter(t => TOWERS[t].unlock <= Save.open() && !lv.banned.includes(t)).slice(0, slotsFor(Save.open()));
   if (!G.loadout.length) G.loadout = ['bolt'];
+  Object.assign(G.run, { g0: lv.gold, peakGold: lv.gold, lo: G.loadout.slice(), t0: Date.now() });
   G.tutorial = n === 1 && Save.stars(1) === 0;
   G.state = 'play';
   buildBackground(theme());
@@ -2298,15 +2357,18 @@ function isBossWave(w) { return w >= 1 && w <= G.waves.length && G.waves[w - 1].
 
 function startWave(early) {
   if (G.over || G.waveNum >= G.waves.length) return;
+  const wasEarly = !!(early && G.nextTimer !== null);
   if (early && G.nextTimer !== null) {
     const bonus = G.noBounty ? 0 : Math.ceil(G.nextTimer * ECON.earlyBonus * ECON.goldRate);
     if (bonus > 0) {
       gain(bonus); G.goldBump = 1;
+      if (tracking()) { G.run.early++; G.run.earlyGold += bonus; }
       G.toast = { text: tr('early_call', bonus), color: '#ffd23d', t: 0, dur: 1.4 };
       snd('coin');
     }
   }
   G.awaiting = false; G.nextTimer = null; G.waveNum++;
+  if (tracking()) G.run.waves.push([G.waveNum, Math.floor(G.gold), G.lives, G.towers.length, wasEarly ? 1 : 0]);
   const w = G.waveNum, list = buildSpawns(w);
   G.spawners.push({ wave: w, list, i: 0, t: -0.8 });
   const ws = waveStat(w); ws.toSpawn = list.length;
@@ -2417,6 +2479,7 @@ function buildTower(type, c, r) {
   if (!isBuildable(c, r) || G.grid[r * COLS + c] || G.gold < d.cost) return null;
   G.gold -= d.cost; G.spent = (G.spent || 0) + d.cost;
   const tw = placeTower(type, c, r);
+  if (tracking()) { bump(G.run.built, type); bump(G.run.spend, type, d.cost); G.run.peakTowers = Math.max(G.run.peakTowers, G.towers.length); }
   FX.ring(tw.x, tw.y, 8, 34, d.color, 0.45, 3);
   FX.shards(tw.x, tw.y, d.color, 10, 130, 3.5);
   FX.flash(tw.x, tw.y, 60, d.color, 0.25);
@@ -2442,6 +2505,7 @@ function upgradeTower(tw) {
   const cost = upgradeCost(tw);
   if (cost == null || G.gold < cost) return false;
   G.gold -= cost; G.spent = (G.spent || 0) + cost; tw.lv++; tw.spent += cost; tw.kick = 1;
+  if (tracking()) { bump(G.run.ups, tw.type); bump(G.run.spend, tw.type, cost); }
   const c = TOWERS[tw.type].color;
   FX.ring(tw.x, tw.y, 10, 44, c, 0.5, 3.5); FX.ring(tw.x, tw.y, 4, 26, '#ffffff', 0.3, 2);
   for (let i = 0; i < 14; i++) FX.dot(tw.x + rand(-14, 14), tw.y + rand(-6, 10), c, 2.5, rand(0.4, 0.8), 0, rand(-90, -40));
@@ -2455,13 +2519,14 @@ function earn(v, rate = ECON.goldRate) {
   const whole = Math.floor(G.goldCarry + 1e-9); G.goldCarry -= whole; gain(whole);
   return whole;
 }
-function gain(v) { G.gold += v; G.earned = (G.earned || 0) + v; }
+function gain(v) { G.gold += v; G.earned = (G.earned || 0) + v; if (G.run && G.gold > G.run.peakGold) G.run.peakGold = G.gold; }
 // kills pay ECON.goldRate on campaign levels; a lab economy sets its own rate (0 on PAYDAY)
 const killRate = () => G.econ ? G.econ.bounty : ECON.goldRate;
 function sellValue(tw) { return Math.floor(tw.spent * (tw.burning ? FIRE.refund : ECON.sellRate)); }   // a burning tower is already lost: selling it only gets the burn-out refund
 function sellTower(tw) {
   const v = sellValue(tw);
   G.gold += v;
+  if (tracking()) { bump(G.run.sold, tw.type); G.run.refund += v; G.run.peakGold = Math.max(G.run.peakGold, G.gold); }
   G.towers.splice(G.towers.indexOf(tw), 1); G.grid[tw.r * COLS + tw.c] = null;
   const c = TOWERS[tw.type].color;
   FX.shatter(tw.x, tw.y, c, 10, false);
@@ -2504,7 +2569,7 @@ function fire(tw, tg) {
   const mx = tw.x + Math.cos(tw.aim) * 14, my = tw.y + Math.sin(tw.aim) * 14;
   if (tw.type === 'bolt') {
     const crit = Math.random() < d.crit;
-    G.shots.push({ x: mx, y: my, tg, lx: tg.x, ly: tg.y, dmg: L.dmg * boost * (crit ? 2.5 : 1), crit, color: c, sp: 560, vx: 0, vy: 0 });
+    G.shots.push({ x: mx, y: my, tg, lx: tg.x, ly: tg.y, dmg: L.dmg * boost * (crit ? 2.5 : 1), crit, color: c, sp: 560, vx: 0, vy: 0, src: tw.type });
     FX.flash(mx, my, 14, c, 0.08);
     snd('bolt');
   } else if (tw.type === 'arc') {
@@ -2529,7 +2594,7 @@ function fire(tw, tg) {
     const flight = 0.75;
     const slow = tg.slowT > 0 ? 1 - tg.slowAmt : 1;
     const p = tg.path.at(tg.dist + tg.speed * slow * flight);
-    G.shells.push({ sx: mx, sy: my, tx: p.x, ty: p.y, t: 0, dur: flight, dmg: L.dmg * boost, splash: L.splash * TILE, color: c });
+    G.shells.push({ sx: mx, sy: my, tx: p.x, ty: p.y, t: 0, dur: flight, dmg: L.dmg * boost, splash: L.splash * TILE, color: c, src: tw.type });
     FX.flash(mx, my, 22, c, 0.12);
     for (let i = 0; i < 4; i++) FX.dot(mx, my, '#ffb47a', 3, 0.35, rand(-30, 30), rand(-30, 30));
     snd('launch');
@@ -2568,7 +2633,7 @@ function fire(tw, tg) {
   } else if (tw.type === 'flak') {
     tw.tube ^= 1;
     const sd = tw.tube ? 3.2 : -3.2, sx = mx - Math.sin(tw.aim) * sd, sy = my + Math.cos(tw.aim) * sd;
-    G.missiles.push({ x: sx, y: sy, vx: Math.cos(tw.aim) * 150, vy: Math.sin(tw.aim) * 150, tg, dmg: L.dmg * boost, splash: L.splash * TILE, color: c, t: 0 });
+    G.missiles.push({ x: sx, y: sy, vx: Math.cos(tw.aim) * 150, vy: Math.sin(tw.aim) * 150, tg, dmg: L.dmg * boost, splash: L.splash * TILE, color: c, t: 0, src: tw.type });
     FX.flash(sx, sy, 16, c, 0.1);
     snd('flak');
   } else if (tw.type === 'pyro') {                 // flame jet: target + small splash, triple damage to cold enemies
@@ -2629,6 +2694,8 @@ function flameJet(x1, y1, x2, y2) {
 }
 
 // ------------------------------------------------------ damage & death
+let DMG_SRC = null;                         // v28: which tower type the damage being dealt right now comes from
+const credit = v => { if (DMG_SRC && v > 0 && tracking()) G.run.dmg[DMG_SRC] = (G.run.dmg[DMG_SRC] || 0) + v; };
 function damage(e, amt, o = {}) {
   if (!e.alive) return;
   if (e.rc.armor && !o.pierce) amt = Math.max(amt * 0.3, amt - e.rc.armor);
@@ -2639,28 +2706,28 @@ function damage(e, amt, o = {}) {
     const hit = amt * SHIELD_FACTOR;
     dm.domePing = 0.15; dm.domeHit = G.time;
     if (hit < dm.dome) {
-      dm.dome -= hit;
+      dm.dome -= hit; credit(hit);
       if (!o.quiet && Math.random() < 0.4) FX.text(e.x + rand(-6, 6), e.y - e.rc.r - 4, `${Math.max(1, Math.round(hit))}`, '#8fc8ff', 9, { life: 0.45 });
       if (Math.random() < 0.3) FX.spark(e.x, e.y, '#9fd6ff', 2, 90, 0.2);
       return;
     }
-    amt -= dm.dome / SHIELD_FACTOR; domeShatter(dm, false);
+    credit(dm.dome); amt -= dm.dome / SHIELD_FACTOR; domeShatter(dm, false);
     if (amt <= 0) return;
   }
   if (e.shield > 0 && !o.throughShield) {
     const hit = amt * SHIELD_FACTOR;
     e.shieldPing = 0.15;
     if (hit < e.shield) {                  // the shield soaks it up
-      e.shield -= hit;
+      e.shield -= hit; credit(hit);
       if (!o.quiet && Math.random() < 0.5) FX.text(e.x + rand(-6, 6), e.y - e.rc.r - 4, `${Math.max(1, Math.round(hit))}`, '#8fc8ff', 9, { life: 0.45 });
       if (Math.random() < 0.4) FX.spark(e.x, e.y, '#9fd6ff', 2, 90, 0.2);
       return;
     }
-    amt -= e.shield / SHIELD_FACTOR;
+    credit(e.shield); amt -= e.shield / SHIELD_FACTOR;
     shieldShatter(e);
     if (amt <= 0) return;
   }
-  e.hp -= amt; e.punch = Math.min(0.4, e.punch + 0.16);
+  credit(Math.min(amt, Math.max(0, e.hp))); e.hp -= amt; e.punch = Math.min(0.4, e.punch + 0.16);
   if (!o.quiet) {
     const n = Math.max(1, Math.round(amt));
     if (o.crit) FX.text(e.x + rand(-5, 5), e.y - e.rc.r - 6, `${n}!`, '#fff36a', 15, { life: 0.8, vy: -55 });
@@ -2677,7 +2744,7 @@ function damage(e, amt, o = {}) {
 
 const MILESTONES = { 10: 'NICE', 25: 'AWESOME', 50: 'UNREAL', 100: 'LEGENDARY', 200: 'GODLIKE' };
 function shieldShatter(e) {
-  e.shield = 0;
+  e.shield = 0; if (tracking()) G.run.shields++;
   FX.shards(e.x, e.y, '#9fd6ff', 12, 180, 3.5); FX.ring(e.x, e.y, e.rc.r, e.rc.r * 3, '#9fd6ff', 0.35, 2);
   snd('shield');
 }
@@ -2691,7 +2758,7 @@ function domeOver(e) {
 }
 function domeShatter(a, byEmp) {
   const R = a.rc.dome.r * TILE;
-  a.dome = 0; if (byEmp) a.domeDead = true;
+  a.dome = 0; if (byEmp) a.domeDead = true; if (tracking()) G.run.shields++;
   FX.ring(a.x, a.y, R * 0.9, R * 1.4, '#9fd6ff', 0.45, 3); FX.shards(a.x, a.y, '#9fd6ff', 18, 220, 3.5);
   if (a.alive) FX.text(a.x, a.y - R * 0.6, tr('dome_down'), '#9fd6ff', 10, { font: FONT_D, life: 0.8 });
   snd('shield'); addShake(0.06);
@@ -2734,7 +2801,7 @@ function snowHit(tw) {
 }
 function igniteTower(tw) {
   if (tw.burning || tw.type === 'frost' || !G.towers.includes(tw)) return;      // FROST never catches fire
-  tw.burning = true;
+  tw.burning = true; if (tracking()) G.run.ignited++;
   FX.flash(tw.x, tw.y, 40, '#ff6a1a', 0.25); FX.spark(tw.x, tw.y, '#ffb347', 8, 150, 0.35);
   FX.text(tw.x, tw.y - 24, tr('on_fire'), '#ff8a3d', 10, { font: FONT_D, life: 0.9 });
   snd('ignite');
@@ -2742,7 +2809,7 @@ function igniteTower(tw) {
 // water on a burning tower: the fire goes out (the health it lost stays lost)
 function douseTower(tw) {
   if (!tw.burning) return;
-  tw.burning = false;
+  tw.burning = false; if (tracking()) G.run.doused++;
   FX.ring(tw.x, tw.y, 8, 30, '#bff8ff', 0.35, 2);
   for (let i = 0; i < 7; i++) FX.dot(tw.x + rand(-8, 8), tw.y + rand(-6, 6), '#d8e4f0', 3, 0.8, rand(-15, 15), rand(-50, -20));   // steam
   FX.text(tw.x, tw.y - 24, tr('fire_out'), '#bff8ff', 10, { font: FONT_D, life: 0.8 });
@@ -2766,6 +2833,7 @@ function throwFire(e, tw) {
 function burnDown(tw) {                       // burnt out: the tower is gone, 25% of what it cost comes back
   const v = Math.floor(tw.spent * FIRE.refund);
   G.gold += v;
+  if (tracking()) { bump(G.run.burned, tw.type); G.run.refund += v; G.run.peakGold = Math.max(G.run.peakGold, G.gold); }
   G.towers.splice(G.towers.indexOf(tw), 1); G.grid[tw.r * COLS + tw.c] = null;
   FX.shatter(tw.x, tw.y, '#ff6a1a', 12, false); FX.shatter(tw.x, tw.y, TOWERS[tw.type].color, 8, false);
   for (let i = 0; i < 8; i++) FX.dot(tw.x + rand(-10, 10), tw.y + rand(-6, 6), '#5a5670', 4, 1.2, rand(-12, 12), rand(-40, -15));   // smoke
@@ -2782,7 +2850,7 @@ function freezeEnemy(e) {
 
 function kill(e) {
   if (e.dome > 0) domeShatter(e, false);
-  e.alive = false; G.kills++;
+  e.alive = false; G.kills++; if (DMG_SRC && tracking()) bump(G.run.killBy, DMG_SRC);
   waveStat(e.wave).alive--;
   const big = !!e.rc.boss;
   FX.shatter(e.x, e.y, e.rc.color, e.rc.r, big || e.rc.r >= 17);
@@ -2818,6 +2886,7 @@ function kill(e) {
 }
 
 function flakBurst(m) {
+  DMG_SRC = m.src;
   for (const e of G.enemies) {
     if (!e.alive || !e.rc.flying) continue;
     const d = Math.hypot(e.x - m.x, e.y - 5 - m.y);
@@ -2871,6 +2940,7 @@ function endGame(win) {
   const n = G.levelNum, wasMax = Save.d.max;
   const r = Save.complete(n, G.stars);
   G.firstClear = r.first; G.prevStars = r.prev;
+  recordRun(win ? 'win' : 'lose');
   G.unlockedTower = r.first && Save.d.max > wasMax ? TOWER_ORDER.find(t => TOWERS[t].unlock === Save.d.max) || null : null;
   G.unlockedSlot = r.first && Save.d.max === SLOT_UNLOCK_LEVEL && wasMax < SLOT_UNLOCK_LEVEL;
   if (r.first) G.mapAnim = { level: Save.d.max, t: 0 };
@@ -2897,7 +2967,7 @@ function spawnCoins(wx, wy, n) {
 
 // ------------------------------------------------------------- update
 function update(dt) {
-  G.time += dt;
+  G.time += dt; DMG_SRC = null;
   if (G.over) return;
   if (G.demo) {
     G.demoT -= dt;
@@ -3046,6 +3116,7 @@ function update(dt) {
   computeBuffs();
   let burnt = null;
   for (const tw of G.towers) {
+    DMG_SRC = tw.type;
     if (tw.burning) { tw.hp -= 100 / FIRE.burn * dt; if (tw.hp <= 0) { (burnt = burnt || []).push(tw); continue; } }
     if (tw.zapT > 0) tw.zapT -= dt;
     if (tw.chillT > 0) tw.chillT -= dt;
@@ -3094,6 +3165,7 @@ function update(dt) {
     if (tg && tw.cd <= 0 && tw.spawn >= 1) fire(tw, tg);
     if (tw.type === 'arc') { tw.idleT -= dt; if (tw.idleT <= 0) { tw.idleT = rand(0.4, 1.4); FX.zap([{ x: tw.x, y: tw.y + 1 }, { x: tw.x + rand(-13, 13), y: tw.y + rand(-13, 13) }], '#ffe23d', 0.08); } }
   }
+  DMG_SRC = null;
   if (burnt) for (const tw of burnt) burnDown(tw);
   // snowballs: arc over to their tower
   for (let i = G.snow.length - 1; i >= 0; i--) {
@@ -3117,7 +3189,7 @@ function update(dt) {
     const dx = s.lx - s.x, dy = s.ly - s.y, dd = Math.hypot(dx, dy), step = s.sp * dt;
     if (dd <= step + (s.tg.alive ? s.tg.rc.r * 0.6 : 2)) {
       if (s.tg.alive) {
-        damage(s.tg, s.dmg, { crit: s.crit });
+        DMG_SRC = s.src; damage(s.tg, s.dmg, { crit: s.crit });
         FX.spark(s.lx, s.ly, s.color, s.crit ? 7 : 3, s.crit ? 220 : 140, 0.22);
         if (s.crit) { FX.flash(s.lx, s.ly, 26, '#fff36a', 0.12); snd('crit'); } else snd('hit');
       }
@@ -3132,7 +3204,7 @@ function update(dt) {
     s.x = lerp(s.sx, s.tx, f); s.y = lerp(s.sy, s.ty, f); s.h = Math.sin(Math.PI * f) * 46;
     if (Math.random() < 0.7) FX.dot(s.x, s.y - s.h, '#ff9a5c', 2.4, 0.3);
     if (f >= 1) {
-      G.shells.splice(i, 1);
+      G.shells.splice(i, 1); DMG_SRC = s.src;
       for (const e of G.enemies) {
         if (!e.alive || e.rc.flying) continue;
         const d = Math.hypot(e.x - s.tx, e.y - s.ty);
@@ -4085,7 +4157,7 @@ function drawPause() {
     else { G.confirm = 'restart'; Sound.play('tap'); }
   }, { size: 15 });
   pillButton(cx, y + 244, 210, 50, G.confirm === 'quit' ? tr('tap_confirm') : isLab(G.levelNum) ? tr('lab_map') : tr('level_map'), '#ff5fc8', () => {
-    if (G.confirm === 'quit') { G.confirm = null; leaveLevel(); } else { G.confirm = 'quit'; Sound.play('tap'); }
+    if (G.confirm === 'quit') { G.confirm = null; abandonRun(); leaveLevel(); } else { G.confirm = 'quit'; Sound.play('tap'); }
   }, { size: 15 });
   const lab = tr('thumb_' + THUMB.setting);
   pillButton(cx, y + 316, 210, 46, tr('menu_thumb', lab), theme().flow, () => {
@@ -4300,6 +4372,7 @@ function toMap() {
 
 // Restart / Retry (user, v27): back to this level's tower select, with the towers you just played with already picked
 function retryLevel() {
+  abandonRun();
   const n = G.levelNum, used = (G.loadout || []).filter(t => TOWERS[t]);
   const key = isLab(n) ? 'labLoadout' : 'loadout', banned = (levelOf(n).banned || []);
   if (used.length) { Save.d[key] = used.slice(); Save.store(); }
@@ -4417,6 +4490,140 @@ function askPassword(then) {
   setTimeout(() => inp.focus(), 30);
 }
 
+
+// ---------------------------------------------------- run analytics (v28)
+// Every level you finish (won, lost, or quit after the first wave) is summed up and saved: towers,
+// gold, lives, damage by tower, leaks, and a line per wave. Labs keep their last RUNS_PER_LAB runs,
+// the campaign its last RUNS_KEPT. The lab screen's SEND LAB ANALYTICS copies a report for the chat.
+const RUNS_PER_LAB = 5, RUNS_KEPT = 20;
+function runSummary(result) {
+  const R = G.run, lv = G.level, round = o => Object.fromEntries(Object.entries(o || {}).map(([k, v]) => [k, Math.round(v)]));
+  return {
+    t: Date.now(), n: G.levelNum, lab: lv.lab ? lv.lab.id : null, lv: lv.lab ? (lv.lab.v || 1) : null, build: BUILD,
+    res: result, stars: result === 'win' ? G.stars : 0, lives: G.lives, max: G.maxLives, wave: G.waveNum, waves: G.waves.length,
+    g0: R.g0, earned: Math.round(G.earned || 0), spent: Math.round(G.spent || 0), refund: Math.round(R.refund), left: Math.floor(G.gold), peak: Math.floor(R.peakGold),
+    lo: R.lo, built: R.built, ups: R.ups, sold: R.sold, burned: R.burned, spend: R.spend,
+    board: G.towers.map(t => t.type + (t.lv + 1)), peakTowers: Math.max(R.peakTowers, G.towers.length),
+    dmg: round(R.dmg), killBy: R.killBy, kills: G.kills, combo: G.bestCombo, leaks: G.leaks, leakTypes: round(G.leakTypes),
+    early: R.early, earlyGold: R.earlyGold, shields: R.shields, ignited: R.ignited, doused: R.doused,
+    wv: R.waves.map(x => x.concat(Math.round((G.waveStats[x[0]] && G.waveStats[x[0]].leaked) || 0))),
+    secs: Math.round((Date.now() - R.t0) / 1000), sim: Math.round(G.time),
+  };
+}
+function recordRun(result) {
+  if (G.demo || !G.level || !G.run || G.run.recorded) return;
+  G.run.recorded = true;
+  const s = runSummary(result);
+  if (isLab(G.levelNum)) {
+    const r = Save.labRec(G.levelNum), a = r.runs = r.runs || [];
+    a.push(s); if (a.length > RUNS_PER_LAB) a.splice(0, a.length - RUNS_PER_LAB);
+    if (result === 'quit') r.quits = (r.quits || 0) + 1;
+  } else {
+    const a = Save.d.runs = Save.d.runs || [];
+    a.push(s); if (a.length > RUNS_KEPT) a.splice(0, a.length - RUNS_KEPT);
+  }
+  Save.store();
+}
+// leaving a level part-way (restart, or back to the map) still counts once a wave has been sent
+function abandonRun() { if (G.state === 'play' && !G.over && !G.demo && G.waveNum > 0) recordRun('quit'); }
+
+// The report (always in English, for the developer)
+const TNAME = t => TOWERS[t] ? TOWERS[t].name : t, ENAME = t => ENEMIES[t] ? ENEMIES[t].name : t;
+const kfmt = v => v >= 10000 ? Math.round(v / 1000) + 'k' : v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(Math.round(v));
+function fmtDate(t) { const d = new Date(t), p = x => String(x).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+const fmtSecs = s => `${Math.floor(s / 60)}m${String(s % 60).padStart(2, '0')}s`;
+const starStr = n => '★'.repeat(n || 0) + '☆'.repeat(3 - (n || 0));
+function countStr(o, name = TNAME) {
+  const e = Object.entries(o || {}).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  return e.length ? e.map(([k, v]) => `${name(k)} ${v}`).join(' · ') : '-';
+}
+function boardStr(board) {
+  const c = {}; for (const b of board || []) c[b] = (c[b] || 0) + 1;
+  const e = Object.entries(c).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
+  return e.length ? e.map(([k, v]) => `${TNAME(k.replace(/\d+$/, ''))} L${k.match(/\d+$/)[0]}${v > 1 ? ' x' + v : ''}`).join(', ') : '-';
+}
+function dmgStr(dmg) {
+  const e = Object.entries(dmg || {}).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]), tot = e.reduce((a, [, v]) => a + v, 0);
+  return tot ? e.map(([k, v]) => `${TNAME(k)} ${Math.round(v / tot * 100)}% (${kfmt(v)})`).join(' · ') : '-';
+}
+function runLines(r, label) {
+  const res = r.res === 'win' ? `WON ${starStr(r.stars)}` : r.res === 'lose' ? 'LOST' : 'QUIT';
+  return [
+    `-- ${label} · ${fmtDate(r.t)} · ${res} · lives ${r.lives}/${r.max} · wave ${r.wave}/${r.waves} · ${fmtSecs(r.secs)}${r.build !== BUILD ? ' · game ' + r.build : ''}`,
+    `gold: start ${r.g0} · earned ${r.earned} · spent ${r.spent} · refunds ${r.refund} · left ${r.left} · peak ${r.peak}`,
+    `loadout: ${(r.lo || []).map(TNAME).join(', ') || '-'}`,
+    `built: ${countStr(r.built)} | upgrades: ${countStr(r.ups)} | sold: ${countStr(r.sold)} | burned down: ${countStr(r.burned)}`,
+    `gold into: ${countStr(r.spend)}`,
+    `board at end (${(r.board || []).length}, most ${r.peakTowers}): ${boardStr(r.board)}`,
+    `damage: ${dmgStr(r.dmg)}`,
+    `kills ${r.kills}: ${countStr(r.killBy)} · best combo ${r.combo}`,
+    `lives leaked ${r.leaks}: ${countStr(r.leakTypes, ENAME)}`,
+    `early calls ${r.early} (+${r.earlyGold} gold) · shields/domes broken ${r.shields} · towers set alight ${r.ignited} · fires put out ${r.doused}`,
+    `waves (wave:gold/lives/towers at its start, -N lives leaked in it, e = called early): ${(r.wv || []).map(w => `${w[0]}:${w[1]}/${w[2]}/${w[3]}${w[5] ? '-' + w[5] : ''}${w[4] ? 'e' : ''}`).join(' ') || '-'}`,
+  ];
+}
+function labReport() {
+  const labs = Save.d.lab || {}, out = [];
+  const runs = LAB.reduce((a, lv) => a + ((labs[lv.n] && labs[lv.n].runs) || []).length, 0);
+  out.push('SHATTERLINE LAB ANALYTICS');
+  out.push(`game ${BUILD} · sent ${fmtDate(Date.now())} · ${LAB.filter(labDone).length}/${LAB.length} labs completed · ${runs} run${runs === 1 ? '' : 's'} saved (last ${RUNS_PER_LAB} per lab)`);
+  LAB.forEach((lv, i) => {
+    const r = labs[lv.n], d = lv.lab, econ = lv.econ.key === 'payday' ? 'PAYDAY' : `LEAN ${Math.round(lv.econ.bounty * 100)}%`;
+    out.push('');
+    out.push(`== LAB ${i + 1} · ${STR.en['lab_name_' + d.id]} [${d.id}${d.v ? ' v' + d.v : ''}] · ${econ} · ${lv.waves.length} waves · start ${lv.gold} gold${labDone(lv) ? ' · COMPLETED' : ''}`);
+    if (!r || !r.plays) { out.push('not played yet'); return; }
+    out.push(`${r.wins} wins / ${r.plays} plays${r.quits ? ` · quit ${r.quits}x` : ''} · best ${starStr(r.stars)}`);
+    const a = r.runs || [];
+    if (!a.length && r.last) out.push(`last (before tracking): ${r.last.win ? 'WON' : 'LOST'} · lives ${r.last.lives} · wave ${r.last.wave}/${r.last.waves} · gold earned ${r.last.earned} spent ${r.last.spent} left ${Math.floor(r.last.left)}`);
+    a.slice().reverse().forEach((x, k) => out.push(...runLines(x, k === 0 ? 'latest run' : `${k + 1} runs back`)));
+  });
+  const camp = (Save.d.runs || []).slice(-10).reverse();
+  if (camp.length) {
+    out.push('');
+    out.push(`== RECENT CAMPAIGN LEVELS (last ${camp.length})`);
+    for (const x of camp) {
+      out.push(`L${x.n} · ${fmtDate(x.t)} · ${x.res === 'win' ? 'WON ' + starStr(x.stars) : x.res === 'lose' ? 'LOST' : 'QUIT'} · lives ${x.lives}/${x.max} · wave ${x.wave}/${x.waves} · gold earned ${x.earned} spent ${x.spent} left ${x.left} peak ${x.peak} · ${fmtSecs(x.secs)}`);
+      out.push(`   board: ${boardStr(x.board)} · damage: ${dmgStr(x.dmg)} · leaked: ${countStr(x.leakTypes, ENAME)}`);
+    }
+  }
+  return out.join('\n');
+}
+// The copy box: a real DOM textarea + COPY button, so copying works on phones and inside the Claude app
+function showAnalytics() {
+  if (document.getElementById('an-box')) return;
+  const text = labReport(), F = "'Chakra Petch',system-ui,sans-serif";
+  const box = document.createElement('div'); box.id = 'an-box';
+  box.style.cssText = 'position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(5,4,14,0.84);touch-action:auto;-webkit-user-select:text;user-select:text';
+  box.innerHTML = `<div style="box-sizing:border-box;width:min(440px,92vw);max-height:88vh;display:flex;flex-direction:column;padding:18px 16px 14px;border-radius:18px;background:#0b0918;border:2px solid #ffd23d;box-shadow:0 0 40px rgba(255,210,61,0.25);font-family:${F};color:#e8e6ff">`
+    + `<div id="an-t" style="font:400 18px Bungee,'Arial Black',sans-serif;color:#ffd23d;letter-spacing:1px;text-align:center"></div>`
+    + `<div id="an-l" style="text-align:center;font-size:12px;font-weight:600;color:rgba(230,230,255,0.75);margin:6px 0 10px"></div>`
+    + `<textarea id="an-txt" readonly spellcheck="false" style="box-sizing:border-box;width:100%;height:46vh;min-height:160px;padding:10px;border-radius:10px;border:1.5px solid #5a48e0;background:#07060f;color:#d9d6f5;font:11px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:none;-webkit-user-select:text;user-select:text;outline:none"></textarea>`
+    + `<div id="an-msg" style="min-height:18px;margin:9px 0 7px;text-align:center;font-weight:700;font-size:12px;letter-spacing:1px"></div>`
+    + `<div style="display:flex;gap:10px"><button type="button" id="an-no" style="flex:1;padding:12px;border-radius:24px;border:1.5px solid #8a84b8;background:transparent;color:#e8e6ff;font:700 13px ${F}"></button>`
+    + `<button type="button" id="an-yes" style="flex:1.4;padding:12px;border-radius:24px;border:1.5px solid #7dffb0;background:rgba(125,255,176,0.16);color:#fff;font:700 14px ${F}"></button></div></div>`;
+  document.body.appendChild(box);
+  const $ = id => box.querySelector('#' + id), ta = $('an-txt'), msg = $('an-msg');
+  $('an-t').textContent = tr('an_title'); $('an-l').textContent = tr('an_lead'); $('an-no').textContent = tr('an_close'); $('an-yes').textContent = tr('an_copy');
+  ta.value = text;
+  const say = ok => { msg.textContent = ok ? tr('an_copied') : tr('an_copy_fail'); msg.style.color = ok ? '#7dffb0' : '#ffb347'; if (ok) Sound.play('build'); else Sound.play('deny'); };
+  const viaSelect = () => {                   // the old way: select the text and copy it (works where the clipboard API is blocked)
+    let ok = false;
+    try { ta.readOnly = false; ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); ok = document.execCommand('copy'); } catch (e) {}
+    ta.readOnly = true; try { ta.blur(); } catch (e) {}
+    return ok;
+  };
+  const copy = quiet => {
+    const fallback = () => { const ok = viaSelect(); if (ok || !quiet) say(ok); };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(() => say(true), fallback); return; }
+    } catch (e) {}
+    fallback();
+  };
+  $('an-yes').onclick = () => copy(false);
+  $('an-no').onclick = () => { box.remove(); Sound.play('tap'); };
+  if (G.pointerType === 'mouse') copy(true);   // with a mouse the click that opened this can copy straight away
+}
+
 // ------------------------------------------------------ playtest lab
 function toLab() {
   Save.lab = null; SAGA.card = null; SAGA.confirm = null;
@@ -4424,16 +4631,29 @@ function toLab() {
   if (G.state !== 'title' && G.state !== 'lab') { startDemo(); buildBackground(theme()); }
   G.state = 'lab'; Sound.musicOff(); FX.clear();
 }
+// Lab screen timing (v28): a completed lab's COMPLETED stamp slams down once, the first time you see it
+const LABFX = { t0: 0, last: 0, hit: {}, fall: {} }, STAMP_FALL = 0.2;
+function labDone(lv) { const r = (Save.d.lab || {})[lv.n]; return !!r && r.doneV === (lv.lab.v || 1); }
+function labPlays() { return LAB.reduce((a, lv) => a + (((Save.d.lab || {})[lv.n] || {}).plays || 0), 0); }
 function drawLab() {
   dim(0.8); blocker();
+  const now = performance.now(), cardOpen = !!SAGA.card;
+  if (now - LABFX.last > 400) { LABFX.t0 = now; LABFX.hit = {}; LABFX.fall = {}; }     // (re)entered the screen
+  LABFX.last = cardOpen ? 0 : now;                     // a level card on top holds the stamps back until you can see them
+  const lt = (now - LABFX.t0) / 1000;
+  let amp = 0; for (const k in LABFX.hit) amp = Math.max(amp, 7 * Math.exp(-(lt - LABFX.hit[k]) * 9));
+  ctx.save();
+  if (amp > 0.3 && !REDUCED) ctx.translate(rand(-amp, amp), rand(-amp, amp));        // the slam shakes the screen
   const cx = LW / 2, cw = Math.min(344, LW - 20), x0 = (LW - cw) / 2;
   circleButton(x0 + 22, 34, 17, 'close', () => { SAGA.card = null; G.state = 'title'; Sound.play('tap'); });
   glowText(tr('lab'), cx, 36, 22, '#ffd23d', FONT_D, 12);
   setFont(10.5, FONT_UI, 500); ctx.fillStyle = 'rgba(230,230,255,0.75)'; wrapText(tr('lab_intro'), cx, 70, cw - 30, 13);
-  // v26: ten labs in two columns of compact cards (what each one tests is on its card)
+  // v26: ten labs in two columns of compact cards (what each one tests is on its card); v28: room for the analytics button
+  const plays = labPlays(), btnRoom = plays ? 62 : 0;
   const cols = 2, rows = Math.ceil(LAB.length / cols), gap = 8, top = 100;
-  const bw = (cw - gap) / cols, bh = Math.min(104, (LH - top - 16) / rows - gap);
+  const bw = (cw - gap) / cols, bh = Math.min(104, (LH - top - 16 - btnRoom) / rows - gap);
   const fit = (str, maxW, size, face = FONT_UI, weight = 700) => { setFont(size, face, weight); const w = ctx.measureText(str).width; if (w > maxW) setFont(Math.max(6.5, size * maxW / w), face, weight); };
+  const stamps = []; let queue = 0;
   LAB.forEach((lv, i) => {
     const x = x0 + (i % cols) * (bw + gap), y = top + Math.floor(i / cols) * (bh + gap);
     const th = THEMES[lv.world], col = lv.boss ? '#ff5a6a' : th.flow, rec = (Save.d.lab || {})[lv.n];
@@ -4451,8 +4671,97 @@ function drawLab() {
     const L = rec && rec.last, res = !L ? tr('lab_never') : L.win ? tr('lab_won_s', L.lives, L.left) : tr('lab_lost_s', L.wave, L.waves);
     fit(res, bw - 22, 8.5); ctx.fillStyle = L ? (L.win ? '#7dffb0' : '#ff8a96') : 'rgba(230,230,255,0.45)'; ctx.fillText(res, x + 11, y + bh - 28);
     if (rec && rec.plays) { fit(tr('lab_plays', rec.wins, rec.plays), bw - 22, 8); ctx.fillStyle = 'rgba(230,230,255,0.5)'; ctx.fillText(tr('lab_plays', rec.wins, rec.plays), x + 11, y + bh - 13); }
-    hit(x, y, bw, bh, () => openCard(lv.n));
+    if (labDone(lv)) {
+      // seconds since this card's stamp started falling: 9 = long since stamped, -1 = still waiting
+      const k = rec.stamped ? 9 : cardOpen ? -1 : lt - (0.45 + (queue++) * 0.6);
+      stamps.push({ lv, rec, x, y, k });
+      if (k >= STAMP_FALL) greyCard(x, y, bw, bh, Math.min(1, (k - STAMP_FALL) / 0.12));
+    }
+    hit(x, y, bw, bh, () => openCard(lv.n));        // a completed lab can still be replayed
   });
+  for (const s of stamps) drawLabStamp(s, bw, bh, lt);
+  if (plays) {
+    pillButton(cx, LH - 16 - 25, Math.min(300, cw), 50, tr('an_send'), '#ffd23d', () => { Sound.play('tap'); showAnalytics(); },
+      { size: 15, sub: tr('an_sub', LAB.filter(labDone).length, LAB.length) });
+  }
+  ctx.restore();
+}
+// a finished card loses its colour and darkens
+function greyCard(x, y, w, h, g) {
+  ctx.save(); roundRect(x, y, w, h, 12); ctx.clip();
+  ctx.globalAlpha = g; ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = '#808080'; ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 0.52 * g; ctx.fillStyle = '#06050b'; ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+  ctx.restore();
+  roundRect(x, y, w, h, 12); ctx.lineWidth = 1.5; ctx.strokeStyle = `rgba(120,118,138,${0.9 * g})`; ctx.stroke();
+}
+// The stamp: falls in huge and see-through, slams down (crack, shockwave, debris, shake), wobbles, then stays
+function drawLabStamp(s, bw, bh, lt) {
+  const { lv, rec, x, y, k } = s;
+  if (k < 0) return;
+  const n = lv.n, col = '#7dffb0', w = Math.min(bw - 16, 152), h = Math.round(w * 0.3);
+  const cx = x + bw / 2, cy = y + bh * 0.56, rot = -0.2 + (seeded(n * 977 + 13)() - 0.5) * 0.1;
+  if (k < STAMP_FALL) {
+    if (!LABFX.fall[n]) { LABFX.fall[n] = 1; Sound.play('swoosh'); }
+    const p = k / STAMP_FALL, sc = 3.4 - 2.4 * p * p;             // speeds up as it drops
+    ctx.save(); ctx.translate(cx + 8 * (1 - p), cy + 14 * (1 - p)); ctx.rotate(rot); ctx.scale(sc, sc);   // its shadow closes in under it
+    roundRect(-w / 2, -h / 2, w, h, 7); ctx.fillStyle = `rgba(0,0,0,${0.5 * p})`; ctx.fill(); ctx.restore();
+    stampGlyph(cx, cy, w, h, sc, rot - 0.4 * (1 - p), Math.min(1, p * 2.2), col, n);
+    return;
+  }
+  const kk = k - STAMP_FALL;
+  if (!LABFX.hit[n] && k < 2) {                                    // impact
+    LABFX.hit[n] = lt - kk;
+    Sound.play('stamp');
+    try { if (navigator.vibrate) navigator.vibrate([35, 25, 70]); } catch (e) {}
+  }
+  drawCracks(cx, cy, w, h, rot, kk, n, x, y, bw, bh);
+  if (kk < 0.6) {                                                  // flash, glow burst and shockwave
+    const f = kk / 0.6;
+    ctx.save(); roundRect(x, y, bw, bh, 12); ctx.clip(); ctx.fillStyle = `rgba(255,255,255,${0.75 * Math.exp(-kk * 11)})`; ctx.fillRect(x, y, bw, bh); ctx.restore();
+    additive(true); glow(cx, cy, 30 + 90 * f, col, 0.9 * (1 - f)); additive(false);
+    ctx.beginPath(); ctx.ellipse(cx, cy, 24 + kk * 330, 12 + kk * 200, rot, 0, TAU); ctx.lineWidth = 4 * (1 - f); ctx.strokeStyle = hexA(col, 0.75 * (1 - f)); ctx.stroke();
+  }
+  const sc = 1 - 0.16 * Math.exp(-kk * 11) * Math.cos(kk * 34);    // squash on impact, then a quick wobble
+  stampGlyph(cx, cy, w, h, sc, rot, 1, col, n);
+  if (kk < 0.8) {                                                  // chips flying off the edges
+    const D = seeded(n * 31 + 7), f = kk / 0.8;
+    for (let i = 0; i < 18; i++) {
+      const a = D() * TAU, sp = 110 + D() * 230, sz = 1.6 + D() * 3.6, spin = (D() - 0.5) * 22, c2 = D() < 0.55 ? col : '#ffffff';
+      const px = cx + Math.cos(a) * (w * 0.42 + sp * kk), py = cy + Math.sin(a) * (h * 0.5 + sp * kk * 0.75) + 300 * kk * kk;
+      ctx.save(); ctx.translate(px, py); ctx.rotate(spin * kk); ctx.globalAlpha = 1 - f; ctx.fillStyle = c2; ctx.fillRect(-sz / 2, -sz * 0.3, sz, sz * 0.6); ctx.restore();
+    }
+  }
+  if (!rec.stamped && kk > 1) { rec.stamped = true; Save.store(); }
+}
+function stampGlyph(cx, cy, w, h, sc, rot, a, col, seed) {
+  const txt = tr('lab_done');
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot); ctx.scale(sc, sc); ctx.globalAlpha = a;
+  roundRect(-w / 2, -h / 2, w, h, 7); ctx.fillStyle = 'rgba(4,18,10,0.78)'; ctx.fill();
+  ctx.shadowColor = col; ctx.shadowBlur = 12;
+  ctx.lineWidth = 3.2; ctx.strokeStyle = col; ctx.stroke();
+  roundRect(-w / 2 + 5, -h / 2 + 5, w - 10, h - 10, 4); ctx.lineWidth = 1.3; ctx.stroke();
+  let fs = h * 0.5; setFont(fs, FONT_D, 400); spacing(1.5);
+  const tw = ctx.measureText(txt).width; if (tw > w - 24) { fs *= (w - 24) / tw; setFont(fs, FONT_D, 400); }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.fillText(txt, 0, 1.5);
+  ctx.shadowBlur = 0; spacing(0);
+  const R = seeded(seed * 53 + 5); ctx.fillStyle = 'rgba(4,18,10,0.85)';        // worn ink, like a real rubber stamp
+  for (let i = 0; i < 30; i++) { const px = (R() - 0.5) * w, py = (R() - 0.5) * h, rr = 0.35 + R() * 1.25; ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.fill(); }
+  ctx.restore();
+}
+function drawCracks(cx, cy, w, h, rot, kk, seed, x, y, bw, bh) {
+  const R = seeded(seed * 7919 + 3), grow = Math.min(1, kk / 0.09);
+  ctx.save(); roundRect(x, y, bw, bh, 12); ctx.clip();
+  ctx.translate(cx, cy); ctx.rotate(rot); ctx.lineJoin = 'miter'; ctx.lineCap = 'round';
+  for (let i = 0; i < 10; i++) {
+    const a0 = R() * TAU, segs = 3 + Math.floor(R() * 3), len = (12 + R() * 30) / segs;
+    let px = Math.cos(a0) * w * 0.5, py = Math.sin(a0) * h * 0.56, ang = a0 + (R() - 0.5) * 0.8;
+    const pts = [[px, py]];
+    for (let j = 0; j < segs; j++) { ang += (R() - 0.5) * 1.1; px += Math.cos(ang) * len * grow; py += Math.sin(ang) * len * grow; pts.push([px, py]); }
+    ctx.beginPath(); pts.forEach(([u, v], j) => j ? ctx.lineTo(u, v) : ctx.moveTo(u, v));
+    ctx.lineWidth = 2.2; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.stroke();
+    ctx.lineWidth = 0.8; ctx.strokeStyle = 'rgba(200,255,220,0.5)'; ctx.stroke();
+  }
+  ctx.restore();
 }
 
 // First launch: pick a language before anything else. The prompt is shown in every language.
@@ -5034,7 +5343,7 @@ if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude
 else start((window.claude && window.claude.hot && window.claude.hot.data) || {});
 
 // handles for automated playtests
-window.__TD = { G, Save, LEVELS, LAB, levelOf, toLab, startLevel, buildTower, upgradeTower, sellTower, upgradeCost, startWave, update, isBuildable, MAP, TOWERS, ENEMIES, ECON, LEVEL_CAL, toMap, openCard, spawnEnemy, FIRE, ELEC, igniteTower };
+window.__TD = { G, Save, LEVELS, LAB, levelOf, toLab, startLevel, buildTower, upgradeTower, sellTower, upgradeCost, startWave, update, isBuildable, MAP, TOWERS, ENEMIES, ECON, LEVEL_CAL, toMap, openCard, spawnEnemy, FIRE, ELEC, igniteTower, labReport, recordRun, showAnalytics, labDone, LABFX };
 </script>
 
 </body></html>
