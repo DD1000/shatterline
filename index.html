@@ -28,7 +28,7 @@ const COLS = 9, ROWS = 13;     // map grid
 const HUD_H = 50, BAR_H = 78;  // top HUD + bottom control bar
 const MIN_H = HUD_H + ROWS * TILE + BAR_H;
 const LEVELS_PER_WORLD = 10;
-const BUILD = 'v33';          // shown in lab analytics reports
+const BUILD = 'v34';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
 
 // Title-screen showcase map
 const DEMO_PATH = [[1,0],[1,2],[7,2],[7,5],[1,5],[1,8],[7,8],[7,10],[4,10],[4,12]];
@@ -4454,6 +4454,7 @@ function drawTitle() {
   }
   setFont(11, FONT_UI, 500); ctx.fillStyle = 'rgba(230,230,255,0.6)'; ctx.textAlign = 'center';
   ctx.fillText(tr('title_footer', LEVELS.length, THEMES.length, TOWER_ORDER.length), cx, LH - 30);
+  setFont(10, FONT_UI, 600); spacing(1); ctx.fillStyle = 'rgba(230,230,255,0.42)'; ctx.fillText(BUILD, cx, LH - 13); spacing(0);   // v34 (user): version number
   // Playtest Lab: hand-made test levels (v25)
   pillButton(cx, py + (started ? 104 : 86), 196, 40, tr('lab'), '#ffd23d', () => { Sound.init(); Sound.play('tap'); withPassword(toLab); }, { size: 13, sub: DEV_OK ? tr('lab_sub', LAB.length) : tr('pw_locked') });
   // playtest helper: open every level without touching real progress
@@ -4668,6 +4669,7 @@ function drawLab() {
   const cx = LW / 2, cw = Math.min(344, LW - 20), x0 = (LW - cw) / 2;
   circleButton(x0 + 22, 34, 17, 'close', () => { SAGA.card = null; G.state = 'title'; Sound.play('tap'); });
   glowText(tr('lab'), cx, 36, 22, '#ffd23d', FONT_D, 12);
+  setFont(10, FONT_UI, 600); ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(230,230,255,0.45)'; ctx.fillText(BUILD, x0 + cw - 6, 34); ctx.textAlign = 'center';   // version number
   setFont(10.5, FONT_UI, 500); ctx.fillStyle = 'rgba(230,230,255,0.75)'; wrapText(tr('lab_intro'), cx, 70, cw - 30, 13);
   // v26: ten labs in two columns of compact cards (what each one tests is on its card); v28: room for the analytics button
   const plays = labPlays(), btnRoom = plays ? 62 : 0;
