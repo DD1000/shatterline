@@ -28,7 +28,7 @@ const COLS = 9, ROWS = 13;     // map grid
 const HUD_H = 50, BAR_H = 78;  // top HUD + bottom control bar
 const MIN_H = HUD_H + ROWS * TILE + BAR_H;
 const LEVELS_PER_WORLD = 10;
-const BUILD = 'v44';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
+const BUILD = 'v46';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
 
 // Title-screen showcase map
 const DEMO_PATH = [[1,0],[1,2],[7,2],[7,5],[1,5],[1,8],[7,8],[7,10],[4,10],[4,12]];
@@ -169,11 +169,13 @@ const TOWERS = {
                  { cost:220, dmg:6.66, rate:1.0, range:2.4, slow:0.65, brittle:true } ] },
   // v27 (user): NOVA fires 35% slower (was 0.52 / 0.57 / 0.63 / 0.7 shots a second)
   // v30 (user): 30% less damage per hit (was 26 / 46 / 78 / 120) and 15% slower again (was 0.34 / 0.37 / 0.41 / 0.46)
-  nova:   { name:'NOVA',   color:'#ff7a2e', sides:6, cost:110, unlock:6, desc:'Plasma bomb. Splash, pierces armor.',
+  // v46 (user): level 4 is the SUPERNOVA: same rate, the main shell as before plus `extra` smaller shells (extraDmg x damage,
+  // extraSplash tiles of blast) aimed to cover as many other enemies in range as possible.
+  nova:   { name:'NOVA',   color:'#ff7a2e', sides:6, cost:110, unlock:6, desc:'Plasma bomb. Splash, pierces armor. Level 4: SUPERNOVA, lobs 3 extra smaller shells to cover more enemies.',
             lv:[ { dmg:22.5, rate:0.29, range:3.0, splash:0.9 },
                  { cost:120, dmg:24.75, rate:0.29, range:3.2, splash:1.02 },
                  { cost:200, dmg:27.23, rate:0.29, range:3.5, splash:1.2 },
-                 { cost:300, dmg:29.95, rate:0.29, range:3.8, splash:1.35 } ] },
+                 { cost:300, dmg:29.95, rate:0.29, range:3.8, splash:1.35, extra:3, extraDmg:0.2, extraSplash:0.6, supernova:true } ] },
   // v37 (user): each upgrade fires 20% faster (0.9 / 1.08 / 1.3 / 1.56 zaps a second). Level 4 is the LIVE WIRE (its own look).
   // v39 (user): the LIVE WIRE's electrified road is gone.
   // v40/v41 (user): the LIVE WIRE chains like level 3 (8 chains, normal targeting), and every zap also sends a pulse down all
@@ -287,7 +289,7 @@ const STR = {
   en: {
     combo: 'COMBO', early_call: 'EARLY CALL  +{0}', wave: 'WAVE {0}', boss_incoming: 'BOSS INCOMING', final_wave: 'FINAL WAVE',
     cond_noBounty: 'NO BOUNTY · BUILD MINTS', cond_air: 'AIR RAID · BUILD FLAK', cond_shielded: 'HEAVY SHIELDS · USE EMP OR PRISM',
-    warden: 'WARDEN', armored_boss: 'ARMORED BOSS', warden_x: 'WARDEN ×{0}', tower_lv: 'LEVEL {0}', master_bolt: 'MASTER BOLT', auto_title: 'AUTO BUILD', auto_sub: 'Rebuild the towers from your last try, at the same moments and on the same tiles, until wave:', auto_go: 'AUTO BUILD UNTIL WAVE {0}', auto_fresh: 'START FRESH', auto_lost: 'LOST', auto_counts: '{0} built · {1} upgraded · {2} sold', auto_pill: 'AUTO BUILD · UNTIL WAVE {0}', auto_wait: 'WAITING FOR GOLD', auto_done: 'AUTO BUILD DONE · YOUR TURN', auto_stopped: 'AUTO BUILD STOPPED', auto_tag: 'AUTO', auto_missing: 'Not in your loadout (skipped): {0}', boss_word: 'BOSS', boss_down: '{0} DOWN', boss_down_gold: '{0} DOWN  +{1}', bosses_x: 'BOSSES ×{0}', immune: 'IMMUNE', live_wire: 'LIVE WIRE', wire_line: 'Zaps faster ({0}/s) and chains to {1}. Each zap also sends a pulse down every track that deals {2} to each enemy it passes.', level_n: 'LEVEL {0}',
+    warden: 'WARDEN', armored_boss: 'ARMORED BOSS', warden_x: 'WARDEN ×{0}', tower_lv: 'LEVEL {0}', master_bolt: 'MASTER BOLT', supernova: 'SUPERNOVA', supernova_line: 'Lobs 4 shells: the main one at full damage, plus 3 smaller ones spread to hit as many enemies as possible ({0}% damage, smaller blast).', auto_title: 'AUTO BUILD', auto_sub: 'Rebuild the towers from your last try, at the same moments and on the same tiles, until wave:', auto_go: 'AUTO BUILD UNTIL WAVE {0}', auto_fresh: 'START FRESH', auto_lost: 'LOST', auto_counts: '{0} built · {1} upgraded · {2} sold', auto_pill: 'AUTO BUILD · UNTIL WAVE {0}', auto_wait: 'WAITING FOR GOLD', auto_done: 'AUTO BUILD DONE · YOUR TURN', auto_stopped: 'AUTO BUILD STOPPED', auto_tag: 'AUTO', auto_missing: 'Not in your loadout (skipped): {0}', boss_word: 'BOSS', boss_down: '{0} DOWN', boss_down_gold: '{0} DOWN  +{1}', bosses_x: 'BOSSES ×{0}', immune: 'IMMUNE', live_wire: 'LIVE WIRE', wire_line: 'Zaps faster ({0}/s) and chains to {1}. Each zap also sends a pulse down every track that deals {2} to each enemy it passes.', level_n: 'LEVEL {0}',
     m_10: 'NICE', m_25: 'AWESOME', m_50: 'UNREAL', m_100: 'LEGENDARY', m_200: 'GODLIKE',
     combo_gold: '{0} COMBO  +{1} GOLD', combo_only: '{0} COMBO', shattered: 'SHATTERED', warden_down: 'WARDEN DOWN', warden_down_gold: 'WARDEN DOWN  +{0}',
     wave_clear: 'WAVE {0} CLEAR', wave_clear_gold: 'WAVE {0} CLEAR  +{1}',
@@ -363,7 +365,7 @@ const STR = {
   zh: {
     combo: '连击', early_call: '提前召唤  +{0}', wave: '第 {0} 波', boss_incoming: '首领来袭', final_wave: '最后一波',
     cond_noBounty: '无赏金 · 建造铸币塔', cond_air: '空袭 · 建造防空塔', cond_shielded: '重护盾 · 使用电磁或棱镜',
-    warden: '守卫者', armored_boss: '重甲首领', warden_x: '守卫者 ×{0}', tower_lv: '{0} 级', master_bolt: '大师光弹', auto_title: '自动建造', auto_sub: '按上次尝试的时间和位置自动重建你的塔，直到第几波：', auto_go: '自动建造到第 {0} 波', auto_fresh: '重新开始', auto_lost: '失败', auto_counts: '建造 {0} · 升级 {1} · 出售 {2}', auto_pill: '自动建造 · 到第 {0} 波', auto_wait: '等待金币', auto_done: '自动建造完成 · 轮到你了', auto_stopped: '已停止自动建造', auto_tag: '自动', auto_missing: '不在出战栏中（将跳过）：{0}', boss_word: '首领', boss_down: '{0} 被击碎', boss_down_gold: '{0} 被击碎  +{1}', bosses_x: '首领 ×{0}', immune: '免疫', live_wire: '高压电网', wire_line: '射速更快（每秒 {0} 次），连锁 {1} 个敌人。每次攻击还会沿所有道路发出一道脉冲，经过每个敌人时造成 {2} 伤害。', level_n: '第 {0} 关',
+    warden: '守卫者', armored_boss: '重甲首领', warden_x: '守卫者 ×{0}', tower_lv: '{0} 级', master_bolt: '大师光弹', supernova: '超新星', supernova_line: '一次抛射 4 发：主炮造成全额伤害，另外 3 发小炮弹分散落下，尽量覆盖更多敌人（{0}% 伤害，爆炸范围更小）。', auto_title: '自动建造', auto_sub: '按上次尝试的时间和位置自动重建你的塔，直到第几波：', auto_go: '自动建造到第 {0} 波', auto_fresh: '重新开始', auto_lost: '失败', auto_counts: '建造 {0} · 升级 {1} · 出售 {2}', auto_pill: '自动建造 · 到第 {0} 波', auto_wait: '等待金币', auto_done: '自动建造完成 · 轮到你了', auto_stopped: '已停止自动建造', auto_tag: '自动', auto_missing: '不在出战栏中（将跳过）：{0}', boss_word: '首领', boss_down: '{0} 被击碎', boss_down_gold: '{0} 被击碎  +{1}', bosses_x: '首领 ×{0}', immune: '免疫', live_wire: '高压电网', wire_line: '射速更快（每秒 {0} 次），连锁 {1} 个敌人。每次攻击还会沿所有道路发出一道脉冲，经过每个敌人时造成 {2} 伤害。', level_n: '第 {0} 关',
     m_10: '漂亮', m_25: '太棒了', m_50: '不可思议', m_100: '传奇', m_200: '神级',
     combo_gold: '{0} 连击  +{1} 金币', combo_only: '{0} 连击', shattered: '粉碎！', warden_down: '守卫者被击碎', warden_down_gold: '守卫者被击碎  +{0}',
     wave_clear: '第 {0} 波清除', wave_clear_gold: '第 {0} 波清除  +{1}',
@@ -440,7 +442,7 @@ const STR = {
     combo: 'COMBO', early_call: 'ADELANTO  +{0}', wave: 'OLEADA {0}', boss_incoming: 'SE ACERCA EL JEFE', final_wave: 'ÚLTIMA OLEADA',
     cond_noBounty: 'SIN BOTÍN · CONSTRUYE CECAS', cond_air: 'ATAQUE AÉREO · CONSTRUYE FLAK', cond_shielded: 'ESCUDOS PESADOS · USA EMP O PRISMA',
     cond_heat: 'OLA DE CALOR · SIN HIELO', cond_rain: 'TORMENTA · SIN PIRO',
-    warden: 'GUARDIÁN', armored_boss: 'JEFE BLINDADO', warden_x: 'GUARDIÁN ×{0}', tower_lv: 'NIVEL {0}', master_bolt: 'RAYO MAESTRO', auto_title: 'AUTOCONSTRUCCIÓN', auto_sub: 'Reconstruye las torres de tu último intento, en los mismos momentos y casillas, hasta la oleada:', auto_go: 'AUTOCONSTRUIR HASTA LA OLEADA {0}', auto_fresh: 'EMPEZAR DE CERO', auto_lost: 'PERDIDA', auto_counts: '{0} torres · {1} mejoras · {2} vendidas', auto_pill: 'AUTOCONSTRUCCIÓN · HASTA OLEADA {0}', auto_wait: 'ESPERANDO ORO', auto_done: 'AUTOCONSTRUCCIÓN LISTA · TE TOCA', auto_stopped: 'AUTOCONSTRUCCIÓN DETENIDA', auto_tag: 'AUTO', auto_missing: 'No están en tu equipo (se omiten): {0}', boss_word: 'JEFE', boss_down: '{0} DERRIBADO', boss_down_gold: '{0} DERRIBADO  +{1}', bosses_x: 'JEFES ×{0}', immune: 'INMUNE', live_wire: 'ALTA TENSIÓN', wire_line: 'Dispara más rápido ({0}/s) y encadena {1}. Cada ataque también lanza un pulso por todos los caminos que hace {2} de daño a cada enemigo que cruza.', level_n: 'NIVEL {0}',
+    warden: 'GUARDIÁN', armored_boss: 'JEFE BLINDADO', warden_x: 'GUARDIÁN ×{0}', tower_lv: 'NIVEL {0}', master_bolt: 'RAYO MAESTRO', supernova: 'SUPERNOVA', supernova_line: 'Lanza 4 proyectiles: el principal con daño completo y 3 más pequeños repartidos para alcanzar a todos los enemigos posibles ({0}% de daño, explosión menor).', auto_title: 'AUTOCONSTRUCCIÓN', auto_sub: 'Reconstruye las torres de tu último intento, en los mismos momentos y casillas, hasta la oleada:', auto_go: 'AUTOCONSTRUIR HASTA LA OLEADA {0}', auto_fresh: 'EMPEZAR DE CERO', auto_lost: 'PERDIDA', auto_counts: '{0} torres · {1} mejoras · {2} vendidas', auto_pill: 'AUTOCONSTRUCCIÓN · HASTA OLEADA {0}', auto_wait: 'ESPERANDO ORO', auto_done: 'AUTOCONSTRUCCIÓN LISTA · TE TOCA', auto_stopped: 'AUTOCONSTRUCCIÓN DETENIDA', auto_tag: 'AUTO', auto_missing: 'No están en tu equipo (se omiten): {0}', boss_word: 'JEFE', boss_down: '{0} DERRIBADO', boss_down_gold: '{0} DERRIBADO  +{1}', bosses_x: 'JEFES ×{0}', immune: 'INMUNE', live_wire: 'ALTA TENSIÓN', wire_line: 'Dispara más rápido ({0}/s) y encadena {1}. Cada ataque también lanza un pulso por todos los caminos que hace {2} de daño a cada enemigo que cruza.', level_n: 'NIVEL {0}',
     m_10: 'BIEN', m_25: 'GENIAL', m_50: 'INCREÍBLE', m_100: 'LEGENDARIO', m_200: 'DIVINO',
     combo_gold: 'COMBO {0}  +{1} ORO', combo_only: 'COMBO {0}', shattered: 'HECHO AÑICOS', warden_down: 'GUARDIÁN DERRIBADO', warden_down_gold: 'GUARDIÁN DERRIBADO  +{0}',
     wave_clear: 'OLEADA {0} SUPERADA', wave_clear_gold: 'OLEADA {0} SUPERADA  +{1}',
@@ -521,7 +523,7 @@ function tr(id, ...a) {
 const ZH = {
   tower: { bolt: '光弹', frost: '冰霜', nova: '新星', arc: '电弧', emp: '电磁', mint: '铸币', prism: '棱镜', rail: '轨道炮', beacon: '信标', flak: '防空', pyro: '烈焰', tide: '潮汐' },
   towerDesc: {
-    bolt: '快速光弹。每第 4 发暴击，每次升级多一发暴击。4 级：大师光弹，射速 +35%。', frost: '冰冻脉冲，减速附近所有敌人。不会着火，还能扑灭紧挨着的塔上的火。', nova: '等离子炸弹，范围伤害，无视护甲。', arc: '连锁闪电，每次升级射速更快。带电敌人会让它超载，但免疫它的伤害。4 级：高压电网，每次攻击还会沿所有道路发出脉冲。',
+    bolt: '快速光弹。每第 4 发暴击，每次升级多一发暴击。4 级：大师光弹，射速 +35%。', frost: '冰冻脉冲，减速附近所有敌人。不会着火，还能扑灭紧挨着的塔上的火。', nova: '等离子炸弹，范围伤害，无视护甲。4 级：超新星，额外抛射 3 发小炮弹覆盖更多敌人。', arc: '连锁闪电，每次升级射速更快。带电敌人会让它超载，但免疫它的伤害。4 级：高压电网，每次攻击还会沿所有道路发出脉冲。',
     emp: '最多 4 道激光专找护盾，地面和空中都能打：剥除护盾、击破护罩、让带电敌人短路。几乎没有伤害。带电敌人无法让它短路。', mint: '波次进行时不断产出金币。', prism: '光束越烧越强，穿透护甲和护盾。',
     rail: '沿一条固定直线射击，贯穿线上所有敌人。', beacon: '提升相邻塔的伤害。', flak: '防空导弹。唯一能击落飞行敌人的塔。',
     pyro: '短程火焰喷射，带少量溅射。对寒冷敌人造成三倍伤害。', tide: '水柱扑灭着火的塔，并将着火的敌人永久浇灭。几乎没有伤害。',
@@ -574,7 +576,7 @@ const ES = {
   tower: { bolt: 'RAYO', frost: 'HIELO', nova: 'NOVA', arc: 'ARCO', emp: 'EMP', mint: 'CECA', prism: 'PRISMA', rail: 'RIEL', beacon: 'FARO', flak: 'FLAK', pyro: 'PIRO', tide: 'MAREA' },
   towerDesc: {
     bolt: 'Láser rápido. Cada 4.º disparo es crítico; cada mejora añade otro. Nivel 4: RAYO MAESTRO, 35% más rápido.', frost: 'Pulso helado que frena a todos los cercanos. Nunca arde y apaga el fuego de las torres de al lado.',
-    nova: 'Bomba de plasma. Daño en área, atraviesa armadura.', arc: 'Relámpago en cadena; cada mejora dispara más rápido. Los eléctricos lo sobrecargan pero son inmunes a él. Nivel 4: ALTA TENSIÓN, cada ataque también lanza un pulso por todos los caminos.',
+    nova: 'Bomba de plasma. Daño en área, atraviesa armadura. Nivel 4: SUPERNOVA, lanza 3 proyectiles extra más pequeños para cubrir más enemigos.', arc: 'Relámpago en cadena; cada mejora dispara más rápido. Los eléctricos lo sobrecargan pero son inmunes a él. Nivel 4: ALTA TENSIÓN, cada ataque también lanza un pulso por todos los caminos.',
     emp: 'Hasta 4 láseres que buscan escudos, en tierra o en el aire: los quita, rompe cúpulas y cortocircuita a los eléctricos. Casi sin daño. Los eléctricos no pueden apagarlo.',
     mint: 'Genera oro mientras hay oleadas.', prism: 'Rayo que se calienta sobre un objetivo. Atraviesa armadura y escudos.',
     rail: 'Dispara en una línea fija y atraviesa todo lo que hay en ella.', beacon: 'Aumenta el daño de las torres de al lado.',
@@ -1960,6 +1962,7 @@ function drawTowerGlyph(type, x, y, o) {
   const d = TOWERS[type], lv = o.lv || 0, t = o.t || 0;
   const master = !!(d.lv[lv] && d.lv[lv].master), c = master ? MASTER_GOLD : d.color;   // v36: MASTER BOLT turns gold
   const wire = !!(d.lv[lv] && d.lv[lv].wire);                                          // v37: ARC level 4, the LIVE WIRE
+  const sn = !!(d.lv[lv] && d.lv[lv].supernova);                                       // v46: NOVA level 4, the SUPERNOVA
   const s = o.scale == null ? 1 : o.scale;
   const k = 1 + (o.kick || 0) * 0.14;
   const pa = ctx.globalAlpha;
@@ -1968,7 +1971,7 @@ function drawTowerGlyph(type, x, y, o) {
   // plate
   roundRect(x - 15 * s, y - 15 * s, 30 * s, 30 * s, 7 * s);
   ctx.fillStyle = '#0b0a1a'; ctx.fill();
-  ctx.lineWidth = master || wire ? 2 : 1.2; ctx.strokeStyle = hexA(c, master || wire ? 0.85 : 0.4); ctx.stroke();
+  ctx.lineWidth = master || wire || sn ? 2 : 1.2; ctx.strokeStyle = hexA(c, master || wire || sn ? 0.85 : 0.4); ctx.stroke();
   if (wire) { roundRect(x - 12.5 * s, y - 12.5 * s, 25 * s, 25 * s, 5 * s); ctx.lineWidth = 1; ctx.strokeStyle = hexA(WIRE_BLUE, 0.55); ctx.stroke(); }
   // LV2+: rotating outer ring
   if (lv >= 1) {
@@ -2022,6 +2025,29 @@ function drawTowerGlyph(type, x, y, o) {
     const pr = (3.6 + lv * 0.8) * k * s;
     additive(true); glow(x, y + 1, pr * 3.5, c, 0.7 + Math.random() * 0.3); additive(false);
     ctx.beginPath(); ctx.arc(x, y + 1, pr, 0, TAU); ctx.fillStyle = '#fffbe0'; ctx.fill();
+  } else if (type === 'nova' && sn) {                  // SUPERNOVA: a big round mortar hole, 4 shells loaded round its rim
+    const kk = o.kick || 0;
+    ctx.beginPath(); ctx.arc(x, y, 12.8 * s, 0, TAU); ctx.fillStyle = '#0b0a1a'; ctx.fill();
+    ctx.lineWidth = 3 * s; ctx.strokeStyle = hexA(c, 0.95); ctx.stroke();
+    const hg = ctx.createRadialGradient(x, y, 0, x, y, 9 * s);
+    hg.addColorStop(0, kk > 0.05 ? '#fff1c8' : '#05040a'); hg.addColorStop(0.55, kk > 0.05 ? hexA('#ffb347', 0.9) : '#120808'); hg.addColorStop(1, hexA(c, 0.55));
+    ctx.beginPath(); ctx.arc(x, y, 9 * s, 0, TAU); ctx.fillStyle = hg; ctx.fill();
+    ctx.lineWidth = 1.2; ctx.strokeStyle = hexA('#ffd9a8', 0.6); ctx.stroke();
+    for (let i = 0; i < 6; i++) {                          // rifling inside the hole
+      const a = t * 0.4 + i * TAU / 6;
+      ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * 4 * s, y + Math.sin(a) * 4 * s); ctx.lineTo(x + Math.cos(a + 0.5) * 8.4 * s, y + Math.sin(a + 0.5) * 8.4 * s);
+      ctx.lineWidth = 1; ctx.strokeStyle = hexA(c, 0.35); ctx.stroke();
+    }
+    additive(true); glow(x, y, (10 + kk * 18) * s, kk > 0.05 ? '#fff1c8' : c, 0.35 + kk * 0.6 + Math.sin(t * 3) * 0.08); additive(false);
+    const load = Math.max(0, 1 - kk * 1.6);                // the shells leave the rim when it fires and reload after
+    for (let i = 0; i < 4; i++) {
+      const a = t * 0.5 + i * TAU / 4 + Math.PI / 4, sx2 = x + Math.cos(a) * 12.8 * s, sy2 = y + Math.sin(a) * 12.8 * s;
+      ctx.globalAlpha = pa * (o.alpha == null ? 1 : o.alpha) * load;
+      additive(true); glow(sx2, sy2, 7 * s, i ? '#ffb347' : '#ff7a2e', 0.9); additive(false);
+      ctx.beginPath(); ctx.arc(sx2, sy2, (i ? 2.6 : 3.2) * s, 0, TAU); ctx.fillStyle = '#fff4e0'; ctx.fill();
+      ctx.lineWidth = 1; ctx.strokeStyle = i ? '#ffb347' : c; ctx.stroke();
+      ctx.globalAlpha = pa * (o.alpha == null ? 1 : o.alpha);
+    }
   } else if (type === 'nova') {
     const back = (o.kick || 0) * 4;
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + ax * (13 - back) * s, y + ay * (13 - back) * s);
@@ -2113,7 +2139,7 @@ function drawTowerGlyph(type, x, y, o) {
     ctx.lineWidth = 1.6; ctx.strokeStyle = '#d8fff6'; ctx.stroke();
   }
   // LV3: orbiting shards
-  if (lv >= 2 && !master && !wire) {
+  if (lv >= 2 && !master && !wire && !sn) {
     for (let i = 0; i < 3; i++) {
       const a = t * 1.8 + i * TAU / 3, ox = x + Math.cos(a) * 19, oy = y + Math.sin(a) * 19;
       polyPath(ox, oy, 3, 4, a); ctx.fillStyle = c; ctx.fill();
@@ -2133,6 +2159,22 @@ function drawTowerGlyph(type, x, y, o) {
     for (let i = 0; i < 4; i++) {
       const a = -t * 1.6 + i * TAU / 4 + Math.PI / 4, ox = x + Math.cos(a) * 20.5, oy = y + Math.sin(a) * 20.5;
       polyPath(ox, oy, 2.2, 4, a); ctx.fillStyle = '#ffffff'; ctx.fill();
+    }
+  }
+  // SUPERNOVA: four heat fins at the corners, a slow ember ring and a pulsing outer glow
+  if (sn) {
+    additive(true); glow(x, y, 40, c, 0.28 + Math.sin(t * 2.4) * 0.1); additive(false);
+    for (let i = 0; i < 4; i++) {
+      const a = i * TAU / 4 + Math.PI / 4, r1 = 17, r2 = 23;
+      ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1); ctx.lineTo(x + Math.cos(a) * r2, y + Math.sin(a) * r2);
+      ctx.lineCap = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = '#0b0a1a'; ctx.stroke(); ctx.lineWidth = 2.2; ctx.strokeStyle = hexA(c, 0.9); ctx.stroke(); ctx.lineCap = 'butt';
+    }
+    ctx.beginPath(); ctx.arc(x, y, 21, 0, TAU); ctx.setLineDash([2, 5]); ctx.lineDashOffset = -t * 9;
+    ctx.lineWidth = 1.3; ctx.strokeStyle = hexA('#ffb347', 0.7); ctx.stroke(); ctx.setLineDash([]);
+    for (let i = 0; i < 4; i++) {
+      const a = -t * 1.1 + i * TAU / 4, ex = x + Math.cos(a) * 21, ey = y + Math.sin(a) * 21;
+      additive(true); glow(ex, ey, 6, '#ffb347', 0.8); additive(false);
+      ctx.beginPath(); ctx.arc(ex, ey, 1.6, 0, TAU); ctx.fillStyle = '#fff1c8'; ctx.fill();
     }
   }
   // LIVE WIRE: three blue pylons joined by a crackling ring, inside a dashed yellow crown
@@ -2156,7 +2198,7 @@ function drawTowerGlyph(type, x, y, o) {
     for (const [ox, oy, a] of py) { polyPath(ox, oy, 3.4, 4, a); ctx.fillStyle = WIRE_BLUE; ctx.fill(); ctx.beginPath(); ctx.arc(ox, oy, 1.2, 0, TAU); ctx.fillStyle = '#ffffff'; ctx.fill(); }
   }
   // LV4: a bright crown ring and a second, counter-turning set of shards
-  if (lv >= 3 && !master && !wire) {
+  if (lv >= 3 && !master && !wire && !sn) {
     additive(true); glow(x, y, 30, c, 0.25 + Math.sin(t * 3) * 0.08); additive(false);
     ctx.beginPath(); ctx.arc(x, y, 23, 0, TAU); ctx.setLineDash([3, 4]); ctx.lineDashOffset = -t * 12;
     ctx.lineWidth = 1.4; ctx.strokeStyle = hexA(c, 0.75); ctx.stroke(); ctx.setLineDash([]);
@@ -2916,6 +2958,12 @@ function upgradeTower(tw) {
     FX.text(tw.x, tw.y - 28, tr('master_bolt'), MASTER_GOLD, 13, { font: FONT_D, life: 1.4 });
     FX.ring(tw.x, tw.y, 12, 70, MASTER_GOLD, 0.6, 4); FX.flash(tw.x, tw.y, 80, MASTER_GOLD, 0.35); FX.shards(tw.x, tw.y, MASTER_GOLD, 14, 170, 3.5);
     addShake(0.25);
+  } else if (TOWERS[tw.type].lv[tw.lv].supernova) {          // v46: NOVA becomes the SUPERNOVA
+    FX.text(tw.x, tw.y - 28, tr('supernova'), '#ffb347', 13, { font: FONT_D, life: 1.4 });
+    FX.ring(tw.x, tw.y, 12, 74, '#ff7a2e', 0.6, 4); FX.ring(tw.x, tw.y, 6, 48, '#fff1c8', 0.4, 2.5);
+    FX.flash(tw.x, tw.y, 90, '#ffb347', 0.4); FX.shards(tw.x, tw.y, '#ff7a2e', 14, 180, 3.5);
+    for (let i = 0; i < 4; i++) { const a = i * TAU / 4 + Math.PI / 4; FX.dot(tw.x, tw.y, '#fff1c8', 3.2, 0.6, Math.cos(a) * 120, Math.sin(a) * 120 - 40); }
+    addShake(0.3); snd('boom', false);
   } else if (TOWERS[tw.type].lv[tw.lv].wire) {               // v37: ARC becomes the LIVE WIRE (lightning strikes it)
     FX.text(tw.x, tw.y - 28, tr('live_wire'), WIRE_BLUE, 13, { font: FONT_D, life: 1.4 });
     FX.ring(tw.x, tw.y, 12, 70, '#fff36a', 0.6, 4); FX.ring(tw.x, tw.y, 6, 46, WIRE_BLUE, 0.45, 2.5);
@@ -3015,10 +3063,12 @@ function fire(tw, tg) {
     snd('arc');
   } else if (tw.type === 'nova') {
     const flight = 0.75;
-    const slow = tg.slowT > 0 ? 1 - tg.slowAmt : 1;
-    const p = tg.path.at(tg.dist + tg.speed * slow * flight);
-    G.shells.push({ sx: mx, sy: my, tx: p.x, ty: p.y, t: 0, dur: flight, dmg: L.dmg * boost, splash: L.splash * TILE, color: c, src: tw.type });
-    FX.flash(mx, my, 22, c, 0.12);
+    const lead = (e, fl) => { const sl = e.slowT > 0 ? 1 - e.slowAmt : 1; return e.path.at(e.dist + e.speed * sl * fl); };
+    const p = lead(tg, flight);
+    const ox = L.supernova ? tw.x : mx, oy = L.supernova ? tw.y : my;          // the SUPERNOVA lobs out of its hole
+    G.shells.push({ sx: ox, sy: oy, tx: p.x, ty: p.y, t: 0, dur: flight, dmg: L.dmg * boost, splash: L.splash * TILE, color: c, src: tw.type });
+    if (L.extra) supernovaVolley(tw, L, p, boost, ox, oy, lead);
+    FX.flash(ox, oy, 22, c, 0.12);
     for (let i = 0; i < 4; i++) FX.dot(mx, my, '#ffb47a', 3, 0.35, rand(-30, 30), rand(-30, 30));
     snd('launch');
   } else if (tw.type === 'frost') {
@@ -3071,6 +3121,39 @@ function fire(tw, tg) {
     flameJet(mx, my, tg.x, tg.y);
     snd('flame');
   } else if (tw.type === 'tide') tideFire(tw);
+}
+// v46: SUPERNOVA's spread shells. Each one goes where its small blast covers the most enemies that no shell of this volley
+// covers yet (ties: the spot farthest from the other impacts), so the volley reaches as many enemies as it can. Spots are
+// where in-range enemies will be when it lands, plus points along the road in range. With nobody left uncovered, the rest
+// fan out over the road as wide as they can (they never stack on the main target, so a lone enemy only takes the main shell).
+function supernovaVolley(tw, L, main, boost, ox, oy, lead) {
+  const R = L.range * TILE, rx = L.extraSplash * TILE, rMain = L.splash * TILE;
+  const ground = G.enemies.filter(e => e.alive && !e.rc.flying && e.age >= 0.15);
+  const road = [];
+  for (const pth of MAP.paths) for (let d = 0; d <= pth.len; d += 10) {
+    const q = pth.at(d); if (Math.hypot(q.x - tw.x, q.y - tw.y) <= R) road.push({ e: null, p: q });
+  }
+  const impacts = [{ x: main.x, y: main.y }];
+  const covered = new Set();
+  const hits = (o, x, y, r) => Math.hypot(o.p.x - x, o.p.y - y) <= r + o.e.rc.r * 0.5;
+  for (let k = 0; k < L.extra; k++) {
+    const fl = 0.75 + 0.07 * (k + 1);                                        // they land one after another
+    const at = ground.map(e => ({ e, p: lead(e, fl) }));
+    if (!k) for (const o of at) if (hits(o, main.x, main.y, rMain)) covered.add(o.e);
+    let best = null, bv = -1;
+    for (const c of at.filter(o => inRange(tw, o.e, R)).concat(road)) {
+      let n = 0; for (const o of at) if (!covered.has(o.e) && hits(o, c.p.x, c.p.y, rx)) n++;
+      const spread = Math.min(...impacts.map(q => Math.hypot(q.x - c.p.x, q.y - c.p.y)));
+      const v = n * 1e4 + spread;
+      if (v > bv) { bv = v; best = c; }
+    }
+    if (!best) break;
+    impacts.push({ x: best.p.x, y: best.p.y });
+    for (const o of at) if (hits(o, best.p.x, best.p.y, rx)) covered.add(o.e);
+    G.shells.push({ sx: ox, sy: oy, tx: best.p.x, ty: best.p.y, t: 0, dur: fl, dmg: L.dmg * L.extraDmg * boost, splash: rx, color: '#ffb347', src: tw.type, small: true });
+  }
+  FX.ring(ox, oy, 6, 26, '#ffb347', 0.35, 3);
+  for (let i = 0; i < 6; i++) FX.dot(ox, oy, '#ffd9a8', 2.6, 0.4, rand(-50, 50), rand(-70, -20));
 }
 // TIDE: water jets. Burning towers in range first (most burnt first), then burning enemies (out for good), then the rest
 function burningInRange(tw) {
@@ -3713,21 +3796,21 @@ function update(dt) {
   for (let i = G.shells.length - 1; i >= 0; i--) {
     const s = G.shells[i]; s.t += dt;
     const f = Math.min(1, s.t / s.dur);
-    s.x = lerp(s.sx, s.tx, f); s.y = lerp(s.sy, s.ty, f); s.h = Math.sin(Math.PI * f) * 46;
-    if (Math.random() < 0.7) FX.dot(s.x, s.y - s.h, '#ff9a5c', 2.4, 0.3);
+    s.x = lerp(s.sx, s.tx, f); s.y = lerp(s.sy, s.ty, f); s.h = Math.sin(Math.PI * f) * (s.small ? 40 : 46);
+    if (Math.random() < (s.small ? 0.45 : 0.7)) FX.dot(s.x, s.y - s.h, s.small ? '#ffc48a' : '#ff9a5c', s.small ? 1.8 : 2.4, 0.3);
     if (f >= 1) {
       G.shells.splice(i, 1); DMG_SRC = s.src;
       for (const e of G.enemies) {
         if (!e.alive || e.rc.flying) continue;
         const d = Math.hypot(e.x - s.tx, e.y - s.ty);
-        if (d <= s.splash + e.rc.r * 0.5) damage(e, s.dmg * (1 - 0.4 * Math.min(1, d / s.splash)), { pierce: true, big: true });
+        if (d <= s.splash + e.rc.r * 0.5) damage(e, s.dmg * (1 - 0.4 * Math.min(1, d / s.splash)), { pierce: true, big: !s.small });
       }
-      FX.flash(s.tx, s.ty, s.splash * 2.2, s.color, 0.3);
-      FX.ring(s.tx, s.ty, 4, s.splash, s.color, 0.4, 4);
+      FX.flash(s.tx, s.ty, s.splash * 2.2, s.color, s.small ? 0.2 : 0.3);
+      FX.ring(s.tx, s.ty, 4, s.splash, s.color, 0.4, s.small ? 2.5 : 4);
       FX.ring(s.tx, s.ty, 2, s.splash * 0.55, '#ffffff', 0.25, 2);
-      FX.spark(s.tx, s.ty, '#ffc08a', 12, 240, 0.4);
-      FX.shards(s.tx, s.ty, s.color, 6, 160, 3);
-      addShake(0.16); snd('boom', false);
+      FX.spark(s.tx, s.ty, '#ffc08a', s.small ? 6 : 12, s.small ? 170 : 240, 0.4);
+      if (!s.small) FX.shards(s.tx, s.ty, s.color, 6, 160, 3);
+      if (s.small) { addShake(0.05); snd('flakHit'); } else { addShake(0.16); snd('boom', false); }
     }
   }
   // FLAK missiles: home in on flyers, burst with a small anti-air splash
@@ -3862,7 +3945,8 @@ function drawWorld() {
   }
   // nova shell shadows
   for (const s of G.shells) {
-    ctx.beginPath(); ctx.ellipse(s.x, s.y, 6 * (1 - s.h / 70), 3 * (1 - s.h / 70), 0, 0, TAU);
+    const k = s.small ? 0.65 : 1;
+    ctx.beginPath(); ctx.ellipse(s.x, s.y, 6 * k * (1 - s.h / 70), 3 * k * (1 - s.h / 70), 0, 0, TAU);
     ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fill();
   }
   // Aegis domes: a soft bubble that travels with the Aegis (drawn under the enemies)
@@ -3952,8 +4036,8 @@ function drawWorld() {
   }
   for (const s of G.shells) {
     const y = s.y - s.h;
-    glow(s.x, y, 16, s.color, 0.9);
-    ctx.beginPath(); ctx.arc(s.x, y, 3.2, 0, TAU); ctx.fillStyle = '#fff4e0'; ctx.fill();
+    glow(s.x, y, s.small ? 10 : 16, s.color, 0.9);
+    ctx.beginPath(); ctx.arc(s.x, y, s.small ? 2.2 : 3.2, 0, TAU); ctx.fillStyle = '#fff4e0'; ctx.fill();
   }
   for (const b of G.snow) glow(b.x, b.y - b.h, 10, '#dff6ff', 0.6);
   for (const b of G.fireballs || []) { glow(b.x, b.y - b.h, 16, '#ff6a1a', 0.9); glow(b.x, b.y - b.h, 7, '#ffd23d', 0.9); }
@@ -4529,6 +4613,7 @@ function drawTooltip(L, m) {
       const cost = upgradeCost(tw);
       title = tr('up_title', tw.lv + 2, cost); line2 = statLine(d.lv[tw.lv], d.lv[tw.lv + 1]);
       if (d.lv[tw.lv + 1].master) { title = `${tr('master_bolt')}  ·  ${cost}`; color = MASTER_GOLD; }   // v36
+      if (d.lv[tw.lv + 1].supernova) { const N4 = d.lv[tw.lv + 1]; title = `${tr('supernova')}  ·  ${cost}`; color = '#ffb347'; line2 = tr('supernova_line', Math.round(N4.extraDmg * 100)); }   // v46
       if (d.lv[tw.lv + 1].wire) { const W4 = d.lv[tw.lv + 1]; title = `${tr('live_wire')}  ·  ${cost}`; color = WIRE_BLUE; line2 = tr('wire_line', W4.rate, W4.chains, W4.trackDmg); }   // v37/v41
       bad = G.gold < cost; line3 = bad ? tr('need_gold', cost - G.gold) : tr('letgo_upgrade');
     } else if (m.sel === 'turn') {
@@ -4755,13 +4840,15 @@ function drawEnd() {
     const noShieldTool = G.level && G.level.hasShields && !G.towers.some(t => t.type === 'emp' || t.type === 'prism') && G.shieldLeaks >= Math.max(2, G.leaks * 0.3);
     const w0 = worst && worst[0], wt = w0 && ((ENEMIES[w0] && ENEMIES[w0].baseOf) || w0), variantTip = wt && G.level ? ((G.level.elecTypes || []).includes(w0) ? 'volt' : (G.level.iceTypes || []).includes(w0) ? 'yeti' : (G.level.fireTypes || []).includes(w0) ? 'scorch' : wt) : wt;
     const tk = noMint ? 'nobounty' : noShieldTool ? (G.level.hasAegis && !G.level.shieldTypes.length ? 'aegis' : 'shield') : variantTip || 'grunt', tip = (LOC() && LOC().tips[tk]) || TIPS[tk];
-    const bw = Math.min(310, LW - 32), bh = 64;
+    const bw = Math.min(330, LW - 24);
+    setFont(11, FONT_UI, 500);
+    const lines = wrapLines(tip, bw - 28), bh = 36 + lines.length * 14 + 6;     // v45: the box grows with the tip
     roundRect(cx - bw / 2, y + 70, bw, bh, 12); ctx.fillStyle = 'rgba(8,6,22,0.95)'; ctx.fill();
     ctx.lineWidth = 1.2; ctx.strokeStyle = '#ffd23d'; ctx.stroke();
     setFont(10, FONT_UI); spacing(2); ctx.fillStyle = '#ffd23d'; ctx.fillText(tr('tip'), cx, y + 86); spacing(0);
     setFont(11, FONT_UI, 500); ctx.fillStyle = '#e8e6ff';
-    wrapText(tip, cx, y + 104, bw - 24, 14);
-    y += 150;
+    lines.forEach((ln, i) => ctx.fillText(ln, cx, y + 104 + i * 14));
+    y += 70 + bh + 16;
   }
   ctx.restore();
   if (t > 0.7) {

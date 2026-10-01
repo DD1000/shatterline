@@ -17,7 +17,13 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 | `tools/` | Bot playtesters and helpers: `calibrate.js` (difficulty tuning), `probe.js`, `audit.js` (tower balance), `gen_maps.js` (level paths), `perf*.js` (frame-time profiling). |
 | `tests/` | Automated checks (Playwright). Run from the repo root, e.g. `node tests/smoke.js /tmp`. |
 
-## Current version (v44)
+## Current version (v46)
+- NOVA level 4 is now the SUPERNOVA (300 gold): a big mortar hole with 4 shells around its rim. Each volley lobs the main shell (full damage, same as before) plus 3 smaller shells (20% damage, smaller blast) that spread out to hit as many other enemies in range as they can. The fire rate is unchanged. With no other enemies around, the extras fan out over the road instead of stacking on the main target.
+
+### v45
+- The TIP box on the defeat screen grows to fit its text (long tips used to spill out of it); the buttons move down to make room.
+
+### v44
 - EMP lasers reach flying enemies too: they strip a flyer's shield, short out an electrified flyer, and do their tiny damage. FLAK is still the only tower that can bring flyers down.
 
 ### v43
@@ -93,7 +99,7 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 - Restart and retry go back to tower select, with the towers you used already picked.
 - The Playtest Lab and Test Mode ask for a tester password.
 
-**Note:** `src/` is still at v25. The v26 to v44 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
+**Note:** `src/` is still at v25. The v26 to v46 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
 
 ## Making a change
 1. Edit files in `src/`.
