@@ -7,7 +7,7 @@ const SP = process.argv[2];
   await p.addInitScript(() => { try { if (!localStorage.getItem('shatterline.lang')) localStorage.setItem('shatterline.lang', 'en'); } catch (e) {} });
   const errs = [];
   p.on('pageerror', e => errs.push('PAGEERROR ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
-  await p.goto('file://' + require('path').resolve('dist/index.html'));
+  await p.goto('file://' + require('path').resolve('index.html'));
   await p.waitForTimeout(600);
   // card for a level with Aegis + a shielded type
   await p.evaluate(() => { const S = __TD.Save; S.d.max = 40; S.d.loadout = ['bolt', 'nova', 'arc', 'frost']; S.d.known = ['bolt','frost','nova','arc','emp','mint','prism','rail','beacon','flak']; __TD.toMap(); __TD.openCard(37); });

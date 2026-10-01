@@ -5,7 +5,7 @@ const { chromium } = require('playwright');
   const p = await b.newPage({ viewport: { width: 390, height: 844 } });
   await p.addInitScript(() => localStorage.setItem('shatterline.lang', 'en'));
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !m.text().includes('ERR_')) errs.push(m.text()); });
-  await p.goto('file://' + require('path').resolve('dist/index.html')); await p.waitForTimeout(500);
+  await p.goto('file://' + require('path').resolve('index.html')); await p.waitForTimeout(500);
   await p.mouse.click(100, 100); await p.evaluate(() => Sound.init());
   // level 20 (boss level), strong towers so it plays through; sample music state per wave
   await p.evaluate(() => { const T = __TD, G = T.G; T.Save.d.max = 30; T.Save.d.loadout = ['nova', 'bolt', 'arc', 'prism']; T.startLevel(20); G.gold = 9000; G.tutorial = false; Sound.setEnabled(true);

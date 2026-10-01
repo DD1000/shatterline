@@ -7,7 +7,7 @@ const SP = process.argv[2];
   const errs = [];
   p.on('pageerror', e => errs.push('PAGEERROR ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 4).join('\n')));
   p.on('console', m => { if (m.type() === 'error' && !m.text().includes('ERR_TUNNEL')) errs.push('CONSOLE ' + m.text()); });
-  await p.goto('file://' + require('path').resolve('dist/index.html'));
+  await p.goto('file://' + require('path').resolve('index.html'));
   await p.waitForTimeout(1500);
   await p.screenshot({ path: SP + '/s1-title.png' });
   const S = await p.evaluate(() => SCALE);

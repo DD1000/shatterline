@@ -6,7 +6,7 @@ const SP = process.argv[2];
   await p.addInitScript(() => { try { if (!localStorage.getItem('shatterline.lang')) localStorage.setItem('shatterline.lang', 'en'); } catch (e) {} });
   const errs = [];
   p.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
-  await p.goto('file://' + require('path').resolve('dist/index.html'));
+  await p.goto('file://' + require('path').resolve('index.html'));
   await p.waitForTimeout(600);
   await p.evaluate(() => { const T = __TD; T.Save.d.max = 20; T.Save.d.loadout = ['bolt', 'frost', 'nova', 'arc']; T.startLevel(20); T.G.gold = 200; T.G.tutorial = false; });
   // synthetic touch presses through the real input path

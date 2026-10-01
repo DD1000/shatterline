@@ -1,0 +1,15 @@
+# Shatterline v31: upgrades give a flat +10% damage (2026-09-30, artifact v33)
+- The user asked: "make the damage instead a flat 10% increase in damage". Asked what else an upgrade should do, they chose "Keep other perks".
+- Edited on top of v30 with `v31/patch5.py`: `BUILD = 'v31'`.
+  - Each damage tower's level 2/3/4 `dmg` (or PRISM `dps`) = base × 1.1 / 1.2 / 1.3.
+  - `rate` for levels 2–4 = the base rate, so upgrades no longer make towers fire faster. This includes EMP, TIDE and FROST.
+  - Range, splash, ARC chains (3/4/6/8), EMP/TIDE beams, FROST slow and brittle, and PRISM heat (3→4.5) still improve.
+  - Upgrade costs are unchanged. MINT and BEACON are untouched (they have no damage stat).
+  - A comment above `TOWERS` explains the rule; the literal level tables were rewritten.
+- All 11 tests pass. `featuretest` now shows RAIL dmg 64 / 70.4 / 76.8 / 83.2.
+- Bots (expert wins out of 12), v30 → v31: L3 12→12, L5 11→11, L8 0→0, L12 2→2, L20 1→0, L30 0→0.
+  - Since v30 (NOVA −40% DPS, enemy HP +10%), the bots die by waves 2–5 from level 8 on, before upgrades matter. They are useless as a difficulty gauge now; the user's own analytics reports are the gauge.
+  - Early levels may be too hard for new players; watch the user's feedback.
+- **GitHub: live.**
+  - v31 was committed at the user's request ("commit") as 147dc39 "Shatterline v31: NOVA nerf, enemies +10% health, upgrades +10% damage each". It includes the v30 changes, which were never committed on their own.
+  - pages-build-deployment #7 finished in 47 s.

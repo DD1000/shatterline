@@ -1,0 +1,17 @@
+# Shatterline v29: BOLT and PRISM 20% less DPS (2026-09-30, artifact v31)
+- The user says the game "feels much too easy". They asked for BOLT −20% and PRISM −20%, and said not to lower enemy health (see the v28 doc).
+- Edited in the published HTML on top of v28 (artifact v30), with `patch3.py`: `BUILD = 'v29'`, which tags the analytics runs.
+  - **BOLT:** fire rate cut 20% (2.8/3.2/3.8/4.4 → 2.24/2.56/3.04/3.52). Damage per hit is unchanged, so armor doesn't punish it more.
+  - **PRISM:** beam dps cut 20% (16/27/44/68 → 12.8/21.6/35.2/54.4). The heat multiplier is unchanged.
+- Level calibration was NOT retuned (it's meant to be harder).
+- All 11 tests pass.
+- Bots, expert wins out of 12, v28 → v29:
+  - L5 12→12 (casual bots much worse), L12 6→5, L18 7→7, L25 2→1, L35 0→0, L45 2→3, L55 1→1, L65 0→0, L75 1→0.
+  - Many bot runs die around waves 2–7 on mid/late levels (all 12 die at wave 4 on L35). The bots are clearly far weaker than the user. Check the bot logic before trusting a bot sweep for difficulty.
+- **GitHub: live.**
+  - Committed via Claude in Chrome at the user's request ("can you commit now"): `index.html` + `README.md`, message "Shatterline v29: BOLT and PRISM do 20% less damage".
+  - pages-build-deployment #6 finished in 54 s.
+  - The user asked for this commit explicitly. For future commits, stage and ask, or commit only when the user says so.
+- Proposed next step (user asked, not yet approved): the bot sweep described in chat.
+  - Every level with 20 tower sets (all possible sets on L1–11), about 1,500 runs, recording the new analytics.
+  - Plus the user's own campaign analytics as the yardstick for "too easy".

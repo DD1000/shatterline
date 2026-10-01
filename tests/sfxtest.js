@@ -5,7 +5,7 @@ const { chromium } = require('playwright');
   const p = await b.newPage({ viewport: { width: 390, height: 844 } });
   await p.addInitScript(() => localStorage.setItem('shatterline.lang', 'en'));
   const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('file://' + require('path').resolve('dist/index.html')); await p.waitForTimeout(500);
+  await p.goto('file://' + require('path').resolve('index.html')); await p.waitForTimeout(500);
   await p.mouse.click(100, 100); await p.evaluate(() => Sound.init());
   await p.evaluate(() => { const T = __TD, G = T.G; T.Save.d.max = 40; T.Save.d.loadout = ['bolt', 'nova', 'arc', 'mint']; T.startLevel(36); G.gold = 5000; G.tutorial = false; Sound.setEnabled(true);
     const spots = []; for (let r = 0; r < 13; r++) for (let c = 0; c < 9; c++) if (T.isBuildable(c, r)) spots.push([c, r, [...T.MAP.tiles].filter(k => ((k % 9) - c) ** 2 + (Math.floor(k / 9) - r) ** 2 <= 5).length]);

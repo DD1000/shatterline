@@ -9,15 +9,22 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 ## What's in here
 | Path | What it is |
 |---|---|
-| `index.html` | The whole game in one readable file (same as `dist/index.html`). This is what GitHub Pages serves. |
-| `dist/shatterline.html` | The same game without the page wrapper, for publishing as a Claude artifact. |
-| `dist/itch/` | A minified single-file build (short names, no test hooks), handy for uploading to itch.io or other game sites. |
+| `index.html` | The whole game in one readable file. This is what GitHub Pages serves, and the file to edit. |
+| `dist/` | `index.html` copied, plus `shatterline.html`: the same game without the page wrapper, for publishing as a Claude artifact. Made by `tools/export_artifact.py`. |
 | `src/` | The source, split by topic: config, languages, levels, audio, drawing, game logic, UI, screens. **Behind the current game** (see below). |
-| `build.sh` | Joins `src/` into `dist/index.html` (standalone) and `dist/shatterline.html` (artifact version), copies the standalone file to `index.html`, and makes the compact build `dist/itch/index.html`. |
-| `tools/` | Bot playtesters and helpers: `calibrate.js` (difficulty tuning), `probe.js`, `audit.js` (tower balance), `gen_maps.js` (level paths), `perf*.js` (frame-time profiling). |
-| `tests/` | Automated checks (Playwright). Run from the repo root, e.g. `node tests/smoke.js /tmp`. |
+| `build.sh` | The old build: joins `src/` into `index.html` and `dist/`. **Outdated, don't run it** (see the note below). |
+| `tools/` | Bot playtesters and helpers: `calibrate.js` (difficulty tuning), `probe.js`, `audit.js` (tower balance), `gen_maps.js` (level paths), `perf*.js` (frame-time profiling), `labtool.js`/`antest.js` (Playtest Lab checks), and `export_artifact.py` (makes `dist/` from `index.html`). |
+| `tests/` | Automated checks (Playwright). They load the root `index.html`. Run them all from the repo root with `bash tests/run_all.sh`, or one with `node tests/smoke.js shots`. |
+| `docs/` | The design notes and history (`design-and-history.md`) and a note for every version from v27 on (`versions/`). |
+| `history/` | The patch scripts that made v28 to v47 (each one edits the game with exact find-and-replace anchors), plus retired tests. For reference only. |
+| `CLAUDE.md` | How to work on the game with Claude Code. |
 
-## Current version (v46)
+## Current version (v47)
+- TIDE soaks every enemy its jets hit, for the rest of its trip (a film of water and drips show it). Soaked enemies take 20% more damage from ARC and 20% less from PYRO, and FROST freezes them even without its snowball supercharge: every 3 blasts, every 2 if FROST is supercharged or level 4, and every blast if it is both. TIDE's jets now go for burning enemies first, then enemies that aren't soaked yet. It still puts out fires.
+- AUTO BUILD is only offered when you pick the same towers (in any order) as on the try you lost.
+- The repo now holds everything needed to keep working on the game: `CLAUDE.md`, the design notes and version notes in `docs/`, the patch history in `history/`, the newer tests (they load the root `index.html`; run them with `bash tests/run_all.sh`) and the lab tools.
+
+### v46
 - NOVA level 4 is now the SUPERNOVA (300 gold): a big mortar hole with 4 shells around its rim. Each volley lobs the main shell (full damage, same as before) plus 3 smaller shells (20% damage, smaller blast) that spread out to hit as many other enemies in range as they can. The fire rate is unchanged. With no other enemies around, the extras fan out over the road instead of stacking on the main target.
 
 ### v45
@@ -99,11 +106,12 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 - Restart and retry go back to tower select, with the towers you used already picked.
 - The Playtest Lab and Test Mode ask for a tester password.
 
-**Note:** `src/` is still at v25. The v26 to v46 changes were made directly in the built HTML, so `index.html` and `dist/` are the up-to-date game. Don't run `build.sh` until `src/` has been brought up to date, or it will overwrite them with the older version.
+**Note:** `src/` is still at v25. The v26 to v47 changes were made directly in the built HTML, so `index.html` is the up-to-date game and the file to edit. Don't run `build.sh`: it rebuilds from the old `src/` and would overwrite `index.html` with the older version.
 
 ## Making a change
-1. Edit files in `src/`.
-2. Run `bash build.sh`.
-3. Push: `git add .`, `git commit -m "..."`, `git push`. GitHub Pages updates the live game within a minute or two.
+1. Edit `index.html` (and bump `const BUILD = 'vNN'` near the top of the script).
+2. Run the tests: `bash tests/run_all.sh`.
+3. Run `python3 tools/export_artifact.py` to refresh `dist/`.
+4. Push: `git add .`, `git commit -m "..."`, `git push`. GitHub Pages updates the live game within a minute or two.
 
-Run `npm install` once (it installs Playwright for the tests and Terser for the compact build).
+Run `npm install` and `npx playwright install chromium` once (Playwright runs the tests in a headless browser).

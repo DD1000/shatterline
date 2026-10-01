@@ -1,0 +1,14 @@
+# Shatterline v32: +25% tower damage, compounding +10% upgrades, lab stamps cleared (2026-09-30, artifact v34)
+- User: "clear the completed stamps. yes the enemies are very strong now. lets raise tower damage by 25% base. each upgrade levels up the damage output 10% the current damage". Then: "commit when ready".
+- Edited on top of v31 with `v32/patch6.py`: `BUILD = 'v32'`.
+  - Every tower with a damage stat (dmg, or PRISM dps; that includes FROST, EMP and TIDE): level-1 damage = v31 base × 1.25. Levels 2/3/4 = ×1.1 / ×1.21 / ×1.331 of that (each upgrade adds 10% of the current damage).
+  - Fire rate is still fixed across levels (the v31 rule). Range, splash, chains, beams, slow and heat still improve. Costs are unchanged.
+  - Level-1 → level-4 damage per hit:
+    - BOLT 7.5 → 9.98
+    - FROST 5 → 6.66
+    - NOVA 22.5 → 29.95
+    - PRISM 16 → 21.3 dps (heat x3 → x4.5)
+    - RAIL 80 → 106.48
+  - **Stamps cleared:** every LAB_DEFS entry's `v` was bumped (7 labs → v2; warden, bossrush, gauntlet → v3). `labDone` is false until each lab is won again. Old runs stay in the analytics.
+- All 11 tests pass. Checked that old saves with doneV 1/2 no longer count as completed.
+- **GitHub: committed** at the user's request as 65bdbaa "Shatterline v32: +25% tower damage, upgrades +10% of current damage, lab stamps reset" (index.html + README).

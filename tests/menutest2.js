@@ -6,7 +6,7 @@ const { chromium } = require('playwright');
   await p.addInitScript(() => { try { if (!localStorage.getItem('shatterline.lang')) localStorage.setItem('shatterline.lang', 'en'); } catch (e) {} });
   const errs = [];
   p.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
-  await p.goto('file://' + require('path').resolve('dist/index.html'));
+  await p.goto('file://' + require('path').resolve('index.html'));
   await p.waitForTimeout(600);
   await p.evaluate(() => { const T = __TD; T.Save.d.max = 12; T.Save.d.loadout = ['bolt', 'frost', 'nova']; T.startLevel(12); T.G.gold = 400; T.G.tutorial = false; });
   await p.waitForTimeout(300);

@@ -9,7 +9,7 @@ const SP = process.argv[2];
   const errs = [];
   p.on('pageerror', e => errs.push('PAGEERROR ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
   p.on('console', m => { if (m.type() === 'error' && !m.text().includes('ERR_TUNNEL')) errs.push('CONSOLE ' + m.text()); });
-  await p.goto('file://' + require('path').resolve('dist/index.html'));
+  await p.goto('file://' + require('path').resolve('index.html'));
   await p.waitForTimeout(900);
   console.log('after migration:', JSON.stringify(await p.evaluate(() => ({ max: __TD.Save.d.max, done: __TD.Save.d.done, levels: __TD.LEVELS.length }))));
   await p.screenshot({ path: SP + '/n1-title.png' });

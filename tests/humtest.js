@@ -5,7 +5,7 @@ const { chromium } = require('playwright');
   const p = await b.newPage({ viewport: { width: 390, height: 844 } });
   await p.addInitScript(() => localStorage.setItem('shatterline.lang', 'en'));
   const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('file://' + require('path').resolve('dist/index.html')); await p.waitForTimeout(500);
+  await p.goto('file://' + require('path').resolve('index.html')); await p.waitForTimeout(500);
   await p.mouse.click(100, 100); await p.evaluate(() => Sound.init());
   await p.evaluate(() => { const T = __TD, G = T.G; T.Save.d.max = 30; T.Save.d.loadout = ['prism', 'bolt', 'nova']; T.startLevel(25); G.gold = 3000; G.tutorial = false; Sound.setEnabled(true);
     const tiles = [...T.MAP.tiles]; const mid = tiles[Math.floor(tiles.length * 0.3)];

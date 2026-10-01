@@ -8,7 +8,7 @@ const SP = process.argv[2];
   const errs = [];
   p.on('pageerror', e => errs.push('PAGEERROR ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 4).join('\n')));
   p.on('console', m => { if (m.type() === 'error' && !m.text().includes('ERR_TUNNEL')) errs.push('CONSOLE ' + m.text()); });
-  await p.goto('file://' + require('path').resolve('dist/index.html'));
+  await p.goto('file://' + require('path').resolve('index.html'));
   await p.waitForTimeout(800);
   const S = await p.evaluate(() => SCALE);
   const tapL = async (x, y) => { await p.touchscreen.tap(x * S, y * S); await p.waitForTimeout(300); };

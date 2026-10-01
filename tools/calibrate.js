@@ -12,19 +12,26 @@ window.__bot = function (n, cal, opts) {
   const T = __TD, G = T.G;
   let seed = (opts.seed || 1) * 99991 + n * 7;
   Math.random = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
-  if (cal != null) T.LEVEL_CAL[n - 1] = cal;
+  // (v25: lab levels 101+ keep their own cal and loadout, and have every tower open)
+  const LV = T.levelOf ? T.levelOf(n) : T.LEVELS[n - 1], lab = !!LV.lab, nn = LV.ref || n;
+  if (cal != null) { if (lab) LV.cal = cal; else T.LEVEL_CAL[n - 1] = cal; }
   Sound.setEnabled(false);
-  T.Save.d.max = Math.max(n, 1);
-  const LV = T.LEVELS[n - 1];
-  let unlocked = ['nova', 'bolt', 'arc', 'frost', 'prism', 'rail'].filter(t => T.TOWERS[t].unlock <= n);
-  const slots = slotsFor(n);
+  if (!lab) T.Save.d.max = Math.max(n, 1);
+  const DEF = ['nova', 'bolt', 'arc', 'frost', 'prism', 'rail'];
+  // opts.core: preferred damage towers (expert search tries several), topped up from the default list
+  const banned = LV.banned || [], ok = t => T.TOWERS[t] && T.TOWERS[t].unlock <= nn && !banned.includes(t);   // (v23: weather bans)
+  let unlocked = [...new Set((opts.core || []).concat(DEF))].filter(ok);
+  const slots = slotsFor(nn);
   // required towers for condition levels; opts.skip drops some (to test playing without them)
   const skip = opts.skipNeeds ? ['mint', 'flak', 'emp'] : (opts.skip || []);
   // shield answer: EMP by default, or PRISM (opts.shieldTool / SHIELD_TOOL) once it is unlocked
   const shieldT = (opts.shieldTool || 'emp') === 'prism' && n >= 17 ? 'prism' : 'emp';
-  const needs = [LV.noBounty && 'mint', LV.air && 'flak', LV.shielded && n >= 12 && !opts.oldShield && shieldT].filter(t => t && !skip.includes(t) && !(t === shieldT && skip.includes('emp')));
+  // v23: fire levels bring TIDE (water puts burning enemies out before they set towers alight)
+  const needs = [LV.noBounty && 'mint', LV.air && 'flak', LV.shielded && nn >= 12 && !opts.oldShield && shieldT].filter(t => t && !skip.includes(t) && !(t === shieldT && skip.includes('emp')));
+  // (only when that still leaves two damage towers: with three required towers a player skips it and lets towers burn)
+  if (LV.hasFire && ok('tide') && !opts.oldBot && !skip.includes('tide') && opts.tide !== false && slots - needs.length >= 3) needs.push('tide');
   unlocked = unlocked.filter(t => !needs.includes(t)).slice(0, slots - needs.length).concat(needs);        // required towers take the last slots
-  T.Save.d.loadout = (opts.loadout || unlocked).filter(t => T.TOWERS[t].unlock <= n).slice(0, slots);
+  T.Save.d[lab ? 'labLoadout' : 'loadout'] = (opts.loadout || unlocked).filter(ok).slice(0, slots);
   T.startLevel(n); G.paused = true; G.tutorial = false;
   const lo = G.loadout;
   const pathTiles = [];
@@ -60,6 +67,15 @@ window.__bot = function (n, cal, opts) {
       const top = free.slice(0, Math.max(1, Math.min(opts.top || 1, 3)));
       return top[Math.floor(Math.random() * top.length)];
     }
+    if (type === 'tide') {          // TIDE: early on the lanes that carry burning enemies (douse them before they reach towers)
+      const free = [];
+      const tw8 = (c, r) => fireLanes.reduce((a, L) => { const lt = laneTiles[L], covered = G.towers.some(tw => tw.type === 'tide' && lt.some(t => (t[0] - tw.c) ** 2 + (t[1] - tw.r) ** 2 <= T.TOWERS.tide.lv[tw.lv].range ** 2));
+        return a + lt.reduce((b, t, i) => b + ((t[0] - c) ** 2 + (t[1] - r) ** 2 <= range * range ? (covered ? 0.3 : 1) * (1.6 - i / lt.length) : 0), 0); }, 0);
+      for (let r = 0; r < 13; r++) for (let c = 0; c < 9; c++) if (T.isBuildable(c, r) && !G.grid[r * 9 + c]) free.push([c, r, tw8(c, r)]);
+      free.sort((a, b) => b[2] - a[2]);
+      const top = free.slice(0, Math.max(1, Math.min(opts.top || 1, 3)));
+      return top[Math.floor(Math.random() * top.length)];
+    }
     const free = [];
     // EMP: favour lane tiles no other EMP reaches yet (so every lane gets shield-stripping), near damage towers
     const inR = (c, r, t, rg) => (t[0] - c) ** 2 + (t[1] - r) ** 2 <= rg * rg;
@@ -89,16 +105,28 @@ window.__bot = function (n, cal, opts) {
   const laneTiles = T.MAP.paths.map(pth => { const st = new Set(); for (let d = 0; d < pth.len; d += 8) { const q = pth.at(d); st.add(Math.floor(q.y / 40) * 9 + Math.floor(q.x / 40)); } return [...st].map(k => [k % 9, Math.floor(k / 9)]); });
   const aegisLaneSet = [...new Set(LV.waves.flatMap(g => g.filter(x => shSet.has(x[0])).flatMap(x => x[3] === -1 ? T.MAP.paths.map((_, i) => i) : [Math.min(x[3] || 0, T.MAP.paths.length - 1)])))];
   const aegisLanes = () => Math.min(2, aegisLaneSet.length);
+  // v22: build shield busters until every shielded lane is reached by one (one EMP at a merge covers both)
+  const laneCovered = L => G.towers.some(tw => tw.type === shieldT && laneTiles[L].some(t => (t[0] - tw.c) ** 2 + (t[1] - tw.r) ** 2 <= T.TOWERS[shieldT].lv[tw.lv].range ** 2));
+  const lanesOpen = () => !opts.oldBot && aegisLaneSet.some(L => !laneCovered(L));
+  // fire: one TIDE per lane that carries burning enemies, up before they arrive
+  const isFire = x => T.ENEMIES[x[0]].fire || (LV.fireTypes || []).includes(x[0]);
+  const hasFireW = w => w >= 0 && w < LV.waves.length && LV.waves[w].some(isFire);
+  const fireSoon = () => hasFireW(G.waveNum - 1) || hasFireW(G.waveNum) || hasFireW(G.waveNum + 1);
+  const fireLater = () => LV.waves.some((g, i) => i >= G.waveNum - 1 && hasFireW(i));
+  const fireLanes = [...new Set(LV.waves.flatMap(g => g.filter(isFire).flatMap(x => x[3] === -1 ? T.MAP.paths.map((_, i) => i) : [Math.min(x[3] || 0, T.MAP.paths.length - 1)])))];
+  const fireOpen = () => fireLanes.some(L => !G.towers.some(tw => tw.type === 'tide' && laneTiles[L].some(t => (t[0] - tw.c) ** 2 + (t[1] - tw.r) ** 2 <= T.TOWERS.tide.lv[tw.lv].range ** 2)));
   const act = () => {
     for (let g = 0; g < 6; g++) {
-      const up = G.towers.filter(tw => T.upgradeCost(tw) != null).sort((a, b) => (LV.noBounty && !opts.skipNeeds ? (b.type === 'mint') - (a.type === 'mint') : 0) || a.lv - b.lv || T.upgradeCost(a) - T.upgradeCost(b))[0];
+      const up = G.towers.filter(tw => !tw.burning && T.upgradeCost(tw) != null).sort((a, b) => (LV.noBounty && !opts.skipNeeds ? (b.type === 'mint') - (a.type === 'mint') : 0) || (opts.oldBot ? 0 : (a.type === 'emp' || a.type === 'tide') - (b.type === 'emp' || b.type === 'tide')) || a.lv - b.lv || T.upgradeCost(a) - T.upgradeCost(b))[0];
       const wantUp = up && G.towers.length >= (opts.minTowers || 4) && (bi % 2 === 1 || G.towers.length >= 14);
       if (wantUp) { if (G.gold >= T.upgradeCost(up)) { T.upgradeTower(up); bi++; continue; } return; }
       let type = lo[Math.floor(bi / 2) % lo.length];
       const count = k => G.towers.filter(tw => tw.type === k).length;
       if (lo.includes('mint') && LV.noBounty && (count('mint') < 2 && G.towers.length >= 1 || count('mint') < 3 && G.towers.length >= 4)) type = 'mint';
       else if (lo.includes('flak') && LV.air && count('flak') < 1 && G.towers.length >= 2) type = 'flak';
-      else if (needs.includes(shieldT) && aegisSoon() && count(shieldT) < aegisLanes() && G.towers.length >= 1) type = shieldT;
+      else if (needs.includes(shieldT) && aegisSoon() && (opts.oldBot ? count(shieldT) < aegisLanes() : lanesOpen() && count(shieldT) < 3) && G.towers.length >= 1) type = shieldT;
+      else if (needs.includes('tide') && fireSoon() && (fireOpen() && count('tide') < 3 || count('tide') < Math.min(4, Math.ceil(G.towers.length / 6))) && G.towers.length >= 3) type = 'tide';
+      else if (type === 'tide') { if (!fireLater() || count('tide') >= Math.ceil(G.towers.length / 5)) type = lo[0]; }
       else if (type === 'mint' || type === 'flak') { if (count(type) >= Math.ceil(G.towers.length / 2.5)) type = lo[0]; }
       else if (type === 'emp') { if (!aegisLater() || count('emp') >= Math.ceil(G.towers.length / 3.5)) type = lo[0]; }
       if (type === 'beacon' && (G.towers.length < 4 || count('beacon') >= Math.ceil(G.towers.length / 5))) type = lo.find(t => t !== 'beacon') || lo[0];
@@ -108,11 +136,11 @@ window.__bot = function (n, cal, opts) {
   };
   act(); T.startWave(false);
   let t = 0, steps = 0;
-  while (!G.over && t < 900) {
+  while (!G.over && t < 2400) {
     T.update(1 / 60); t += 1 / 60; steps++;
     if (steps % 15 === 0) act();
   }
-  const res = { n, win: G.result === 'win', lives: G.lives, time: Math.round(t), towers: G.towers.length, gold: Math.floor(G.gold), wave: G.waveNum };
+  const res = { n, win: G.result === 'win', lives: G.lives, time: Math.round(t), towers: G.towers.length, gold: Math.floor(G.gold), wave: G.waveNum, earned: G.earned, spent: G.spent };
   G.paused = true;
   return res;
 };`;

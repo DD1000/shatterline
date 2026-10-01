@@ -1,0 +1,12 @@
+{
+  "name": "shatterline",
+  "private": true,
+  "description": "Neon tower defense game (single-file HTML5 canvas).",
+  "scripts": {
+    "test": "bash tests/run_all.sh",
+    "export": "python3 tools/export_artifact.py"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  }
+}

@@ -8,14 +8,15 @@ const SP = process.argv[2];
   const errs = [];
   p.on('pageerror', e => errs.push('PAGEERROR ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
   p.on('console', m => { if (m.type() === 'error' && !m.text().includes('ERR_TUNNEL') && !m.text().includes('fonts.g')) errs.push('CONSOLE ' + m.text()); });
-  await p.goto('file://' + require('path').resolve('dist/index.html'));
+  await p.goto('file://' + require('path').resolve('index.html'));
   await p.waitForTimeout(1200);
   const S = await p.evaluate(() => SCALE);
   const tapL = async (x, y) => { await p.mouse.click(x * S, y * S); await p.waitForTimeout(400); };
   console.log('first launch:', JSON.stringify(await p.evaluate(() => ({ LANG, LANG_CHOSEN }))));
   await p.screenshot({ path: SP + '/l1-picker.png' });
   const { LWv, LHv } = await p.evaluate(() => ({ LWv: LW, LHv: LH }));
-  await tapL(LWv / 2, LHv * 0.58 - 40 + 104);        // 中文
+  const zb = await p.evaluate(() => { const h = hits.filter(h => h.w === 210 && h.h === 54)[1]; return { x: h.x + h.w / 2, y: h.y + h.h / 2 }; });
+  await tapL(zb.x, zb.y);        // 中文
   console.log('after tap:', JSON.stringify(await p.evaluate(() => ({ LANG, LANG_CHOSEN, saved: localStorage.getItem('shatterline.lang'), html: document.documentElement.lang }))));
   await p.waitForTimeout(1200);
   await p.screenshot({ path: SP + '/l2-title-zh.png' });
@@ -60,7 +61,10 @@ const SP = process.argv[2];
   // back to title and switch to English
   await p.evaluate(() => { __TD.G.state = 'title'; });
   await p.waitForTimeout(300);
-  await p.evaluate(() => { const h = hits.find(h => h.w === 92 && h.h === 34); h.cb(); });
+  await p.evaluate(() => { const h = hits.find(h => h.w === 104 && h.h === 34); h.cb(); });
+  await p.waitForTimeout(400);
+  await p.screenshot({ path: SP + '/l10b-lang-overlay.png' });
+  await p.evaluate(() => { const h = hits.filter(h => h.w === 210 && h.h === 54)[0]; h.cb(); });
   await p.waitForTimeout(500);
   console.log('toggle:', JSON.stringify(await p.evaluate(() => ({ LANG, saved: localStorage.getItem('shatterline.lang') }))));
   await p.screenshot({ path: SP + '/l11-title-en.png' });

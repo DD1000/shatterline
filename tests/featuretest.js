@@ -6,7 +6,7 @@ const SP = process.argv[2];
   await p.addInitScript(() => { try { if (!localStorage.getItem('shatterline.lang')) localStorage.setItem('shatterline.lang', 'en'); } catch (e) {} });
   const errs = [];
   p.on('pageerror', e => errs.push('PAGEERROR ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
-  await p.goto('file://' + require('path').resolve('dist/index.html'));
+  await p.goto('file://' + require('path').resolve('index.html'));
   await p.waitForTimeout(600);
   // 1) No Bounty card + confirm
   await p.evaluate(() => { const S = __TD.Save; S.d.max = 36; S.d.loadout = ['bolt', 'frost', 'nova', 'arc']; S.d.known = ['bolt','frost','nova','arc','mint','prism','rail','beacon','flak']; __TD.toMap(); __TD.openCard(14); });
