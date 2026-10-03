@@ -26,7 +26,7 @@ const COLS = 9, ROWS = 13;     // map grid
 const HUD_H = 50, BAR_H = 78;  // top HUD + bottom control bar
 const MIN_H = HUD_H + ROWS * TILE + BAR_H;
 const LEVELS_PER_WORLD = 10;
-const BUILD = 'v47';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
+const BUILD = 'v48';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
 
 // Title-screen showcase map
 const DEMO_PATH = [[1,0],[1,2],[7,2],[7,5],[1,5],[1,8],[7,8],[7,10],[4,10],[4,12]];
@@ -68,7 +68,7 @@ const ENEMIES = {
   mender:   { name:'Mender',  sides:0, r:10,  color:'#ff9ce0', speed:0.85, hp:60,  gold:10, armor:0, leak:1, spin:0, plus:true, heal:{ every:2.6, radius:1.8, pct:0.12 }, intro:21,
               desc:'Heals nearby enemies. Take it out first.' },
   glider:   { name:'Glider',  sides:3, r:9,   color:'#9fe8ff', speed:0.95, hp:36,  gold:5,  armor:0, leak:1, spin:0, eye:true, point:true, flying:true, intro:32,
-              desc:'Flies straight over the path. Only FLAK can bring it down (EMP lasers reach it but barely hurt).' },
+              desc:'Flies straight over the path. Only FLAK and LANCE can bring it down (EMP lasers reach it but barely hurt).' },
   titan:    { name:'Titan',   sides:8, r:17,  color:'#ff8a3d', speed:0.45, hp:420, gold:28, armor:7, leak:3, spin:0.2, eye:true, thick:true, inner:{ sides:4, scale:0.5, spin:0.8 }, intro:25,
               desc:'Huge, slow and heavily armored.' },
   volt:     { name:'Volt',    sides:3, star:true, r:10, color:'#f6ff3d', speed:1.0, hp:48, gold:8, armor:0, leak:1, spin:1.6, eye:true, elec:true, intro:37,
@@ -108,7 +108,7 @@ Object.assign(ENEMIES, {
                    desc:'Boss. Huge, slow and very heavily armored. Takes 8 lives if it reaches the core.' },
   boss_glider:   { name:'Stormwing',    baseOf:'glider',   sides:3, r:19, color:'#9fe8ff', speed:0.7,  hp:420,  gold:80,  armor:0,  leak:5, spin:0, eye:true, point:true, flying:true,
                    boss:true, crown:true, intro:999, summon:{ every:4, types:['glider'], n:2 },
-                   desc:'Boss. Flies straight over the path; only FLAK can bring it down. Calls in Gliders.' },
+                   desc:'Boss. Flies straight over the path; only FLAK and LANCE can bring it down. Calls in Gliders.' },
   boss_volt:     { name:'Overload',     baseOf:'volt',     sides:3, star:true, r:19, color:'#f6ff3d', speed:0.75, hp:420, gold:80, armor:0, leak:5, spin:1.2, eye:true, inner:{ sides:3, scale:0.45, spin:-1.6 },
                    elec:true, elecR:2.5, boss:true, crown:true, intro:999, summon:{ every:5, types:['volt'], n:1 },
                    desc:'Boss. Electrified with a huge reach: towers within 2.5 tiles shut down (not EMP). Immune to ARC. Calls in Volts.' },
@@ -209,14 +209,14 @@ const TOWERS = {
                  { cost:160, buff:0.75, range:2.3 },
                  { cost:240, buff:1.0,  range:2.3 } ] },
 };
-TOWERS.flak = { name:'FLAK', color:'#ff6f61', sides:3, cost:90, unlock:32, air:true, desc:'Anti-air missiles. The only tower that can bring flyers down.',
+TOWERS.flak = { name:'FLAK', color:'#ff6f61', sides:3, cost:90, unlock:32, air:true, desc:'Anti-air missiles with a small blast. Brings flyers down (LANCE can snipe them too).',
             lv:[ { dmg:20, rate:1.3, range:3.2, splash:0.6 },
                  { cost:100, dmg:22, rate:1.3, range:3.5, splash:0.7 },
                  { cost:160, dmg:24.2, rate:1.3, range:3.8, splash:0.8 },
                  { cost:240, dmg:26.62, rate:1.3, range:4.1, splash:0.9 } ] };
 // EMP: up to 4 lasers per shot that go for shields first (personal shields, Aegis domes, electrified
 // enemies). A hit strips the shield for good, pops the dome, or shorts out the electricity. Tiny damage.
-TOWERS.emp = { name:'EMP', color:'#3d7bff', sides:5, cost:75, unlock:12, shieldBreak:true, beams:4, desc:'Up to 4 lasers that hunt shields, on the ground or in the air. Strips them, pops domes, shorts out electrified enemies. Barely any damage. Electrified enemies can\'t shut it down.',
+TOWERS.emp = { name:'EMP', color:'#3d7bff', sides:5, cost:75, unlock:12, shieldBreak:true, beams:4, desc:'Up to 4 lasers that hunt shields, on the ground or in the air: strips them, pops domes, shorts out electrified enemies (they can\'t shut it down). Barely any damage.',
             lv:[ { dmg:1.25,   rate:1.1, range:2.4, beams:4 },
                  { cost:85,  dmg:1.38, rate:1.1, range:2.7, beams:4 },
                  { cost:140, dmg:1.51,   rate:1.1, range:3.0, beams:4 },
@@ -234,16 +234,24 @@ TOWERS.tide = { name:'TIDE', color:'#1ec8a5', sides:6, cost:80, unlock:52, douse
                  { cost:80,  dmg:4.12,  rate:1.0, range:2.6, beams:2 },
                  { cost:130, dmg:4.54,  rate:1.0, range:2.8, beams:3 },
                  { cost:200, dmg:4.99, rate:1.0, range:3.0, beams:3 } ] };
+// v48 (user): LANCE, the long-range sniper. One slow, heavy shot at a time that lands at once (no travel), aimed at the
+// toughest enemy by default, on the ground or in the air (hitsAir). Big hits shrug off most armor. Upgrades add range and the
+// usual +10% damage. Level 4 is DEADEYE: a hit that leaves a non-boss enemy under `execute` of its health shatters it.
+TOWERS.lance = { name:'LANCE', color:'#c08bff', sides:4, cost:120, unlock:40, hitsAir:true, sniper:true, desc:'Sniper: slow, huge shots at the toughest enemy, ground or air. Armor barely dents them. Level 4: DEADEYE, shatters non-bosses it leaves under 25% health.',
+            lv:[ { dmg:60,    rate:0.4, range:6.0 },
+                 { cost:130, dmg:66,    rate:0.4, range:6.5 },
+                 { cost:200, dmg:72.6,  rate:0.4, range:7.0 },
+                 { cost:300, dmg:79.86, rate:0.4, range:7.5, execute:0.25, deadeye:true } ] };
 // Shields shrug off ordinary hits: only 20% of normal damage gets into a shield.
 // Two kinds: personal shields (random enemy types per level, worth 60% of their HP)
 // and the Aegis dome (covers every ground enemy near the Aegis while it lives).
 // An EMP laser strips both for good; PRISM's beam goes straight through.
 // Light shield levels use thinner shields (25% of HP) so you can get by without a shield buster.
 const SHIELD_FACTOR = 0.2, SHIELD_PCT = 0.9, SHIELD_PCT_LIGHT = 0.25;
-const TOWER_ORDER = ['bolt', 'frost', 'nova', 'arc', 'emp', 'mint', 'prism', 'rail', 'beacon', 'flak', 'pyro', 'tide'];
+const TOWER_ORDER = ['bolt', 'frost', 'nova', 'arc', 'emp', 'mint', 'prism', 'rail', 'beacon', 'flak', 'lance', 'pyro', 'tide'];
 
 // ---- Level conditions ------------------------------------------------
-// NO BOUNTY: enemies drop no gold (Mint is your income). AIR RAID: Gliders fly in (only FLAK brings them down; EMP reaches them).
+// NO BOUNTY: enemies drop no gold (Mint is your income). AIR RAID: Gliders fly in (only FLAK and LANCE bring them down; EMP reaches them).
 const NO_BOUNTY_LEVELS = [14, 23, 29, 36, 43, 48, 55, 62, 67, 74, 79];
 const AIR_LEVELS = [32, 34, 38, 41, 44, 46, 50, 53, 57, 60, 64, 66, 69, 72, 75, 78, 80];
 // HEATWAVE: FROST can't be used. RAINSTORM: PYRO can't be used, and lightning strikes every new ARC (a free upgrade).
@@ -251,13 +259,14 @@ const HEAT_LEVELS = [24, 28, 35, 42, 56, 65, 71, 77];
 const RAIN_LEVELS = [49, 51, 54, 58, 61, 63, 68, 73, 76];
 const CONDITIONS = {
   noBounty: { tag:'NO BOUNTY', color:'#ffd23d', need:'mint', line:'Enemies drop no gold. MINT is your only income.' },
-  air:      { tag:'AIR RAID',  color:'#9fe8ff', need:'flak', line:'Gliders fly over the path. Only FLAK can bring them down.' },
+  air:      { tag:'AIR RAID',  color:'#9fe8ff', need:['flak', 'lance'], line:'Gliders fly over the path. Only FLAK and LANCE can bring them down.' },
   shielded: { tag:'HEAVY SHIELDS', color:'#4aa8ff', need:['emp', 'prism'], line:'Lots of shielded enemies. Bring EMP or PRISM.' },
   heat:     { tag:'HEATWAVE',  color:'#ff8a3d', ban:'frost', line:'Too hot for FROST: it can\'t be used here.' },
   rain:     { tag:'RAINSTORM', color:'#7fb6ff', ban:'pyro',  line:'No PYRO in the rain. Lightning strikes each new ARC: a free upgrade.' },
   // Playtest Lab economy rules (shown like conditions, nothing required)
   lean:     { tag:'LEAN ECONOMY', color:'#ffd23d', line:'Kills pay {0}%. Clear a wave with no leaks for a bonus.' },
   payday:   { tag:'PAYDAY', color:'#ffd23d', line:'Kills pay nothing. Each wave pays a wage, less if anything leaks.' },
+  vault:    { tag:'VAULT MINTS', color:'#ffd23d', line:'Kills pay as usual. A MINT pays out 2.5x its cost, then shatters.' },
 };
 const slotsFor = level => level >= 20 ? 4 : 3;     // loadout slots
 const SLOT_UNLOCK_LEVEL = 20;
@@ -292,7 +301,7 @@ const STR = {
   en: {
     combo: 'COMBO', early_call: 'EARLY CALL  +{0}', wave: 'WAVE {0}', boss_incoming: 'BOSS INCOMING', final_wave: 'FINAL WAVE',
     cond_noBounty: 'NO BOUNTY · BUILD MINTS', cond_air: 'AIR RAID · BUILD FLAK', cond_shielded: 'HEAVY SHIELDS · USE EMP OR PRISM',
-    warden: 'WARDEN', armored_boss: 'ARMORED BOSS', warden_x: 'WARDEN ×{0}', tower_lv: 'LEVEL {0}', master_bolt: 'MASTER BOLT', supernova: 'SUPERNOVA', supernova_line: 'Lobs 4 shells: the main one at full damage, plus 3 smaller ones spread to hit as many enemies as possible ({0}% damage, smaller blast).', auto_title: 'AUTO BUILD', auto_sub: 'Rebuild the towers from your last try, at the same moments and on the same tiles, until wave:', auto_go: 'AUTO BUILD UNTIL WAVE {0}', auto_fresh: 'START FRESH', auto_lost: 'LOST', auto_counts: '{0} built · {1} upgraded · {2} sold', auto_pill: 'AUTO BUILD · UNTIL WAVE {0}', auto_wait: 'WAITING FOR GOLD', auto_done: 'AUTO BUILD DONE · YOUR TURN', auto_stopped: 'AUTO BUILD STOPPED', auto_tag: 'AUTO', auto_missing: 'Not in your loadout (skipped): {0}', boss_word: 'BOSS', boss_down: '{0} DOWN', boss_down_gold: '{0} DOWN  +{1}', bosses_x: 'BOSSES ×{0}', immune: 'IMMUNE', live_wire: 'LIVE WIRE', wire_line: 'Zaps faster ({0}/s) and chains to {1}. Each zap also sends a pulse down every track that deals {2} to each enemy it passes.', level_n: 'LEVEL {0}',
+    warden: 'WARDEN', armored_boss: 'ARMORED BOSS', warden_x: 'WARDEN ×{0}', tower_lv: 'LEVEL {0}', master_bolt: 'MASTER BOLT', supernova: 'SUPERNOVA', supernova_line: 'Lobs 4 shells: the main one at full damage, plus 3 smaller ones spread to hit as many enemies as possible ({0}% damage, smaller blast).', auto_title: 'AUTO BUILD', auto_sub: 'Rebuild the towers from your last try, at the same moments and on the same tiles, until wave:', auto_go: 'AUTO BUILD UNTIL WAVE {0}', auto_fresh: 'START FRESH', auto_lost: 'LOST', auto_counts: '{0} built · {1} upgraded · {2} sold', auto_pill: 'AUTO BUILD · UNTIL WAVE {0}', auto_wait: 'WAITING FOR GOLD', auto_done: 'AUTO BUILD DONE · YOUR TURN', auto_stopped: 'AUTO BUILD STOPPED', auto_tag: 'AUTO', auto_missing: 'Not in your loadout (skipped): {0}', boss_word: 'BOSS', boss_down: '{0} DOWN', boss_down_gold: '{0} DOWN  +{1}', bosses_x: 'BOSSES ×{0}', immune: 'IMMUNE', live_wire: 'LIVE WIRE', wire_line: 'Zaps faster ({0}/s) and chains to {1}. Each zap also sends a pulse down every track that deals {2} to each enemy it passes.', vault_dry: 'VAULT EMPTY', deadeye: 'DEADEYE', deadeye_line: 'Any shot that leaves a non-boss enemy under {0}% health shatters it. Range {1}, damage +10%.', level_n: 'LEVEL {0}',
     m_10: 'NICE', m_25: 'AWESOME', m_50: 'UNREAL', m_100: 'LEGENDARY', m_200: 'GODLIKE',
     combo_gold: '{0} COMBO  +{1} GOLD', combo_only: '{0} COMBO', shattered: 'SHATTERED', warden_down: 'WARDEN DOWN', warden_down_gold: 'WARDEN DOWN  +{0}',
     wave_clear: 'WAVE {0} CLEAR', wave_clear_gold: 'WAVE {0} CLEAR  +{1}',
@@ -321,7 +330,7 @@ const STR = {
     info_new: 'NEW  {0}: {1}', info_new_tower: 'NEW TOWER  {0}: {1}', info_two: 'NEW  Enemies pour in from two portals!', info_boss: 'A Warden boss arrives in the final wave. It calls in more enemies as it walks.',
     bring: 'BRING', add: 'ADD', play_without: 'PLAY WITHOUT IT',
     confirm_noBounty: 'Enemies drop no gold on this level. Are you sure you want to play without {0}?',
-    confirm_air: 'Gliders fly over the path and only {0} can bring them down. Are you sure you want to play without it?',
+    confirm_air: 'Gliders fly over the path on this level. Are you sure you want to play without {0}?',
     confirm_shielded: 'This level has heavy shield usage. Are you sure you want to play without {0}?',
     info_light: 'Some enemies carry shields. EMP or PRISM helps, but you can manage without.',
     shield_badge: 'SHIELD', shielded_note: 'Shielded here: takes 20% damage until an EMP strips it.', stripped: 'STRIPPED', dome_down: 'DOME DOWN',
@@ -350,7 +359,9 @@ const STR = {
     lab_tests_bossrush: 'A Warden every 4 waves, two at wave 20 and two more at the end. Each shields up at 60% and rages at 30%.',
     lab_tests_split: 'Two lanes, and the pressure swaps sides every wave. Cover both, or hold the merge?',
     lab_tests_gauntlet: 'Every threat in the game in 25 waves: flyers, shields, fire, ice, electricity, and a Warden.',
-    lab_name_bosszoo: 'BOSS ZOO I', lab_name_bosszoo2: 'BOSS ZOO II',
+    lab_name_bosszoo: 'BOSS ZOO I', lab_name_bosszoo2: 'BOSS ZOO II', lab_name_vault: 'VAULT MINTS', lab_name_skyguard: 'SKY SHIELDS',
+    lab_tests_vault: 'Level 25, but each MINT pays out 2.5x its price, then shatters. Kills pay as usual. Is MINT still worth a slot?',
+    lab_tests_skyguard: 'Shielded Gliders and Stormwings. EMP lasers strip shields in the air; FLAK and LANCE bring flyers down.',
     lab_tests_bosszoo: 'Six new bosses, one at a time: Block King, Dart Queen, Spore Mother, Fortress, Bastion and Phantom. Later they return with shields, fire, ice and electricity.',
     lab_tests_bosszoo2: 'Six more: Lifebloom, Colossus, Stormwing (bring FLAK), Overload, Frost Giant and Inferno. Electrified enemies are immune to ARC; EMP keeps working next to them.',
     lab_won_s: 'WON · {0} LIVES · {1} LEFT', lab_lost_s: 'LOST · WAVE {0}/{1}',
@@ -368,7 +379,7 @@ const STR = {
   zh: {
     combo: '连击', early_call: '提前召唤  +{0}', wave: '第 {0} 波', boss_incoming: '首领来袭', final_wave: '最后一波',
     cond_noBounty: '无赏金 · 建造铸币塔', cond_air: '空袭 · 建造防空塔', cond_shielded: '重护盾 · 使用电磁或棱镜',
-    warden: '守卫者', armored_boss: '重甲首领', warden_x: '守卫者 ×{0}', tower_lv: '{0} 级', master_bolt: '大师光弹', supernova: '超新星', supernova_line: '一次抛射 4 发：主炮造成全额伤害，另外 3 发小炮弹分散落下，尽量覆盖更多敌人（{0}% 伤害，爆炸范围更小）。', auto_title: '自动建造', auto_sub: '按上次尝试的时间和位置自动重建你的塔，直到第几波：', auto_go: '自动建造到第 {0} 波', auto_fresh: '重新开始', auto_lost: '失败', auto_counts: '建造 {0} · 升级 {1} · 出售 {2}', auto_pill: '自动建造 · 到第 {0} 波', auto_wait: '等待金币', auto_done: '自动建造完成 · 轮到你了', auto_stopped: '已停止自动建造', auto_tag: '自动', auto_missing: '不在出战栏中（将跳过）：{0}', boss_word: '首领', boss_down: '{0} 被击碎', boss_down_gold: '{0} 被击碎  +{1}', bosses_x: '首领 ×{0}', immune: '免疫', live_wire: '高压电网', wire_line: '射速更快（每秒 {0} 次），连锁 {1} 个敌人。每次攻击还会沿所有道路发出一道脉冲，经过每个敌人时造成 {2} 伤害。', level_n: '第 {0} 关',
+    warden: '守卫者', armored_boss: '重甲首领', warden_x: '守卫者 ×{0}', tower_lv: '{0} 级', master_bolt: '大师光弹', supernova: '超新星', supernova_line: '一次抛射 4 发：主炮造成全额伤害，另外 3 发小炮弹分散落下，尽量覆盖更多敌人（{0}% 伤害，爆炸范围更小）。', auto_title: '自动建造', auto_sub: '按上次尝试的时间和位置自动重建你的塔，直到第几波：', auto_go: '自动建造到第 {0} 波', auto_fresh: '重新开始', auto_lost: '失败', auto_counts: '建造 {0} · 升级 {1} · 出售 {2}', auto_pill: '自动建造 · 到第 {0} 波', auto_wait: '等待金币', auto_done: '自动建造完成 · 轮到你了', auto_stopped: '已停止自动建造', auto_tag: '自动', auto_missing: '不在出战栏中（将跳过）：{0}', boss_word: '首领', boss_down: '{0} 被击碎', boss_down_gold: '{0} 被击碎  +{1}', bosses_x: '首领 ×{0}', immune: '免疫', live_wire: '高压电网', wire_line: '射速更快（每秒 {0} 次），连锁 {1} 个敌人。每次攻击还会沿所有道路发出一道脉冲，经过每个敌人时造成 {2} 伤害。', vault_dry: '金库空了', deadeye: '鹰眼', deadeye_line: '射击后生命低于 {0}% 的非首领敌人会当场粉碎。射程 {1}，伤害 +10%。', level_n: '第 {0} 关',
     m_10: '漂亮', m_25: '太棒了', m_50: '不可思议', m_100: '传奇', m_200: '神级',
     combo_gold: '{0} 连击  +{1} 金币', combo_only: '{0} 连击', shattered: '粉碎！', warden_down: '守卫者被击碎', warden_down_gold: '守卫者被击碎  +{0}',
     wave_clear: '第 {0} 波清除', wave_clear_gold: '第 {0} 波清除  +{1}',
@@ -397,7 +408,7 @@ const STR = {
     info_new: '新  {0}：{1}', info_new_tower: '新塔  {0}：{1}', info_two: '新  敌人从两个传送门涌入！', info_boss: '守卫者首领将在最后一波出现，行进时会不断召唤敌人。',
     bring: '携带', add: '加入', play_without: '不带也开始',
     confirm_noBounty: '本关敌人不掉落金币。确定不带{0}就开始吗？',
-    confirm_air: '滑翔者会飞越道路，只有{0}能击落它们。确定不带就开始吗？',
+    confirm_air: '本关有滑翔者飞越道路。确定不带{0}就开始吗？',
     confirm_shielded: '本关大量敌人带护盾。确定不带{0}就开始吗？',
     info_light: '部分敌人带护盾。电磁或棱镜有帮助，但不带也能应付。',
     shield_badge: '护盾', shielded_note: '本关带护盾：被电磁剥除前只受 20% 伤害。', stripped: '已剥除', dome_down: '护罩破碎',
@@ -426,7 +437,9 @@ const STR = {
     lab_tests_bossrush: '每 4 波一个守卫者，第 20 波两个，最后再来两个。每个在 60% 时开盾，30% 时狂暴。',
     lab_tests_split: '两条路，每波压力换一边。两边都守，还是守住汇合点？',
     lab_tests_gauntlet: '25 波里有游戏中所有威胁：飞行、护盾、火、冰、电，最后还有守卫者。',
-    lab_name_bosszoo: '首领图鉴 I', lab_name_bosszoo2: '首领图鉴 II',
+    lab_name_bosszoo: '首领图鉴 I', lab_name_bosszoo2: '首领图鉴 II', lab_name_vault: '金库铸币', lab_name_skyguard: '空中护盾',
+    lab_tests_vault: '第 25 关，但每座铸币塔产出价格的 2.5 倍后就会碎裂。击杀照常给金币。铸币塔还值得带吗？',
+    lab_tests_skyguard: '带护盾的滑翔者和风暴之翼。电磁激光能在空中剥除护盾；防空塔和光矛负责击落。',
     lab_tests_bosszoo: '六个新首领逐一登场：方块之王、飞镖女王、孢子之母、堡垒、神盾主宰和幻影。之后它们会带着护盾、火焰、冰霜和电再次出现。',
     lab_tests_bosszoo2: '另外六个：生命之花、巨像、风暴之翼（带上防空塔）、超载者、冰霜巨人和炼狱。带电敌人免疫电弧；电磁在它们旁边照常工作。',
     lab_won_s: '胜利 · {0} 条命 · 剩 {1}', lab_lost_s: '失败 · 第 {0}/{1} 波',
@@ -445,7 +458,7 @@ const STR = {
     combo: 'COMBO', early_call: 'ADELANTO  +{0}', wave: 'OLEADA {0}', boss_incoming: 'SE ACERCA EL JEFE', final_wave: 'ÚLTIMA OLEADA',
     cond_noBounty: 'SIN BOTÍN · CONSTRUYE CECAS', cond_air: 'ATAQUE AÉREO · CONSTRUYE FLAK', cond_shielded: 'ESCUDOS PESADOS · USA EMP O PRISMA',
     cond_heat: 'OLA DE CALOR · SIN HIELO', cond_rain: 'TORMENTA · SIN PIRO',
-    warden: 'GUARDIÁN', armored_boss: 'JEFE BLINDADO', warden_x: 'GUARDIÁN ×{0}', tower_lv: 'NIVEL {0}', master_bolt: 'RAYO MAESTRO', supernova: 'SUPERNOVA', supernova_line: 'Lanza 4 proyectiles: el principal con daño completo y 3 más pequeños repartidos para alcanzar a todos los enemigos posibles ({0}% de daño, explosión menor).', auto_title: 'AUTOCONSTRUCCIÓN', auto_sub: 'Reconstruye las torres de tu último intento, en los mismos momentos y casillas, hasta la oleada:', auto_go: 'AUTOCONSTRUIR HASTA LA OLEADA {0}', auto_fresh: 'EMPEZAR DE CERO', auto_lost: 'PERDIDA', auto_counts: '{0} torres · {1} mejoras · {2} vendidas', auto_pill: 'AUTOCONSTRUCCIÓN · HASTA OLEADA {0}', auto_wait: 'ESPERANDO ORO', auto_done: 'AUTOCONSTRUCCIÓN LISTA · TE TOCA', auto_stopped: 'AUTOCONSTRUCCIÓN DETENIDA', auto_tag: 'AUTO', auto_missing: 'No están en tu equipo (se omiten): {0}', boss_word: 'JEFE', boss_down: '{0} DERRIBADO', boss_down_gold: '{0} DERRIBADO  +{1}', bosses_x: 'JEFES ×{0}', immune: 'INMUNE', live_wire: 'ALTA TENSIÓN', wire_line: 'Dispara más rápido ({0}/s) y encadena {1}. Cada ataque también lanza un pulso por todos los caminos que hace {2} de daño a cada enemigo que cruza.', level_n: 'NIVEL {0}',
+    warden: 'GUARDIÁN', armored_boss: 'JEFE BLINDADO', warden_x: 'GUARDIÁN ×{0}', tower_lv: 'NIVEL {0}', master_bolt: 'RAYO MAESTRO', supernova: 'SUPERNOVA', supernova_line: 'Lanza 4 proyectiles: el principal con daño completo y 3 más pequeños repartidos para alcanzar a todos los enemigos posibles ({0}% de daño, explosión menor).', auto_title: 'AUTOCONSTRUCCIÓN', auto_sub: 'Reconstruye las torres de tu último intento, en los mismos momentos y casillas, hasta la oleada:', auto_go: 'AUTOCONSTRUIR HASTA LA OLEADA {0}', auto_fresh: 'EMPEZAR DE CERO', auto_lost: 'PERDIDA', auto_counts: '{0} torres · {1} mejoras · {2} vendidas', auto_pill: 'AUTOCONSTRUCCIÓN · HASTA OLEADA {0}', auto_wait: 'ESPERANDO ORO', auto_done: 'AUTOCONSTRUCCIÓN LISTA · TE TOCA', auto_stopped: 'AUTOCONSTRUCCIÓN DETENIDA', auto_tag: 'AUTO', auto_missing: 'No están en tu equipo (se omiten): {0}', boss_word: 'JEFE', boss_down: '{0} DERRIBADO', boss_down_gold: '{0} DERRIBADO  +{1}', bosses_x: 'JEFES ×{0}', immune: 'INMUNE', live_wire: 'ALTA TENSIÓN', wire_line: 'Dispara más rápido ({0}/s) y encadena {1}. Cada ataque también lanza un pulso por todos los caminos que hace {2} de daño a cada enemigo que cruza.', vault_dry: 'BÓVEDA VACÍA', deadeye: 'OJO MORTAL', deadeye_line: 'Si un disparo deja a un enemigo (no jefe) con menos del {0}% de vida, lo destroza. Alcance {1}, +10% de daño.', level_n: 'NIVEL {0}',
     m_10: 'BIEN', m_25: 'GENIAL', m_50: 'INCREÍBLE', m_100: 'LEGENDARIO', m_200: 'DIVINO',
     combo_gold: 'COMBO {0}  +{1} ORO', combo_only: 'COMBO {0}', shattered: 'HECHO AÑICOS', warden_down: 'GUARDIÁN DERRIBADO', warden_down_gold: 'GUARDIÁN DERRIBADO  +{0}',
     wave_clear: 'OLEADA {0} SUPERADA', wave_clear_gold: 'OLEADA {0} SUPERADA  +{1}',
@@ -474,7 +487,7 @@ const STR = {
     info_new: 'NUEVO  {0}: {1}', info_new_tower: 'NUEVA TORRE  {0}: {1}', info_two: 'NUEVO  ¡Los enemigos llegan por dos portales!', info_boss: 'Un Guardián llega en la última oleada. Llama a más enemigos mientras avanza.',
     bring: 'LLEVA', add: 'AÑADIR', play_without: 'JUGAR SIN ELLA',
     confirm_noBounty: 'En este nivel los enemigos no sueltan oro. ¿Seguro que quieres jugar sin {0}?',
-    confirm_air: 'Los planeadores vuelan sobre el camino y solo {0} puede derribarlos. ¿Seguro que quieres jugar sin ella?',
+    confirm_air: 'En este nivel vuelan planeadores sobre el camino. ¿Seguro que quieres jugar sin {0}?',
     confirm_shielded: 'En este nivel hay muchos escudos. ¿Seguro que quieres jugar sin {0}?',
     info_light: 'Algunos enemigos llevan escudo. EMP o PRISMA ayudan, pero puedes arreglártelas sin ellos.',
     shield_badge: 'ESCUDO', shielded_note: 'Con escudo aquí: recibe el 20% del daño hasta que un EMP se lo quite.', stripped: 'SIN ESCUDO', dome_down: 'CÚPULA ROTA',
@@ -502,7 +515,9 @@ const STR = {
     lab_tests_bossrush: 'Un Guardián cada 4 oleadas, dos en la oleada 20 y dos más al final. Todos con escudo al 60% y furia al 30%.',
     lab_tests_split: 'Dos caminos, y la presión cambia de lado cada oleada. ¿Cubres los dos o defiendes la unión?',
     lab_tests_gauntlet: 'Todas las amenazas del juego en 25 oleadas: voladores, escudos, fuego, hielo, electricidad y un Guardián.',
-    lab_name_bosszoo: 'ZOO DE JEFES I', lab_name_bosszoo2: 'ZOO DE JEFES II',
+    lab_name_bosszoo: 'ZOO DE JEFES I', lab_name_bosszoo2: 'ZOO DE JEFES II', lab_name_vault: 'CECAS CON BÓVEDA', lab_name_skyguard: 'ESCUDOS EN EL AIRE',
+    lab_tests_vault: 'El nivel 25, pero cada CECA da 2,5 veces su precio y luego se rompe. Las bajas pagan lo normal. ¿Sigue valiendo la pena?',
+    lab_tests_skyguard: 'Planeadores y Alas Tormenta con escudo. Los láseres de EMP quitan escudos en el aire; FLAK y LANZA los derriban.',
     lab_tests_bosszoo: 'Seis jefes nuevos, uno a uno: Rey Bloque, Reina Dardo, Madre Espora, Fortaleza, Bastión y Fantasma. Luego vuelven con escudos, fuego, hielo y electricidad.',
     lab_tests_bosszoo2: 'Seis más: Flor de Vida, Coloso, Ala Tormenta (lleva FLAK), Sobrecarga, Gigante Helado e Infierno. Los eléctricos son inmunes a ARCO; EMP sigue funcionando a su lado.',
     lab_won_s: 'GANADA · {0} VIDAS · QUEDA {1}', lab_lost_s: 'PERDIDA · OLEADA {0}/{1}',
@@ -524,18 +539,18 @@ function tr(id, ...a) {
 }
 
 const ZH = {
-  tower: { bolt: '光弹', frost: '冰霜', nova: '新星', arc: '电弧', emp: '电磁', mint: '铸币', prism: '棱镜', rail: '轨道炮', beacon: '信标', flak: '防空', pyro: '烈焰', tide: '潮汐' },
+  tower: { bolt: '光弹', frost: '冰霜', nova: '新星', arc: '电弧', emp: '电磁', mint: '铸币', prism: '棱镜', rail: '轨道炮', beacon: '信标', flak: '防空', lance: '光矛', pyro: '烈焰', tide: '潮汐' },
   towerDesc: {
     bolt: '快速光弹。每第 4 发暴击，每次升级多一发暴击。4 级：大师光弹，射速 +35%。', frost: '冰冻脉冲，减速附近所有敌人。不会着火，还能扑灭紧挨着的塔上的火。', nova: '等离子炸弹，范围伤害，无视护甲。4 级：超新星，额外抛射 3 发小炮弹覆盖更多敌人。', arc: '连锁闪电，每次升级射速更快。带电敌人会让它超载，但免疫它的伤害。4 级：高压电网，每次攻击还会沿所有道路发出脉冲。',
     emp: '最多 4 道激光专找护盾，地面和空中都能打：剥除护盾、击破护罩、让带电敌人短路。几乎没有伤害。带电敌人无法让它短路。', mint: '波次进行时不断产出金币。', prism: '光束越烧越强，穿透护甲和护盾。',
-    rail: '沿一条固定直线射击，贯穿线上所有敌人。', beacon: '提升相邻塔的伤害。', flak: '防空导弹。唯一能击落飞行敌人的塔。',
+    rail: '沿一条固定直线射击，贯穿线上所有敌人。', beacon: '提升相邻塔的伤害。', flak: '防空导弹，带小范围爆炸。能击落飞行敌人（光矛也能狙击它们）。', lance: '远程狙击：缓慢而强力的射击，优先打最强的敌人，地面和空中都能打。护甲几乎挡不住。4 级：鹰眼，射击后生命低于 25% 的非首领敌人会当场粉碎。',
     pyro: '短程火焰喷射，带少量溅射。对寒冷敌人造成三倍伤害。', tide: '水柱让敌人永久浸湿：电弧对其伤害 +20%，烈焰 -20%，冰霜每 3 次冲击将其冻住（被强化或 4 级时更快）。能灭火。',
   },
   enemy: { grunt: '方块', scout: '飞镖', splitter: '孢子', mite: '螨虫', brute: '壁垒', boss: '守卫者', aegis: '神盾', blink: '闪烁', mender: '治愈者', titan: '泰坦', glider: '滑翔者', volt: '伏特', yeti: '雪怪', scorch: '灼焰', boss_grunt: '方块之王', boss_scout: '飞镖女王', boss_splitter: '孢子之母', boss_brute: '堡垒', boss_aegis: '神盾主宰', boss_blink: '幻影', boss_mender: '生命之花', boss_titan: '巨像', boss_glider: '风暴之翼', boss_volt: '超载者', boss_yeti: '冰霜巨人', boss_scorch: '炼狱' },
   enemyDesc: {
     grunt: '最基础的行走者。', scout: '速度快但很脆弱。', splitter: '被摧毁时分裂成 3 只螨虫。抵达核心会扣 4 条命：它自己加体内的 3 只螨虫。', mite: '小而快。', brute: '重甲：小伤害几乎无效。',
     boss: '首领：厚重护甲，生命值极高。行进时会不断召唤敌人。', aegis: '投射随行护罩，罩内敌人只受 20% 伤害。电磁可将其击破。', blink: '每隔几秒向前瞬移。',
-    mender: '治疗附近的敌人。优先消灭它。', titan: '巨大、缓慢且重甲。', glider: '直线飞越道路。只有防空塔能击落它（电磁激光能打到它，但几乎没有伤害）。',
+    mender: '治疗附近的敌人。优先消灭它。', titan: '巨大、缓慢且重甲。', glider: '直线飞越道路。只有防空塔和光矛能击落它（电磁激光能打到它，但几乎没有伤害）。',
     volt: '带电：紧挨着它的塔会短路 4 秒（电磁除外，电弧塔反而会超载）。免疫电弧。电磁能让它短路。',
     yeti: '每秒向范围内所有塔扔雪球。被击中的塔 5 秒内攻速大减。冰霜塔反而会超载。',
     scorch: '着火：每隔几秒向附近的塔扔一个火球。被击中的塔会烧毁（返还 25%），除非潮汐塔或紧挨着的冰霜塔把火扑灭。',
@@ -543,18 +558,19 @@ const ZH = {
     boss_splitter: '首领。行进时放出螨虫，被摧毁时炸成 4 个孢子。', boss_brute: '首领。护甲极厚，小伤害几乎无效。召唤壁垒。',
     boss_aegis: '首领。巨大的护罩覆盖附近所有敌人（只受 20% 伤害）。电磁可将其击破。召唤方块。', boss_blink: '首领。每隔几秒向前远距离瞬移。召唤闪烁。',
     boss_mender: '首领。每 2 秒治疗周围所有敌人。召唤方块。', boss_titan: '首领。巨大、缓慢、护甲极重。抵达核心会扣 8 条命。',
-    boss_glider: '首领。直线飞越道路，只有防空塔能击落它。召唤滑翔者。', boss_volt: '首领。带电且范围极大：2.5 格内的塔会短路（电磁除外）。免疫电弧。召唤伏特。',
+    boss_glider: '首领。直线飞越道路，只有防空塔和光矛能击落它。召唤滑翔者。', boss_volt: '首领。带电且范围极大：2.5 格内的塔会短路（电磁除外）。免疫电弧。召唤伏特。',
     boss_yeti: '首领。冰霜：向 3 格内所有塔扔雪球。召唤雪怪。', boss_scorch: '首领。着火：扔火球的频率和距离都翻倍。召唤灼焰。',
   },
   world: ['虚空', '深渊', '余烬', '糖果', '极光', '烈日', '冰川', '剧毒'],
   cond: {
     noBounty: ['无赏金', '敌人不掉落金币。铸币塔是唯一收入。'],
-    air: ['空袭', '滑翔者飞越道路，只有防空塔能击落它们。'],
+    air: ['空袭', '滑翔者飞越道路，只有防空塔和光矛能击落它们。'],
     shielded: ['重护盾', '大量敌人带护盾。带电磁或棱镜。'],
     heat: ['热浪', '太热了，冰霜塔无法使用。'],
     rain: ['暴雨', '雨中不能用烈焰塔。闪电会击中每座新建的电弧塔：免费升级。'],
     lean: ['精简经济', '击杀只给 {0}% 金币。无漏怪清完一波可得奖励。'],
     payday: ['发薪日', '击杀不给金币。每波发放工资，有漏怪则减少。'],
+    vault: ['金库铸币', '击杀照常给金币。铸币塔产出投入的 2.5 倍后碎裂。'],
   },
   tips: {
     grunt: '在道路拐角处建塔，一座塔能覆盖两条路。',
@@ -571,19 +587,20 @@ const ZH = {
     scorch: '着火的敌人会向道路附近的塔扔火球，着火的塔会被烧毁，除非潮汐塔喷到它，或紧挨着的冰霜塔发出冲击。冰霜塔本身不会着火。',
     mender: '治愈者会治疗同伴。把塔设为攻击“最强”，或用轨道炮狙击。',
     titan: '泰坦巨大且有护甲。在同一个拐角集中升级过的塔。',
-    glider: '滑翔者直线飞向核心。只有防空塔能击落它们。在飞行线下方建造防空塔。',
+    glider: '滑翔者直线飞向核心。只有防空塔和光矛能击落它们。在飞行线下方建造防空塔。',
     nobounty: '无赏金关卡：敌人不掉落金币。尽早建造铸币塔并升级，这是你唯一的收入。',
   },
 };
 const ES = {
-  tower: { bolt: 'RAYO', frost: 'HIELO', nova: 'NOVA', arc: 'ARCO', emp: 'EMP', mint: 'CECA', prism: 'PRISMA', rail: 'RIEL', beacon: 'FARO', flak: 'FLAK', pyro: 'PIRO', tide: 'MAREA' },
+  tower: { bolt: 'RAYO', frost: 'HIELO', nova: 'NOVA', arc: 'ARCO', emp: 'EMP', mint: 'CECA', prism: 'PRISMA', rail: 'RIEL', beacon: 'FARO', flak: 'FLAK', lance: 'LANZA', pyro: 'PIRO', tide: 'MAREA' },
   towerDesc: {
     bolt: 'Láser rápido. Cada 4.º disparo es crítico; cada mejora añade otro. Nivel 4: RAYO MAESTRO, 35% más rápido.', frost: 'Pulso helado que frena a todos los cercanos. Nunca arde y apaga el fuego de las torres de al lado.',
-    nova: 'Bomba de plasma. Daño en área, atraviesa armadura. Nivel 4: SUPERNOVA, lanza 3 proyectiles extra más pequeños para cubrir más enemigos.', arc: 'Relámpago en cadena; cada mejora dispara más rápido. Los eléctricos lo sobrecargan pero son inmunes a él. Nivel 4: ALTA TENSIÓN, cada ataque también lanza un pulso por todos los caminos.',
+    nova: 'Bomba de plasma. Daño en área, atraviesa armadura. Nivel 4: SUPERNOVA, lanza 3 proyectiles extra más pequeños para cubrir más enemigos.', arc: 'Relámpago en cadena, más rápido con cada mejora. Los eléctricos lo sobrecargan y son inmunes. Nivel 4: ALTA TENSIÓN, cada ataque lanza un pulso por los caminos.',
     emp: 'Hasta 4 láseres que buscan escudos, en tierra o en el aire: los quita, rompe cúpulas y cortocircuita a los eléctricos. Casi sin daño. Los eléctricos no pueden apagarlo.',
     mint: 'Genera oro mientras hay oleadas.', prism: 'Rayo que se calienta sobre un objetivo. Atraviesa armadura y escudos.',
     rail: 'Dispara en una línea fija y atraviesa todo lo que hay en ella.', beacon: 'Aumenta el daño de las torres de al lado.',
-    flak: 'Misiles antiaéreos. La única torre que puede derribar a los voladores.',
+    flak: 'Misiles antiaéreos con algo de área. Derriban voladores (LANZA también puede abatirlos).',
+    lance: 'Francotirador: disparos lentos y enormes al más duro, en tierra o aire. La armadura apenas lo frena. Nivel 4: OJO MORTAL, remata a los no jefes bajo el 25% de vida.',
     pyro: 'Chorro de fuego con algo de área. Triple daño a enemigos fríos.', tide: 'Empapa a los enemigos para siempre: ARCO les hace +20%, PIRO -20%, y HIELO los congela cada 3 golpes (menos si está potenciado o en nivel 4). Apaga fuegos.',
   },
   enemy: { grunt: 'Bloque', scout: 'Dardo', splitter: 'Espora', mite: 'Ácaro', brute: 'Baluarte', boss: 'Guardián', aegis: 'Égida', blink: 'Destello', mender: 'Sanador', titan: 'Titán', glider: 'Planeador', volt: 'Voltio', yeti: 'Yeti', scorch: 'Brasa', boss_grunt: 'Rey Bloque', boss_scout: 'Reina Dardo', boss_splitter: 'Madre Espora', boss_brute: 'Fortaleza', boss_aegis: 'Bastión', boss_blink: 'Fantasma', boss_mender: 'Flor de Vida', boss_titan: 'Coloso', boss_glider: 'Ala Tormenta', boss_volt: 'Sobrecarga', boss_yeti: 'Gigante Helado', boss_scorch: 'Infierno' },
@@ -591,7 +608,7 @@ const ES = {
     grunt: 'El caminante básico.', scout: 'Rápido pero frágil.', splitter: 'Se divide en 3 ácaros al destruirlo. Si llega al núcleo quita 4 vidas: ella y los 3 ácaros de dentro.', mite: 'Pequeño y veloz.',
     brute: 'Blindado. Los golpes pequeños apenas le hacen nada.', boss: 'Jefe. Blindaje pesado y muchísima vida. Llama a más enemigos mientras avanza.',
     aegis: 'Proyecta una cúpula que viaja con él. Los enemigos dentro reciben el 20% del daño. EMP la revienta.', blink: 'Se teletransporta hacia delante cada pocos segundos.',
-    mender: 'Cura a los enemigos cercanos. Acaba con él primero.', titan: 'Enorme, lento y muy blindado.', glider: 'Vuela en línea recta sobre el camino. Solo FLAK puede derribarlo (los láseres de EMP lo alcanzan, pero apenas le hacen daño).',
+    mender: 'Cura a los enemigos cercanos. Acaba con él primero.', titan: 'Enorme, lento y muy blindado.', glider: 'Vuela en línea recta sobre el camino. Solo FLAK y LANZA pueden derribarlo (los láseres de EMP lo alcanzan, pero apenas le hacen daño).',
     volt: 'Eléctrico: las torres junto a él se apagan 4 s (menos EMP; ARCO se sobrecarga). Inmune a ARCO. EMP lo cortocircuita.',
     yeti: 'Lanza bolas de nieve a todas las torres a su alcance cada segundo. Las alcanzadas disparan mucho más lento 5 s. HIELO se sobrecarga.',
     scorch: 'En llamas: cada pocos segundos lanza una bola de fuego a una torre cercana. La torre alcanzada arde hasta caer (se recupera el 25%) salvo que MAREA o un HIELO de al lado la apaguen.',
@@ -599,18 +616,19 @@ const ES = {
     boss_splitter: 'Jefe. Suelta Ácaros al avanzar y estalla en 4 Esporas al morir.', boss_brute: 'Jefe. Armadura enorme: los golpes pequeños apenas la rozan. Invoca Baluartes.',
     boss_aegis: 'Jefe. Su gran cúpula cubre todo lo cercano (reciben un 20% del daño). EMP la rompe. Invoca Bloques.', boss_blink: 'Jefe. Se teletransporta muy lejos cada pocos segundos. Invoca Destellos.',
     boss_mender: 'Jefe. Cura a todos los enemigos cercanos cada 2 segundos. Invoca Bloques.', boss_titan: 'Jefe. Enorme, lento y con muchísima armadura. Quita 8 vidas si llega al núcleo.',
-    boss_glider: 'Jefe. Vuela en línea recta sobre el camino; solo FLAK puede derribarlo. Invoca Planeadores.', boss_volt: 'Jefe. Electrificado y con gran alcance: las torres a 2,5 casillas se apagan (menos EMP). Inmune a ARCO. Invoca Voltios.',
+    boss_glider: 'Jefe. Vuela en línea recta sobre el camino; solo FLAK y LANZA pueden derribarlo. Invoca Planeadores.', boss_volt: 'Jefe. Electrificado y con gran alcance: las torres a 2,5 casillas se apagan (menos EMP). Inmune a ARCO. Invoca Voltios.',
     boss_yeti: 'Jefe. Helado: lanza bolas de nieve a todas las torres a 3 casillas. Invoca Yetis.', boss_scorch: 'Jefe. En llamas: lanza bolas de fuego el doble de a menudo y más lejos. Invoca Brasas.',
   },
   world: ['VACÍO', 'ABISMO', 'BRASAS', 'DULCE', 'AURORA', 'SOLAR', 'GLACIAR', 'TÓXICO'],
   cond: {
     noBounty: ['SIN BOTÍN', 'Los enemigos no sueltan oro. CECA es tu único ingreso.'],
-    air: ['ATAQUE AÉREO', 'Los planeadores vuelan sobre el camino. Solo FLAK puede derribarlos.'],
+    air: ['ATAQUE AÉREO', 'Los planeadores vuelan sobre el camino. Solo FLAK y LANZA los derriban.'],
     shielded: ['ESCUDOS PESADOS', 'Muchos enemigos con escudo. Lleva EMP o PRISMA.'],
     heat: ['OLA DE CALOR', 'Demasiado calor para HIELO: aquí no se puede usar.'],
     rain: ['TORMENTA', 'Sin PIRO con lluvia. Cada ARCO nuevo recibe un rayo: mejora gratis.'],
     lean: ['ECONOMÍA JUSTA', 'Las bajas pagan {0}%. Oleada sin fugas: bono.'],
     payday: ['DÍA DE PAGO', 'Las bajas no pagan. Cada oleada paga un sueldo, menos si hay fugas.'],
+    vault: ['CECAS CON BÓVEDA', 'Las bajas pagan lo normal. Una CECA da 2,5x su coste y se rompe.'],
   },
   tips: {
     grunt: 'Construye en las curvas. Una torre ahí cubre dos tramos.',
@@ -627,7 +645,7 @@ const ES = {
     scorch: 'Los enemigos en llamas lanzan bolas de fuego a las torres junto al camino. Una torre en llamas cae salvo que MAREA la moje o un HIELO de al lado dispare. HIELO nunca arde.',
     mender: 'Los sanadores curan a sus compañeros. Pon una torre en FUERTE o usa RIEL.',
     titan: 'Los titanes son enormes y blindados. Junta torres mejoradas en una curva.',
-    glider: 'Los planeadores vuelan directos a tu núcleo. Solo FLAK puede derribarlos. Constrúyela bajo la línea de vuelo.',
+    glider: 'Los planeadores vuelan directos a tu núcleo. Solo FLAK y LANZA pueden derribarlos. Construye FLAK bajo la línea de vuelo.',
     nobounty: 'Nivel sin botín: los enemigos no sueltan oro. Construye CECAS pronto y mejóralas: son tu único ingreso.',
   },
 };
@@ -986,6 +1004,10 @@ const ECON_LEAN45 = { key: 'lean', bounty: 0.45, combo: true, clean: w => 12 + 3
 const ECON_LEAN50 = { key: 'lean', bounty: 0.5, combo: true, clean: w => 14 + 4 * w, dirty: () => 0 };
 // PAYDAY: kills pay nothing; every wave pays a wage, less if anything leaked (v26: Lab 3 left 904 gold, so wages are lower)
 const ECON_PAYDAY = { key: 'payday', bounty: 0, combo: false, clean: w => 50 + 9 * w, dirty: w => 32 + 6 * w };
+// v48 (user): VAULT MINTS. Kills, combos, wave clears and early calls pay what they pay in the campaign; the one change is
+// the MINT vault (see MINT_VAULT), so the labs can try the MINT rework before it goes to the campaign
+const campaignClear = w => Math.round(ECON.clearBonus(w) * ECON.goldRate);
+const ECON_VAULT = { key: 'vault', bounty: ECON.goldRate, combo: true, clean: campaignClear, dirty: campaignClear, vault: true };
 // v32 (user): every lab's version was bumped to clear the COMPLETED stamps after the v29-v32 rebalance
 const LAB_DEFS = [
   { id: 'lean66', v: 2, map: 66, ref: 66, clone: 66, econ: ECON_LEAN45, gold: 404 },
@@ -1229,6 +1251,29 @@ const LAB_DEFS = [
     [['brute', 10, 0.9, -1, { elec: 1 }], ['boss_yeti', 1, 6, 0, { shield: 1 }], ['boss_scorch', 1, 6, 1, { elec: 1 }]],
     [['grunt', 20, 0.35, -1], ['boss_mender', 1, 5, 0], ['boss_titan', 1, 5, 1], ['boss_glider', 1, 5, 0], ['boss_volt', 1, 5, 1], ['boss_yeti', 1, 5, 0], ['boss_scorch', 1, 5, 1]],
   ] },
+  // 13 VAULT MINTS (v48): level 25 exactly (its waves, toughness and starting gold) with the campaign's own economy, except that
+  //   every MINT pays out 2.5x what was spent on it and then shatters. Play it next to level 25 to feel the MINT rework.
+  { id: 'vault', v: 1, map: 25, ref: 25, clone: 25, econ: ECON_VAULT, gold: 240 },
+  // 14 SKY SHIELDS (v48): flyers with shields. Shielded Gliders take 20% from FLAK and LANCE until an EMP laser strips them
+  //   (EMP reaches flyers); shielded Stormwings close it out. LANCE snipes flyers too. Vault MINTs, campaign kill gold.
+  { id: 'skyguard', v: 1, map: 72, ref: 66, world: 7, econ: ECON_VAULT, gold: 420, cal: 0.3, boss: true, waves: [
+    [['grunt', 16, 0.5, -1]],
+    [['glider', 6, 1.0, 0], ['scout', 14, 0.35, 1]],
+    [['glider', 5, 1.1, 1, { shield: 1 }], ['grunt', 12, 0.5, 0]],
+    [['brute', 5, 1.3, -1], ['glider', 8, 0.8, 0]],
+    [['glider', 10, 0.6, -1, { shield: 1 }]],
+    [['titan', 2, 3.0, 0], ['scout', 18, 0.3, 1], ['glider', 6, 0.9, 1]],
+    [['mender', 3, 1.4, 0], ['glider', 10, 0.6, 0, { shield: 1 }], ['grunt', 14, 0.4, 1]],
+    [['glider', 8, 0.8, -1], ['boss_glider', 1, 6, 0]],
+    [['brute', 8, 1.0, -1, { shield: 1 }], ['glider', 12, 0.5, 1]],
+    [['glider', 14, 0.45, -1, { shield: 1 }], ['scout', 20, 0.28, 0]],
+    [['titan', 3, 2.6, -1], ['glider', 10, 0.6, 0, { shield: 1 }], ['blink', 10, 0.7, 1]],
+    [['aegis', 3, 2.0, 0], ['glider', 14, 0.45, 1], ['grunt', 20, 0.35, 0]],
+    [['glider', 18, 0.38, -1, { shield: 1 }], ['mender', 4, 1.2, 1]],
+    [['titan', 4, 2.2, -1], ['glider', 12, 0.5, -1, { shield: 1 }]],
+    [['glider', 16, 0.4, -1], ['boss_glider', 1, 6, 1, { shield: 1 }]],
+    [['glider', 22, 0.32, -1, { shield: 1 }], ['brute', 10, 0.9, -1], ['boss_glider', 1, 6, 0, { shield: 1 }], ['boss_glider', 1, 6, 1, { shield: 1 }]],
+  ] },
 ];
 const LAB = LAB_DEFS.map((d, i) => {
   const src = LEVELS[d.map - 1], base = d.clone ? LEVELS[d.clone - 1] : null;
@@ -1466,6 +1511,22 @@ const Sound = (() => {
       noise({ dur:0.3, vol:0.28, type:'bandpass', f0:5000, f1:600, q:1.5, at:g.at });
       tone({ type:'sawtooth', f0:nf(g.ch[2], 2), f1:nf(g.ch[0], -2), dur:0.28, vol:0.09, at:g.at });
       const f = nf(g.ch[0], -2); tone({ type:'sine', f0:f, f1:f / 2, dur:0.25, vol:0.25, at:g.at });
+    },
+    snipe(de) {                                // v48 LANCE: a sharp crack, a high ping that falls away and a low thump
+      if (!ok('snipe', 60)) return; const g = grid(16); if (!slot('snipe', g.at)) return;
+      noise({ dur:0.1, vol:0.26, type:'highpass', f0:3500, f1:900, at:g.at });
+      const f = nf(g.ch[0], 3); tone({ type:'triangle', f0:f, f1:f / 3, dur:0.24, vol:0.07, at:g.at });
+      tone({ type:'sine', f0:nf(g.ch[0], -1), f1:nf(g.ch[0], -3), dur:0.2, vol:0.22, at:g.at });
+      if (de) tone({ type:'sine', f0:nf(g.ch[2], 3), dur:0.3, vol:0.035, at:g.at + 0.04 });
+    },
+    deadeye() {                                // v48 DEADEYE finishes an enemy off: a glassy two-note chime
+      if (!ok('deadeye', 80)) return; const g = grid(32);
+      tone({ type:'sine', f0:nf(g.ch[2], 2), dur:0.14, vol:0.06, at:g.at }); tone({ type:'sine', f0:nf(g.ch[0], 3), dur:0.32, vol:0.05, at:g.at + 0.07 });
+    },
+    crack()  {                                 // v48 an empty MINT shatters: a glassy crack and a falling run of coin chimes
+      if (!ok('crack', 120)) return; const g = grid(16), sp = sixteenth() / 2;
+      noise({ dur:0.3, vol:0.22, type:'highpass', f0:2000, f1:5000, at:g.at });
+      [g.ch[2] + 12, g.ch[1] + 12, g.ch[0] + 12, g.ch[2]].forEach((n, i) => tone({ type:'sine', f0:nf(n, 1), dur:0.12, vol:0.05, at:g.at + 0.03 + i * sp }));
     },
     beam(h)  { hum(h); },
     blink()  { if (!ok('blink', 60)) return; const g = grid(32); if (!slot('blink', g.at)) return; const f = nf(pick(g.ch), 2); tone({ type:'sine', f0:f, f1:f / 4, dur:0.12, vol:0.055, at:g.at }); noise({ dur:0.08, vol:0.045, type:'highpass', f0:5000, at:g.at }); },
@@ -1978,11 +2039,13 @@ function drawIceHalo(x, y, r, t) {
 // o: { lv, aim, kick, t, scale, alpha, ghost }
 const MASTER_GOLD = '#ffd23d';
 const WIRE_BLUE = '#8fe9ff';        // v37: LIVE WIRE accent
+const DEADEYE_RED = '#ff4d6d';      // v48: DEADEYE (LANCE level 4) accent
 function drawTowerGlyph(type, x, y, o) {
   const d = TOWERS[type], lv = o.lv || 0, t = o.t || 0;
   const master = !!(d.lv[lv] && d.lv[lv].master), c = master ? MASTER_GOLD : d.color;   // v36: MASTER BOLT turns gold
   const wire = !!(d.lv[lv] && d.lv[lv].wire);                                          // v37: ARC level 4, the LIVE WIRE
   const sn = !!(d.lv[lv] && d.lv[lv].supernova);                                       // v46: NOVA level 4, the SUPERNOVA
+  const l4 = lv >= 3;                                                                   // v48: every tower has its own level 4 look
   const s = o.scale == null ? 1 : o.scale;
   const k = 1 + (o.kick || 0) * 0.14;
   const pa = ctx.globalAlpha;
@@ -1991,7 +2054,7 @@ function drawTowerGlyph(type, x, y, o) {
   // plate
   roundRect(x - 15 * s, y - 15 * s, 30 * s, 30 * s, 7 * s);
   ctx.fillStyle = '#0b0a1a'; ctx.fill();
-  ctx.lineWidth = master || wire || sn ? 2 : 1.2; ctx.strokeStyle = hexA(c, master || wire || sn ? 0.85 : 0.4); ctx.stroke();
+  ctx.lineWidth = l4 ? 2 : 1.2; ctx.strokeStyle = hexA(l4 && type === 'lance' ? DEADEYE_RED : c, l4 ? 0.85 : 0.4); ctx.stroke();
   if (wire) { roundRect(x - 12.5 * s, y - 12.5 * s, 25 * s, 25 * s, 5 * s); ctx.lineWidth = 1; ctx.strokeStyle = hexA(WIRE_BLUE, 0.55); ctx.stroke(); }
   // LV2+: rotating outer ring
   if (lv >= 1) {
@@ -2015,6 +2078,243 @@ function drawTowerGlyph(type, x, y, o) {
     ctx.fillStyle = hexA(cy, 0.55); ctx.fill(); neon(cy, 1.4);
     additive(true); glow(x, y, 9 + Math.sin(t * 6) * 2, '#ffffff', 0.9); additive(false);
     ctx.beginPath(); ctx.arc(x, y, 2.4 + Math.sin(t * 6) * 0.5, 0, TAU); ctx.fillStyle = '#ffffff'; ctx.fill();
+  } else if (l4 && type === 'frost') {                 // v48 level 4: a big crystal snowflake in a frozen hex frame, snow drifting round it
+    const rot = t * (1.2 + (o.kick || 0) * 4), ice = '#eef3ff';
+    additive(true); glow(x, y, 32, '#dfeaff', 0.3 + Math.sin(t * 2) * 0.08); additive(false);
+    for (let i = 0; i < 6; i++) {                          // six ice crystals standing out round it
+      const a = -t * 0.25 + i * TAU / 6 - Math.PI / 2, ca = Math.cos(a), sa = Math.sin(a), r0 = 16, r1 = 25.5, rm = 20, w = 2.8;
+      ctx.beginPath(); ctx.moveTo(x + ca * r0, y + sa * r0); ctx.lineTo(x + ca * rm - sa * w, y + sa * rm + ca * w);
+      ctx.lineTo(x + ca * r1, y + sa * r1); ctx.lineTo(x + ca * rm + sa * w, y + sa * rm - ca * w); ctx.closePath();
+      ctx.fillStyle = hexA(ice, 0.85); ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = c; ctx.stroke();
+      const tw2 = 0.5 + 0.5 * Math.sin(t * 3 + i * 1.7), b = a + Math.PI / 6;          // a glint between each pair
+      starPath(x + Math.cos(b) * 20, y + Math.sin(b) * 20, 1.6 + tw2 * 2.2, 0.6, 4, 0); ctx.fillStyle = hexA('#ffffff', 0.35 + tw2 * 0.6); ctx.fill();
+    }
+    for (let i = 0; i < 5; i++) {                          // snow drifting outwards
+      const ph = (t * 0.35 + i / 5) % 1, a = i * 1.3 + t * 0.3, rr = 12 + ph * 11;
+      ctx.beginPath(); ctx.arc(x + Math.cos(a) * rr, y + Math.sin(a) * rr, 1.3, 0, TAU); ctx.fillStyle = hexA('#ffffff', Math.sin(ph * Math.PI) * 0.9); ctx.fill();
+    }
+    starPath(x, y, 12.5 * s * k, 4.2 * s, 6, rot);
+    ctx.fillStyle = '#0b0a1a'; ctx.fill(); ctx.fillStyle = hexA(c, 0.3); ctx.fill(); neon(c, 2);
+    ctx.beginPath(); ctx.lineCap = 'round';
+    for (let i = 0; i < 6; i++) {                          // crystal branches on every arm
+      const a = rot + i * TAU / 6 - Math.PI / 2, bx = x + Math.cos(a) * 7.5 * s, by = y + Math.sin(a) * 7.5 * s;
+      for (const sd of [-0.8, 0.8]) { ctx.moveTo(bx, by); ctx.lineTo(bx + Math.cos(a + sd) * 3.6 * s, by + Math.sin(a + sd) * 3.6 * s); }
+    }
+    ctx.lineWidth = 1.3; ctx.strokeStyle = ice; ctx.stroke(); ctx.lineCap = 'butt';
+    polyPath(x, y, 4.2 * s, 6, rot); ctx.fillStyle = ice; ctx.fill();
+    additive(true); glow(x, y, 9, '#ffffff', 0.7); additive(false);
+  } else if (l4 && type === 'emp') {                   // v48 level 4: a tesla pentagon, five charged nodes with arcs crackling between them
+    additive(true); glow(x, y, 32, c, 0.3 + (o.kick || 0) * 0.4); additive(false);
+    const nodes = [];
+    for (let i = 0; i < 5; i++) { const a = t * 0.3 + i * TAU / 5 - Math.PI / 2; nodes.push([x + Math.cos(a) * 19.5, y + Math.sin(a) * 19.5]); }
+    additive(true); ctx.lineWidth = 1.5;
+    for (let i = 0; i < 5; i++) {                          // arcs between neighbouring nodes, flickering brighter and dimmer
+      const [x1, y1] = nodes[i], [x2, y2] = nodes[(i + 1) % 5];
+      ctx.strokeStyle = hexA('#b8d0ff', Math.sin(t * 9 + i * 2.1) > -0.2 ? 0.9 : 0.3);
+      ctx.beginPath(); ctx.moveTo(x1, y1);
+      for (let j = 1; j < 4; j++) { const f = j / 4; ctx.lineTo(x1 + (x2 - x1) * f + Math.sin(t * 40 + i * 3 + j * 5) * 2.2, y1 + (y2 - y1) * f + Math.cos(t * 37 + i * 2 + j * 4) * 2.2); }
+      ctx.lineTo(x2, y2); ctx.stroke();
+    }
+    additive(false);
+    for (const [nx2, ny2] of nodes) {
+      ctx.beginPath(); ctx.arc(nx2, ny2, 2.4, 0, TAU); ctx.fillStyle = '#0b0a1a'; ctx.fill(); ctx.lineWidth = 1.4; ctx.strokeStyle = c; ctx.stroke();
+      ctx.beginPath(); ctx.arc(nx2, ny2, 1.1, 0, TAU); ctx.fillStyle = '#e8f0ff'; ctx.fill();
+    }
+    polyPath(x, y, 11.5 * s * k, 5, t * 0.3);
+    ctx.fillStyle = '#0b0a1a'; ctx.fill(); ctx.fillStyle = hexA(c, 0.3); ctx.fill(); neon(c, 2);
+    for (let i = 0; i < 3; i++) {                          // two coils turning opposite ways
+      const a = t * 3 + i * TAU / 3, b = -t * 4.5 + i * TAU / 3;
+      ctx.beginPath(); ctx.arc(x, y, 8.2 * s, a, a + 1.1); ctx.lineWidth = 1.8; ctx.strokeStyle = '#b8d0ff'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, 5 * s, b, b + 0.9); ctx.lineWidth = 1.3; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+    }
+    additive(true); glow(x, y, 12 + (o.kick || 0) * 16, '#b8d0ff', 0.9); additive(false);
+    ctx.beginPath(); ctx.arc(x, y, 2.4 + Math.sin(t * 8) * 0.6, 0, TAU); ctx.fillStyle = '#ffffff'; ctx.fill();
+  } else if (l4 && type === 'mint') {                  // v48 level 4: a gold treasury, six coins flipping round a stamped hex
+    if (o.charge != null) {
+      ctx.beginPath(); ctx.arc(x, y, 15.5 * s, -Math.PI / 2, -Math.PI / 2 + TAU * o.charge);
+      ctx.lineWidth = 2.2; ctx.strokeStyle = hexA(c, 0.35 + 0.6 * o.charge); ctx.stroke();
+    }
+    additive(true); glow(x, y, 34, c, 0.3 + Math.sin(t * 2.2) * 0.08); additive(false);
+    for (let i = 0; i < 6; i++) {                          // the coins, each flipping as it goes round
+      const a = t * 0.6 + i * TAU / 6, cx2 = x + Math.cos(a) * 20.5, cy2 = y + Math.sin(a) * 20.5, fl = Math.abs(Math.cos(t * 2.4 + i * 1.1));
+      ctx.beginPath(); ctx.ellipse(cx2, cy2, Math.max(0.7, 3.2 * fl), 3.2, 0, 0, TAU);
+      ctx.fillStyle = fl > 0.5 ? c : '#b8860b'; ctx.fill(); ctx.lineWidth = 0.9; ctx.strokeStyle = '#fff3b0'; ctx.stroke();
+    }
+    polyPath(x, y, 12 * s * k, 6, t * 0.4);
+    ctx.fillStyle = '#2a1e02'; ctx.fill();
+    if (o.vault != null) { mintVault(x, y, 12 * s * k, t * 0.4, o.vault, t); polyPath(x, y, 12 * s * k, 6, t * 0.4); }
+    else { ctx.fillStyle = hexA(c, 0.3); ctx.fill(); }
+    neon(o.vault != null && o.vault < 0.25 && Math.sin(t * 10) > 0 ? '#ff8a96' : c, 2.2);
+    polyPath(x, y, 8.6 * s, 6, -t * 0.4 + Math.PI / 6); ctx.lineWidth = 1; ctx.strokeStyle = hexA('#fff3b0', 0.7); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, 5.6 * s, 0, TAU); ctx.fillStyle = hexA(c, 0.95); ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = '#fff3b0'; ctx.stroke();
+    starPath(x, y, 3.3 * s, 1.4 * s, 5, 0); ctx.fillStyle = '#8a6400'; ctx.fill();
+    const gl = (t * 0.7) % 1;
+    ctx.save(); ctx.beginPath(); ctx.arc(x, y, 5.6 * s, 0, TAU); ctx.clip();
+    ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.fillRect(x - 7 + gl * 14, y - 7, 2.5, 14); ctx.restore();
+    for (let i = 0; i < 3; i++) {                          // sparkles popping up round it
+      const ph = (t * 0.8 + i / 3) % 1, n = Math.floor(t * 0.8 + i / 3), a = i * 2.4 + n * 1.7, sz = Math.sin(ph * Math.PI) * 3.4;
+      if (sz < 0.4) continue;
+      starPath(x + Math.cos(a) * 13.5, y + Math.sin(a) * 13.5, sz, sz * 0.28, 4, 0); ctx.fillStyle = '#fffbe6'; ctx.fill();
+    }
+  } else if (l4 && type === 'prism') {                 // v48 level 4: a compass star that splits its light into three colours
+    const heat = o.heat || 0, cols = ['#5ce1ff', '#fff36a', '#ff5cf0'];
+    ctx.beginPath(); ctx.arc(x, y, 19.5, 0, TAU); ctx.lineWidth = 1; ctx.strokeStyle = hexA(c, 0.45); ctx.stroke();
+    additive(true); glow(x, y, 18 + heat * 12, c, 0.38 + heat * 0.5);
+    for (let i = 0; i < 3; i++) {                          // the split light: three rays out to three coloured shards
+      const a = t * 1.1 + i * TAU / 3;
+      ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * 9, y + Math.sin(a) * 9); ctx.lineTo(x + Math.cos(a) * 19.5, y + Math.sin(a) * 19.5);
+      ctx.lineWidth = 1.3; ctx.strokeStyle = hexA(cols[i], 0.5 + heat * 0.4); ctx.stroke();
+      glow(x + Math.cos(a) * 19.5, y + Math.sin(a) * 19.5, 8, cols[i], 0.75);
+    }
+    additive(false);
+    for (let i = 0; i < 3; i++) {
+      const a = t * 1.1 + i * TAU / 3;
+      polyPath(x + Math.cos(a) * 19.5, y + Math.sin(a) * 19.5, 4.2, 3, a + Math.PI / 2); ctx.fillStyle = cols[i]; ctx.fill(); ctx.lineWidth = 0.8; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+    }
+    starPath(x, y, 12.5 * s * k, 4.6 * s, 4, aim + Math.PI / 4);
+    ctx.fillStyle = '#0b0a1a'; ctx.fill(); ctx.fillStyle = hexA(c, 0.3 + heat * 0.3); ctx.fill(); neon(c, 2);
+    starPath(x, y, 8.5 * s, 3 * s, 4, aim);
+    ctx.fillStyle = hexA('#ffffff', 0.16 + heat * 0.3); ctx.fill(); ctx.lineWidth = 1.1; ctx.strokeStyle = hexA('#ffd6fb', 0.9); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, 2.8 + heat * 1.8, 0, TAU); ctx.fillStyle = '#ffffff'; ctx.fill();
+  } else if (l4 && type === 'rail') {                  // v48 level 4: longer rails wrapped in coils that charge toward the muzzle
+    const back = (o.kick || 0) * 5, nx = -ay, ny = ax;
+    ctx.beginPath();                                       // the corners of a targeting frame, squared to the line
+    for (const [u, v] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      const qx = x + ax * u * 18.5 + nx * v * 18.5, qy = y + ay * u * 18.5 + ny * v * 18.5;
+      ctx.moveTo(qx - ax * u * 6.5, qy - ay * u * 6.5); ctx.lineTo(qx, qy); ctx.lineTo(qx - nx * v * 6.5, qy - ny * v * 6.5);
+    }
+    ctx.lineCap = 'round'; ctx.lineWidth = 2.2; ctx.strokeStyle = hexA(c, 0.75 + Math.sin(t * 4) * 0.2); ctx.stroke(); ctx.lineCap = 'butt';
+    additive(true); glow(x + ax * 21, y + ay * 21, 10, c, 0.45 + Math.sin(t * 5) * 0.2 + (o.kick || 0) * 0.5); additive(false);
+    for (const sd of [-1, 1]) {                            // fins at the back
+      ctx.beginPath(); ctx.moveTo(x + nx * sd * 4 - ax * 2, y + ny * sd * 4 - ay * 2); ctx.lineTo(x + nx * sd * 11 - ax * 10, y + ny * sd * 11 - ay * 10);
+      ctx.lineTo(x + nx * sd * 4 - ax * 9, y + ny * sd * 4 - ay * 9); ctx.closePath();
+      ctx.fillStyle = '#0b0a1a'; ctx.fill(); ctx.fillStyle = hexA(c, 0.3); ctx.fill(); neon(c, 1.3);
+    }
+    ctx.lineCap = 'round';
+    for (const sd of [-3, 3]) {
+      ctx.beginPath();
+      ctx.moveTo(x + nx * sd - ax * back, y + ny * sd - ay * back);
+      ctx.lineTo(x + nx * sd + ax * (21 - back) * s, y + ny * sd + ay * (21 - back) * s);
+      neon(c, 2.4);
+    }
+    for (let i = 0; i < 3; i++) {                          // coils: a light runs along them toward the muzzle
+      const d2 = 8 + i * 5 - back, lit = (((t * 2.5 - i / 3) % 1) + 1) % 1 < 0.34;
+      ctx.beginPath(); ctx.moveTo(x - nx * 5 + ax * d2, y - ny * 5 + ay * d2); ctx.lineTo(x + nx * 5 + ax * d2, y + ny * 5 + ay * d2);
+      ctx.lineWidth = 2.6; ctx.strokeStyle = lit ? '#eaffef' : hexA(c, 0.7); ctx.stroke();
+      if (lit) { additive(true); glow(x + ax * d2, y + ay * d2, 8, c, 0.7); additive(false); }
+    }
+    ctx.lineCap = 'butt';
+    polyPath(x, y, 8.5 * s * k, 4, aim + Math.PI / 4);
+    ctx.fillStyle = '#0b0a1a'; ctx.fill(); ctx.fillStyle = hexA(c, 0.35); ctx.fill(); neon(c, 2);
+    ctx.beginPath(); ctx.arc(x, y, 2.6, 0, TAU); ctx.fillStyle = '#eaffef'; ctx.fill();
+  } else if (l4 && type === 'beacon') {                // v48 level 4: a lighthouse, two beams sweeping round and chase lights on a ring
+    additive(true);
+    for (const off of [0, Math.PI]) {
+      const a = t * 1.6 + off, g = ctx.createRadialGradient(x, y, 4, x, y, 31);
+      g.addColorStop(0, hexA(c, 0.7)); g.addColorStop(1, hexA(c, 0));
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, 31, a - 0.26, a + 0.26); ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+    }
+    glow(x, y, 30, c, 0.3);
+    additive(false);
+    for (const p of [(t * 0.8) % 1, (t * 0.8 + 0.5) % 1]) {
+      ctx.beginPath(); ctx.arc(x, y, 7 + p * 14, 0, TAU); ctx.lineWidth = 1.5; ctx.strokeStyle = hexA(c, 0.7 * (1 - p)); ctx.stroke();
+    }
+    const lit = Math.floor(t * 10) % 8;
+    for (let i = 0; i < 8; i++) {                          // chase lights
+      const a = i * TAU / 8 + Math.PI / 8, on = i === lit || i === (lit + 4) % 8;
+      ctx.beginPath(); ctx.arc(x + Math.cos(a) * 19.5, y + Math.sin(a) * 19.5, on ? 2.3 : 1.4, 0, TAU); ctx.fillStyle = on ? '#ffffff' : hexA(c, 0.55); ctx.fill();
+    }
+    polyPath(x, y, 10.5 * s * k, 8, Math.PI / 8);
+    ctx.fillStyle = '#0b0a1a'; ctx.fill(); ctx.fillStyle = hexA(c, 0.2); ctx.fill(); neon(c, 2);
+    starPath(x, y, 7.5 * s, 3 * s, 8, t * 0.5); ctx.fillStyle = hexA('#ffffff', 0.22); ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = hexA('#ffffff', 0.8); ctx.stroke();
+    additive(true); glow(x, y, 12, '#ffffff', 0.8); additive(false);
+    ctx.beginPath(); ctx.arc(x, y, 3.4 + Math.sin(t * 4) * 0.9, 0, TAU); ctx.fillStyle = '#ffffff'; ctx.fill();
+  } else if (l4 && type === 'flak') {                  // v48 level 4: a quad battery under a radar sweep
+    const sw = t * 2.6;
+    ctx.beginPath(); ctx.arc(x, y, 19.5, 0, TAU); ctx.lineWidth = 1.6; ctx.strokeStyle = hexA(c, 0.75); ctx.stroke();
+    additive(true); glow(x, y, 30, c, 0.25);
+    for (let i = 0; i < 6; i++) {                          // the sweep and its fading trail
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, 19.5, sw - (i + 1) * 0.13, sw - i * 0.13); ctx.closePath();
+      ctx.fillStyle = hexA(c, 0.24 * (1 - i / 6)); ctx.fill();
+    }
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(sw) * 19.5, y + Math.sin(sw) * 19.5); ctx.lineWidth = 1.4; ctx.strokeStyle = hexA('#ffe4e0', 0.8); ctx.stroke();
+    additive(false);
+    for (let i = 0; i < 4; i++) {                          // blips: each one flares as the sweep passes it
+      const a = i * TAU / 4 + Math.PI / 4, lag = (((sw - a) % TAU) + TAU) % TAU, hot = Math.max(0, 1 - lag / 1.6);
+      ctx.beginPath(); ctx.arc(x + Math.cos(a) * 19.5, y + Math.sin(a) * 19.5, 1.6 + hot * 1.4, 0, TAU); ctx.fillStyle = hot > 0.1 ? '#ffffff' : '#ffe4e0'; ctx.fill();
+    }
+    const nx = -ay, ny = ax;
+    for (const sd of [-5.4, -1.8, 1.8, 5.4]) {
+      const back = (o.kick || 0) * (Math.abs(sd) < 3 ? 3 : 1.5);
+      ctx.beginPath();
+      ctx.moveTo(x + nx * sd - ax * back, y + ny * sd - ay * back);
+      ctx.lineTo(x + nx * sd + ax * (14.5 - back) * s, y + ny * sd + ay * (14.5 - back) * s);
+      ctx.lineCap = 'round'; ctx.lineWidth = 4 * s; ctx.strokeStyle = '#0b0a1a'; ctx.stroke(); neon(c, 2.3 * s); ctx.lineCap = 'butt';
+    }
+    shapePath(x, y, 10.5 * s * k, 3, false, aim + Math.PI / 2);
+    ctx.fillStyle = '#0b0a1a'; ctx.fill(); ctx.fillStyle = hexA(c, 0.3); ctx.fill(); neon(c, 2);
+    additive(true); glow(x, y, 10, c, 0.7); additive(false);
+    ctx.beginPath(); ctx.arc(x, y, 3, 0, TAU); ctx.fillStyle = '#ffe4e0'; ctx.fill();
+  } else if (l4 && type === 'pyro') {                  // v48 level 4: an inferno, a double flame that flickers with embers rising off it
+    for (let i = 0; i < 7; i++) {                          // embers
+      const ph = (t * 0.7 + i / 7) % 1, ex = x + Math.sin(i * 2.3 + t * 1.3) * (6 + i * 1.6), ey = y + 8 - ph * 32;
+      additive(true); glow(ex, ey, 5, i % 2 ? '#ffb347' : '#ff4a12', (1 - ph) * 0.8); additive(false);
+      ctx.beginPath(); ctx.arc(ex, ey, 1.6 * (1 - ph) + 0.4, 0, TAU); ctx.fillStyle = hexA(i % 2 ? '#ffe08a' : '#ffb347', 1 - ph); ctx.fill();
+    }
+    additive(true); glow(x, y, 34, c, 0.3 + Math.sin(t * 7) * 0.06); additive(false);
+    for (let i = 0; i < 8; i++) {                          // a ring of flame tongues licking outwards
+      const a = i * TAU / 8 + t * 0.4, ca = Math.cos(a), sa = Math.sin(a), fl = 0.7 + 0.3 * Math.sin(t * 11 + i * 1.9), r0 = 16.5, r1 = r0 + 8.5 * fl, w = 2.9;
+      ctx.beginPath(); ctx.moveTo(x + ca * r0 - sa * w, y + sa * r0 + ca * w);
+      ctx.quadraticCurveTo(x + ca * (r0 + 4) - sa * w, y + sa * (r0 + 4) + ca * w, x + ca * r1, y + sa * r1);
+      ctx.quadraticCurveTo(x + ca * (r0 + 4) + sa * w, y + sa * (r0 + 4) - ca * w, x + ca * r0 + sa * w, y + sa * r0 - ca * w); ctx.closePath();
+      ctx.fillStyle = hexA(i % 2 ? '#ffb347' : c, 0.9); ctx.fill();
+    }
+    const back = (o.kick || 0) * 3;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + ax * (14 - back) * s, y + ay * (14 - back) * s);
+    ctx.lineCap = 'round'; ctx.lineWidth = 7 * s; ctx.strokeStyle = '#0b0a1a'; ctx.stroke(); neon(c, 4 * s); ctx.lineCap = 'butt';
+    additive(true); glow(x + ax * 15, y + ay * 15, 7 + (o.kick || 0) * 8, '#ffb347', 0.6 + (o.kick || 0) * 0.4); additive(false);
+    const flame = (h, w2, dy) => {
+      ctx.beginPath(); ctx.moveTo(x, y + dy - h); ctx.quadraticCurveTo(x + w2, y + dy - 2 * s, x + w2 * 0.6, y + dy + 8 * s);
+      ctx.quadraticCurveTo(x, y + dy + 11 * s, x - w2 * 0.6, y + dy + 8 * s); ctx.quadraticCurveTo(x - w2, y + dy - 2 * s, x, y + dy - h); ctx.closePath();
+    };
+    flame(13.5 * s * k * (1 + Math.sin(t * 9) * 0.05), 11 * s, 0);
+    ctx.fillStyle = '#0b0a1a'; ctx.fill(); ctx.fillStyle = hexA(c, 0.32); ctx.fill(); neon(c, 2);
+    flame(8 * s * (1 + Math.sin(t * 12 + 1) * 0.08), 6.5 * s, 2.5 * s);
+    ctx.fillStyle = hexA('#ffb347', 0.45); ctx.fill(); ctx.lineWidth = 1.2; ctx.strokeStyle = '#ffe08a'; ctx.stroke();
+    additive(true); glow(x, y + 3, 14, '#ffb347', 0.6 + (o.kick || 0) * 0.4); additive(false);
+    ctx.beginPath(); ctx.arc(x, y + 3, 2.4 + Math.sin(t * 18) * 0.5, 0, TAU); ctx.fillStyle = '#fff4d0'; ctx.fill();
+  } else if (l4 && type === 'tide') {                  // v48 level 4: a maelstrom, spiral currents and bubbles circling the drop
+    additive(true); glow(x, y, 30, c, 0.3 + Math.sin(t * 2) * 0.06); additive(false);
+    ctx.beginPath(); ctx.arc(x, y, 21, 0, TAU); ctx.lineWidth = 1.2; ctx.strokeStyle = hexA(c, 0.4); ctx.stroke();
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 3; i++) {                          // three spiral currents turning round it
+      const a0 = -t * 1.8 + i * TAU / 3;
+      for (let j = 0; j < 8; j++) {
+        const u0 = j / 8, u1 = (j + 1) / 8;
+        ctx.beginPath(); ctx.moveTo(x + Math.cos(a0 + u0 * 2.2) * (13 + u0 * 11), y + Math.sin(a0 + u0 * 2.2) * (13 + u0 * 11));
+        ctx.lineTo(x + Math.cos(a0 + u1 * 2.2) * (13 + u1 * 11), y + Math.sin(a0 + u1 * 2.2) * (13 + u1 * 11));
+        ctx.lineWidth = 2.8 - u0 * 1.8; ctx.strokeStyle = hexA(j < 4 ? '#d8fff6' : c, 0.95 * (1 - u0 * 0.7)); ctx.stroke();
+      }
+    }
+    for (let i = 0; i < 5; i++) {                          // bubbles
+      const a = t * 1.2 + i * TAU / 5, rr = 17.5 + Math.sin(t * 3 + i) * 2.5;
+      ctx.beginPath(); ctx.arc(x + Math.cos(a) * rr, y + Math.sin(a) * rr, 1.5 + (i % 2) * 0.7, 0, TAU);
+      ctx.fillStyle = hexA(c, 0.3); ctx.fill(); ctx.lineWidth = 0.9; ctx.strokeStyle = '#d8fff6'; ctx.stroke();
+    }
+    const back = (o.kick || 0) * 3;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + ax * (14 - back) * s, y + ay * (14 - back) * s);
+    ctx.lineWidth = 6 * s; ctx.strokeStyle = '#0b0a1a'; ctx.stroke(); neon(c, 3.4 * s); ctx.lineCap = 'butt';
+    const h = 12.5 * s * k;
+    ctx.beginPath(); ctx.moveTo(x, y - h); ctx.bezierCurveTo(x + 10 * s, y - 1 * s, x + 9 * s, y + 10 * s, x, y + 10 * s);
+    ctx.bezierCurveTo(x - 9 * s, y + 10 * s, x - 10 * s, y - 1 * s, x, y - h); ctx.closePath();
+    ctx.fillStyle = '#0b0a1a'; ctx.fill(); ctx.fillStyle = hexA(c, 0.32); ctx.fill(); neon(c, 2);
+    ctx.beginPath(); ctx.moveTo(x - 2.5 * s, y - 5 * s); ctx.bezierCurveTo(x - 5 * s, y - 1 * s, x - 5 * s, y + 3 * s, x - 2 * s, y + 5 * s);
+    ctx.lineWidth = 1.4; ctx.strokeStyle = hexA('#ffffff', 0.6); ctx.stroke();       // a highlight on the drop
+    for (const k2 of [0, 1]) {
+      const wv = Math.sin(t * 3 + k2 * 1.6) * 1.5, yy = y + 2.5 + k2 * 3.5;
+      ctx.beginPath(); ctx.moveTo(x - 5 * s, yy + wv); ctx.quadraticCurveTo(x, yy - 2.5 - wv, x + 5 * s, yy + wv);
+      ctx.lineWidth = 1.5; ctx.strokeStyle = k2 ? hexA('#d8fff6', 0.6) : '#d8fff6'; ctx.stroke();
+    }
   } else if (type === 'bolt') {
     const back = (o.kick || 0) * 3;
     ctx.beginPath(); ctx.moveTo(x - ax * back, y - ay * back); ctx.lineTo(x + ax * (14 - back) * s, y + ay * (14 - back) * s);
@@ -2107,7 +2407,10 @@ function drawTowerGlyph(type, x, y, o) {
       ctx.lineWidth = 2.2; ctx.strokeStyle = hexA(c, 0.35 + 0.6 * o.charge); ctx.stroke();
     }
     polyPath(x, y, 10 * s * k, 6, t * 0.4);
-    ctx.fillStyle = '#2a1e02'; ctx.fill(); ctx.fillStyle = hexA(c, 0.25); ctx.fill(); neon(c, 2);
+    ctx.fillStyle = '#2a1e02'; ctx.fill();
+    if (o.vault != null) { mintVault(x, y, 10 * s * k, t * 0.4, o.vault, t); polyPath(x, y, 10 * s * k, 6, t * 0.4); }
+    else { ctx.fillStyle = hexA(c, 0.25); ctx.fill(); }
+    neon(o.vault != null && o.vault < 0.25 && Math.sin(t * 10) > 0 ? '#ff8a96' : c, 2);
     ctx.beginPath(); ctx.arc(x, y, 4.5 * s, 0, TAU); ctx.fillStyle = hexA(c, 0.85); ctx.fill();
     const gl = (t * 0.7) % 1;
     ctx.save(); ctx.beginPath(); ctx.arc(x, y, 4.5 * s, 0, TAU); ctx.clip();
@@ -2157,9 +2460,48 @@ function drawTowerGlyph(type, x, y, o) {
     const wv = Math.sin(t * 3) * 1.5;
     ctx.beginPath(); ctx.moveTo(x - 5 * s, y + 3 + wv); ctx.quadraticCurveTo(x, y + 0.5 - wv, x + 5 * s, y + 3 + wv);
     ctx.lineWidth = 1.6; ctx.strokeStyle = '#d8fff6'; ctx.stroke();
+  } else if (type === 'lance') {                        // v48: LANCE, a long thin barrel with a scope on a kite-shaped body
+    const de = l4, back = (o.kick || 0) * 4, nx = -ay, ny = ax, bl = de ? 21 : 18, ac = de ? DEADEYE_RED : c;
+    if (de) {                                            // DEADEYE: a sniper's reticle turning round it
+      additive(true); glow(x, y, 34, DEADEYE_RED, 0.2 + Math.sin(t * 2.6) * 0.08); additive(false);
+      ctx.beginPath(); ctx.arc(x, y, 20, 0, TAU); ctx.lineWidth = 1.2; ctx.strokeStyle = hexA(c, 0.7); ctx.stroke();
+      ctx.beginPath();
+      for (let i = 0; i < 4; i++) { const a = t * 0.6 + i * TAU / 4; ctx.moveTo(x + Math.cos(a) * 15.5, y + Math.sin(a) * 15.5); ctx.lineTo(x + Math.cos(a) * 24, y + Math.sin(a) * 24); }
+      ctx.lineWidth = 2.2; ctx.strokeStyle = DEADEYE_RED; ctx.stroke();
+      for (let i = 0; i < 4; i++) { const a = t * 0.6 + i * TAU / 4 + Math.PI / 4; ctx.beginPath(); ctx.arc(x + Math.cos(a) * 20, y + Math.sin(a) * 20, 1.4, 0, TAU); ctx.fillStyle = '#ffd6de'; ctx.fill(); }
+    }
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x - ax * 9 * s, y - ay * 9 * s); ctx.lineTo(x, y);          // the stock
+    ctx.lineWidth = 4.6 * s; ctx.strokeStyle = '#0b0a1a'; ctx.stroke(); neon(c, 2.2 * s);
+    ctx.beginPath(); ctx.moveTo(x - ax * back, y - ay * back); ctx.lineTo(x + ax * (bl - back) * s, y + ay * (bl - back) * s);   // the barrel
+    ctx.lineWidth = 4.2 * s; ctx.strokeStyle = '#0b0a1a'; ctx.stroke(); neon(c, 2 * s);
+    const mx2 = x + ax * (bl - 1.5 - back) * s, my2 = y + ay * (bl - 1.5 - back) * s;   // a muzzle brake across the tip
+    ctx.beginPath(); ctx.moveTo(mx2 + nx * 3 * s, my2 + ny * 3 * s); ctx.lineTo(mx2 - nx * 3 * s, my2 - ny * 3 * s);
+    ctx.lineWidth = 2.3 * s; ctx.strokeStyle = ac; ctx.stroke();
+    if (de) { additive(true); glow(mx2, my2, 8, DEADEYE_RED, 0.6 + Math.sin(t * 6) * 0.2); additive(false); }
+    ctx.lineCap = 'butt';
+    const kk = s * k;                                     // the kite-shaped body, long along the aim
+    ctx.beginPath(); ctx.moveTo(x + ax * 8.5 * kk, y + ay * 8.5 * kk); ctx.lineTo(x + nx * 6.2 * kk, y + ny * 6.2 * kk);
+    ctx.lineTo(x - ax * 6.5 * kk, y - ay * 6.5 * kk); ctx.lineTo(x - nx * 6.2 * kk, y - ny * 6.2 * kk); ctx.closePath();
+    ctx.fillStyle = '#0b0a1a'; ctx.fill(); ctx.fillStyle = hexA(c, 0.3); ctx.fill(); neon(c, 1.8);
+    const so = 5.4 * s;                                   // the scope, mounted to one side
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x + nx * so + ax * s, y + ny * so + ay * s); ctx.lineTo(x + nx * so + ax * 9 * s, y + ny * so + ay * 9 * s);
+    ctx.lineWidth = 3.4 * s; ctx.strokeStyle = '#0b0a1a'; ctx.stroke(); neon(ac, 1.5 * s);
+    ctx.lineCap = 'butt';
+    ctx.beginPath(); ctx.arc(x + nx * so + ax * 9.5 * s, y + ny * so + ay * 9.5 * s, 1.3 * s, 0, TAU); ctx.fillStyle = '#ffffff'; ctx.fill();
+    if (de) {                                             // the eye: an almond with a red pupil looking down the barrel
+      ctx.save(); ctx.translate(x, y); ctx.rotate(aim + Math.PI / 2);
+      ctx.beginPath(); ctx.moveTo(-5.2 * s, 0); ctx.quadraticCurveTo(0, -4 * s, 5.2 * s, 0); ctx.quadraticCurveTo(0, 4 * s, -5.2 * s, 0); ctx.closePath();
+      ctx.fillStyle = '#1a0610'; ctx.fill(); ctx.lineWidth = 1.1; ctx.strokeStyle = '#ffd6de'; ctx.stroke();
+      additive(true); glow(0, -0.6 * s, 7, DEADEYE_RED, 0.9); additive(false);
+      ctx.beginPath(); ctx.arc(0, -0.6 * s, 1.9 * s, 0, TAU); ctx.fillStyle = DEADEYE_RED; ctx.fill();
+      ctx.beginPath(); ctx.arc(0.6 * s, -1.3 * s, 0.6 * s, 0, TAU); ctx.fillStyle = '#ffffff'; ctx.fill();
+      ctx.restore();
+    } else { ctx.beginPath(); ctx.arc(x, y, 2 + lv * 0.4, 0, TAU); ctx.fillStyle = '#f3e8ff'; ctx.fill(); }
   }
-  // LV3: orbiting shards
-  if (lv >= 2 && !master && !wire && !sn) {
+  // LV3: orbiting shards (level 4 has its own look instead)
+  if (lv === 2) {
     for (let i = 0; i < 3; i++) {
       const a = t * 1.8 + i * TAU / 3, ox = x + Math.cos(a) * 19, oy = y + Math.sin(a) * 19;
       polyPath(ox, oy, 3, 4, a); ctx.fillStyle = c; ctx.fill();
@@ -2217,16 +2559,7 @@ function drawTowerGlyph(type, x, y, o) {
     additive(false);
     for (const [ox, oy, a] of py) { polyPath(ox, oy, 3.4, 4, a); ctx.fillStyle = WIRE_BLUE; ctx.fill(); ctx.beginPath(); ctx.arc(ox, oy, 1.2, 0, TAU); ctx.fillStyle = '#ffffff'; ctx.fill(); }
   }
-  // LV4: a bright crown ring and a second, counter-turning set of shards
-  if (lv >= 3 && !master && !wire && !sn) {
-    additive(true); glow(x, y, 30, c, 0.25 + Math.sin(t * 3) * 0.08); additive(false);
-    ctx.beginPath(); ctx.arc(x, y, 23, 0, TAU); ctx.setLineDash([3, 4]); ctx.lineDashOffset = -t * 12;
-    ctx.lineWidth = 1.4; ctx.strokeStyle = hexA(c, 0.75); ctx.stroke(); ctx.setLineDash([]);
-    for (let i = 0; i < 3; i++) {
-      const a = -t * 1.3 + i * TAU / 3 + Math.PI / 3, ox = x + Math.cos(a) * 23, oy = y + Math.sin(a) * 23;
-      polyPath(ox, oy, 2.4, 4, a); ctx.fillStyle = '#ffffff'; ctx.fill();
-    }
-  }
+  // (v48: the generic level 4 crown ring is gone: every tower now has its own level 4 look, drawn above)
   // level pips
   if (!o.ghost) {
     for (let i = 0; i <= lv; i++) {
@@ -2237,6 +2570,16 @@ function drawTowerGlyph(type, x, y, o) {
   ctx.globalAlpha = pa;
 }
 
+// v48 VAULT MINTS: the gold left in a MINT's vault, shown as a level of molten gold inside its hex (it sloshes a little)
+function mintVault(x, y, r, rot, f, t) {
+  ctx.save(); polyPath(x, y, r, 6, rot); ctx.clip();
+  const top = y + r - 2 * r * f, wv = Math.sin(t * 3) * 1.2;
+  ctx.beginPath(); ctx.moveTo(x - r, top + wv); ctx.quadraticCurveTo(x, top - wv * 2, x + r, top + wv); ctx.lineTo(x + r, y + r); ctx.lineTo(x - r, y + r); ctx.closePath();
+  ctx.fillStyle = hexA('#ffd23d', 0.6); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x - r, top + wv); ctx.quadraticCurveTo(x, top - wv * 2, x + r, top + wv);
+  ctx.lineWidth = 1.2; ctx.strokeStyle = '#fff3b0'; ctx.stroke();
+  ctx.restore();
+}
 function drawCoin(x, y, r, a = 1) {
   const pa = ctx.globalAlpha;
   ctx.globalAlpha = pa * a;
@@ -2580,7 +2923,8 @@ const theme = () => THEMES[G.theme];
 const waveStat = w => G.waveStats[w] || (G.waveStats[w] = { alive: 0, toSpawn: 0, cleared: false });
 // v28 run analytics: what the player did this run (saved when the level ends; see recordRun)
 const newRun = () => ({ built: {}, ups: {}, sold: {}, burned: {}, spend: {}, dmg: {}, killBy: {}, waves: [], early: 0, earlyGold: 0,
-  refund: 0, g0: 0, peakGold: 0, peakTowers: 0, shields: 0, ignited: 0, doused: 0, lo: [], t0: Date.now(), recorded: false });
+  refund: 0, g0: 0, peakGold: 0, peakTowers: 0, shields: 0, ignited: 0, doused: 0, lo: [], t0: Date.now(), recorded: false,
+  mintGold: 0, dried: 0, executes: 0 });                                       // v48: MINT gold paid, MINTs run dry, DEADEYE finishes
 const bump = (o, k, v = 1) => { o[k] = (o[k] || 0) + v; };
 const tracking = () => !G.demo && !!G.run;
 const snd = (name, ...a) => { if (!G.demo || G.demoSound) Sound.play(name, ...a); };
@@ -2886,10 +3230,10 @@ function drawReplayPill() {
 // --------------------------------------------------------------- towers
 function placeTower(type, c, r) {
   const tw = { type, c, r, x: c * TILE + TILE / 2, y: r * TILE + TILE / 2, lv: 0, cd: 0.3, aim: -Math.PI / 2,
-    kick: 0, spawn: 0, mode: 'first', spent: TOWERS[type].cost, retT: 0, target: null, idleT: rand(0, 2),
+    kick: 0, spawn: 0, mode: TOWERS[type].sniper ? 'strong' : 'first', spent: TOWERS[type].cost, retT: 0, target: null, idleT: rand(0, 2),
     buff: 0, heat: 0, beamT: null, acc: 0, accT: 0, dir: 1, tube: 0, zapT: 0, chillT: 0, hp: 100, burning: false };
   if (type === 'rail') { tw.dir = bestRailDir(c, r, TOWERS.rail.lv[0].range); tw.aim = railAngle(tw.dir); }
-  if (type === 'mint') tw.cd = TOWERS.mint.lv[0].every;
+  if (type === 'mint') { tw.cd = TOWERS.mint.lv[0].every; tw.vault = tw.vaultMax = MINT_VAULT * TOWERS.mint.cost; }
   G.towers.push(tw); G.grid[r * COLS + c] = tw; return tw;
 }
 
@@ -2934,16 +3278,37 @@ function fireRail(tw, victims) {
 }
 
 // ---- Mint: pulses out gold while a wave is running ----
+// v48 (user): VAULT MINTS, in the Playtest Lab first (a lab economy with vault:true). Each MINT holds a vault of MINT_VAULT x
+// the gold spent on it (its build plus every upgrade). Its pulses pay out of the vault at the usual speed; when the vault is
+// empty the MINT cracks and shatters (no refund) and its tile is free again. Selling one refunds the usual 70% times the share
+// still in its vault. Never on NO BOUNTY levels: there MINT is the only income. Returns true when the vault ran dry.
+const MINT_VAULT = 2.5;
+const vaultOn = () => !!(G.econ && G.econ.vault) && !G.noBounty;
 function mintPulse(tw) {
-  const L = TOWERS.mint.lv[tw.lv];
+  const L = TOWERS.mint.lv[tw.lv], vault = vaultOn() && tw.vault != null;
   tw.cd = L.every; tw.kick = 1;
-  const got = earn(L.gold);
+  let got;
+  if (vault && tw.vault <= L.gold * ECON.goldRate + 1e-6) { got = Math.max(0, Math.round(tw.vault)); gain(got); tw.vault = 0; }   // the last of it
+  else { got = earn(L.gold); if (vault) tw.vault -= got; }
+  if (tracking()) G.run.mintGold += got;
   FX.ring(tw.x, tw.y, 8, 42, '#ffd23d', 0.55, 3);
   FX.ring(tw.x, tw.y, 4, 24, '#fff3b0', 0.35, 1.5);
   FX.flash(tw.x, tw.y, 42, '#ffd23d', 0.22);
   FX.text(tw.x, tw.y - 22, `+${got}`, '#ffe38a', 13, { font: FONT_D, life: 0.9 });
   spawnCoins(tw.x, tw.y, 2 + tw.lv);
   snd('mint');
+  return vault && tw.vault <= 0;
+}
+// v48 VAULT MINTS: an empty MINT cracks open in a burst of gold and is gone (no refund); the tile is free again
+function mintDry(tw) {
+  const i = G.towers.indexOf(tw); if (i < 0) return;
+  G.towers.splice(i, 1); G.grid[tw.r * COLS + tw.c] = null;
+  if (G.menu && G.menu.tw === tw) G.menu = null;
+  if (tracking()) G.run.dried = (G.run.dried || 0) + 1;
+  FX.text(tw.x, tw.y - 26, tr('vault_dry'), '#ffd23d', 12, { font: FONT_D, life: 1.2 });
+  FX.shatter(tw.x, tw.y, TOWERS.mint.color, 13, false); FX.shards(tw.x, tw.y, '#fff3b0', 12, 170, 3);
+  FX.ring(tw.x, tw.y, 8, 46, '#ffd23d', 0.45, 3); FX.flash(tw.x, tw.y, 50, '#ffd23d', 0.25);
+  addShake(0.15); snd('crack');
 }
 function buildTower(type, c, r) {
   const d = TOWERS[type];
@@ -2977,6 +3342,7 @@ function upgradeTower(tw) {
   const cost = upgradeCost(tw);
   if (cost == null || G.gold < cost) return false;
   G.gold -= cost; G.spent = (G.spent || 0) + cost; tw.lv++; tw.spent += cost; tw.kick = 1;
+  if (tw.vault != null) { tw.vault += MINT_VAULT * cost; tw.vaultMax += MINT_VAULT * cost; }   // v48: an upgrade tops the vault up
   recAct('u', { c: tw.c, r: tw.r, type: tw.type });
   if (tracking()) { bump(G.run.ups, tw.type); bump(G.run.spend, tw.type, cost); }
   const c = TOWERS[tw.type].color;
@@ -3001,6 +3367,17 @@ function upgradeTower(tw) {
       pts.push({ x: tw.x, y: tw.y }); FX.zap(pts, '#ffffff', 0.35); }
     G.flashA = Math.max(G.flashA || 0, 0.25); G.flashCol = '#fff7c8';
     addShake(0.25); snd('charge');
+  } else if (TOWERS[tw.type].lv[tw.lv].deadeye) {           // v48: LANCE becomes DEADEYE (a reticle snaps shut on it)
+    FX.text(tw.x, tw.y - 28, tr('deadeye'), DEADEYE_RED, 13, { font: FONT_D, life: 1.4 });
+    FX.ring(tw.x, tw.y, 72, 16, DEADEYE_RED, 0.45, 3); FX.ring(tw.x, tw.y, 10, 60, c, 0.55, 3.5);
+    for (let i = 0; i < 4; i++) { const a = i * TAU / 4; FX.line(tw.x + Math.cos(a) * 64, tw.y + Math.sin(a) * 64, tw.x + Math.cos(a) * 20, tw.y + Math.sin(a) * 20, DEADEYE_RED, 0.45, 3); }
+    FX.flash(tw.x, tw.y, 80, DEADEYE_RED, 0.3); FX.shards(tw.x, tw.y, c, 12, 170, 3);
+    addShake(0.25); snd('snipe', true);
+  } else if (tw.lv === 3) {                                   // v48: every other tower's level 4 look arrives with a bigger burst
+    FX.text(tw.x, tw.y - 28, tr('tower_lv', 4), c, 13, { font: FONT_D, life: 1.2 });
+    FX.ring(tw.x, tw.y, 12, 64, c, 0.55, 4); FX.ring(tw.x, tw.y, 6, 40, '#ffffff', 0.35, 2.5);
+    FX.flash(tw.x, tw.y, 70, c, 0.3); FX.shards(tw.x, tw.y, c, 12, 160, 3.2);
+    addShake(0.2);
   } else FX.text(tw.x, tw.y - 26, tr('tower_lv', tw.lv + 1), c, 12, { font: FONT_D, life: 0.9 });
   addShake(0.1); snd('upgrade'); vibrate(20);
   return true;
@@ -3014,7 +3391,10 @@ function earn(v, rate = ECON.goldRate) {
 function gain(v) { G.gold += v; G.earned = (G.earned || 0) + v; if (G.run && G.gold > G.run.peakGold) G.run.peakGold = G.gold; }
 // kills pay ECON.goldRate on campaign levels; a lab economy sets its own rate (0 on PAYDAY)
 const killRate = () => G.econ ? G.econ.bounty : ECON.goldRate;
-function sellValue(tw) { return Math.floor(tw.spent * (tw.burning ? FIRE.refund : ECON.sellRate)); }   // a burning tower is already lost: selling it only gets the burn-out refund
+function sellValue(tw) {
+  const vf = vaultOn() && tw.vault != null ? clamp(tw.vault / tw.vaultMax, 0, 1) : 1;      // v48 VAULT MINTS: only the share still in the vault
+  return Math.floor(tw.spent * (tw.burning ? FIRE.refund : ECON.sellRate) * vf);
+}   // a burning tower is already lost: selling it only gets the burn-out refund
 function sellTower(tw) {
   recAct('s', { c: tw.c, r: tw.r, type: tw.type });
   const v = sellValue(tw);
@@ -3034,7 +3414,7 @@ function inRange(tw, e, range) {
 }
 function findTarget(tw, range) {
   let best = null, bestV = -Infinity;
-  const air = !!TOWERS[tw.type].air, both = tw.type === 'emp';            // v44: EMP lasers reach flyers as well
+  const air = !!TOWERS[tw.type].air, both = tw.type === 'emp' || !!TOWERS[tw.type].hitsAir;   // v44: EMP lasers reach flyers as well; v48: so does LANCE
   for (const e of G.enemies) {
     if (!e.alive || e.age < 0.15 || (!both && !!e.rc.flying !== air) || !inRange(tw, e, range)) continue;
     if (tw.type === 'arc' && isLiveElec(e)) continue;                 // v42: electrified enemies are immune to ARC
@@ -3150,6 +3530,29 @@ function fire(tw, tg) {
     flameJet(mx, my, tg.x, tg.y);
     snd('flame');
   } else if (tw.type === 'tide') tideFire(tw);
+  else if (tw.type === 'lance') lanceFire(tw, tg, L, boost);
+}
+// v48: LANCE. The shot lands at once: a tracer from the barrel to the target, a muzzle flash and a spray of sparks.
+// DEADEYE (level 4): if the hit leaves a non-boss enemy under L.execute of its health, it shatters on the spot.
+function lanceFire(tw, tg, L, boost) {
+  const c = L.deadeye ? DEADEYE_RED : TOWERS.lance.color, ca = Math.cos(tw.aim), sa = Math.sin(tw.aim), bl = L.deadeye ? 21 : 18;
+  const bx = tw.x + ca * bl, by = tw.y + sa * bl, ty = tg.rc.flying ? tg.y - 5 : tg.y;
+  FX.line(bx, by, tg.x, ty, c, 0.32, 4.5); FX.line(bx, by, tg.x, ty, '#ffffff', 0.14, 1.6);
+  FX.flash(bx, by, 26, c, 0.14); FX.flash(tg.x, ty, 22, '#ffffff', 0.1);
+  FX.spark(tg.x, ty, c, 7, 240, 0.3);
+  for (let i = 0; i < 3; i++) FX.dot(bx, by, '#f3e8ff', 2, 0.3, ca * rand(20, 60) - sa * rand(-40, 40), sa * rand(20, 60) + ca * rand(-40, 40));
+  damage(tg, L.dmg * boost, { big: true });
+  if (L.execute && tg.alive && !tg.rc.boss && tg.hp <= L.execute * tg.maxHp) deadeyeShot(tg);
+  addShake(0.05); snd('snipe', !!L.deadeye);
+}
+function deadeyeShot(e) {
+  const ey = e.rc.flying ? e.y - 5 : e.y, r = e.rc.r;
+  FX.ring(e.x, ey, r + 18, r + 2, DEADEYE_RED, 0.3, 2.5);                          // the reticle snaps shut on it
+  for (let i = 0; i < 4; i++) { const a = i * TAU / 4 + Math.PI / 4; FX.line(e.x + Math.cos(a) * (r + 16), ey + Math.sin(a) * (r + 16), e.x + Math.cos(a) * (r + 3), ey + Math.sin(a) * (r + 3), DEADEYE_RED, 0.32, 2.5); }
+  FX.flash(e.x, ey, 34, DEADEYE_RED, 0.2);
+  credit(Math.max(0, e.hp)); e.hp = 0;
+  if (tracking()) G.run.executes = (G.run.executes || 0) + 1;
+  kill(e); snd('deadeye');
 }
 // v46: SUPERNOVA's spread shells. Each one goes where its small blast covers the most enemies that no shell of this volley
 // covers yet (ties: the spot farthest from the other impacts), so the volley reaches as many enemies as it can. Spots are
@@ -3751,7 +4154,7 @@ function update(dt) {
   }
   // towers
   computeBuffs();
-  let burnt = null;
+  let burnt = null, dried = null;
   for (const tw of G.towers) {
     DMG_SRC = tw.type;
     if (tw.burning) { tw.hp -= 100 / FIRE.burn * dt; if (tw.hp <= 0) { (burnt = burnt || []).push(tw); continue; } }
@@ -3763,7 +4166,7 @@ function update(dt) {
     const d = TOWERS[tw.type];
     if (d.eco) {
       if (G.awaiting || G.waveNum === 0 || G.demo) tw.cd += dt * rm;     // only pays while waves run
-      else if (tw.cd <= 0 && tw.spawn >= 1 && !off) mintPulse(tw);
+      else if (tw.cd <= 0 && tw.spawn >= 1 && !off && mintPulse(tw)) (dried = dried || []).push(tw);   // v48: an empty vault
       continue;
     }
     if (d.support) continue;
@@ -3805,6 +4208,7 @@ function update(dt) {
   DMG_SRC = null;
   updatePulses(dt);                                             // v40: LIVE WIRE pulses
   if (burnt) for (const tw of burnt) burnDown(tw);
+  if (dried) for (const tw of dried) mintDry(tw);
   // snowballs: arc over to their tower
   for (let i = G.snow.length - 1; i >= 0; i--) {
     const b = G.snow[i]; b.t += dt;
@@ -3976,7 +4380,8 @@ function drawWorld() {
   for (const tw of G.towers) {
     const sp = tw.spawn;
     const charge = tw.type === 'mint' && !G.awaiting && G.waveNum > 0 ? 1 - clamp(tw.cd / TOWERS.mint.lv[tw.lv].every, 0, 1) : null;
-    drawTowerGlyph(tw.type, tw.x, tw.y, { lv: tw.lv, aim: tw.aim, kick: tw.kick, t: G.time, heat: tw.heat, charge, scale: 1 + (1 - easeOut(sp)) * 0.8, alpha: Math.min(1, sp * 1.5) * (tw.zapT > 0 && tw.type !== 'arc' ? 0.3 : 1) });
+    const vault = tw.vault != null && vaultOn() ? clamp(tw.vault / tw.vaultMax, 0, 1) : null;      // v48 VAULT MINTS
+    drawTowerGlyph(tw.type, tw.x, tw.y, { lv: tw.lv, aim: tw.aim, kick: tw.kick, t: G.time, heat: tw.heat, charge, vault, scale: 1 + (1 - easeOut(sp)) * 0.8, alpha: Math.min(1, sp * 1.5) * (tw.zapT > 0 && tw.type !== 'arc' ? 0.3 : 1) });
     if (tw.buff > 0) { ctx.beginPath(); ctx.arc(tw.x + 12, tw.y - 12, 3, 0, TAU); ctx.fillStyle = '#f4f0ff'; ctx.fill(); }
     if (tw.zapT > 0 || tw.chillT > 0) drawTowerState(tw);
     if (tw.burning) drawBurning(tw);
@@ -4060,6 +4465,25 @@ function drawWorld() {
     glow(tg.x, tg.y, 12 + h * 12, c, 0.8);
   }
   ctx.lineCap = 'butt';
+  // v48: LANCE laser sights. A thin line from the barrel to the target that brightens as the next shot charges,
+  // and a reticle that closes in on the target until the shot lands
+  for (const tw of G.towers) {
+    if (tw.type !== 'lance' || tw.zapT > 0 || tw.spawn < 1) continue;
+    const tg = tw.target;
+    if (!tg || !tg.alive || !inRange(tw, tg, towerRange(tw))) continue;
+    const L = TOWERS.lance.lv[tw.lv], ch = 1 - clamp(tw.cd * L.rate, 0, 1), c = L.deadeye ? DEADEYE_RED : TOWERS.lance.color;
+    const bl = L.deadeye ? 21 : 18, bx = tw.x + Math.cos(tw.aim) * bl, by = tw.y + Math.sin(tw.aim) * bl, ty = tg.rc.flying ? tg.y - 5 : tg.y;
+    ctx.strokeStyle = c;
+    ctx.globalAlpha = 0.1 + 0.45 * ch * ch; ctx.lineWidth = 1 + ch;
+    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tg.x, ty); ctx.stroke();
+    const rr = tg.rc.r + 5 + 12 * (1 - ch), a0 = G.time * 1.5;
+    ctx.globalAlpha = 0.25 + 0.65 * ch; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(tg.x, ty, rr, 0, TAU); ctx.stroke();
+    ctx.beginPath();
+    for (let i = 0; i < 4; i++) { const a = a0 + i * TAU / 4; ctx.moveTo(tg.x + Math.cos(a) * (rr - 4), ty + Math.sin(a) * (rr - 4)); ctx.lineTo(tg.x + Math.cos(a) * (rr + 5), ty + Math.sin(a) * (rr + 5)); }
+    ctx.lineWidth = 2; ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
   // bolts
   for (const s of G.shots) {
     const n = Math.hypot(s.vx, s.vy) || 1, bx = s.x - s.vx / n * (s.crit ? 16 : 11), by = s.y - s.vy / n * (s.crit ? 16 : 11);
@@ -4658,6 +5082,7 @@ function drawTooltip(L, m) {
       if (d.lv[tw.lv + 1].master) { title = `${tr('master_bolt')}  ·  ${cost}`; color = MASTER_GOLD; }   // v36
       if (d.lv[tw.lv + 1].supernova) { const N4 = d.lv[tw.lv + 1]; title = `${tr('supernova')}  ·  ${cost}`; color = '#ffb347'; line2 = tr('supernova_line', Math.round(N4.extraDmg * 100)); }   // v46
       if (d.lv[tw.lv + 1].wire) { const W4 = d.lv[tw.lv + 1]; title = `${tr('live_wire')}  ·  ${cost}`; color = WIRE_BLUE; line2 = tr('wire_line', W4.rate, W4.chains, W4.trackDmg); }   // v37/v41
+      if (d.lv[tw.lv + 1].deadeye) { const D4 = d.lv[tw.lv + 1]; title = `${tr('deadeye')}  ·  ${cost}`; color = DEADEYE_RED; line2 = tr('deadeye_line', Math.round(D4.execute * 100), D4.range); }   // v48
       bad = G.gold < cost; line3 = bad ? tr('need_gold', cost - G.gold) : tr('letgo_upgrade');
     } else if (m.sel === 'turn') {
       title = tr('turn_to', ARROWS[(tw.dir + 1) % 4]);
@@ -4815,7 +5240,7 @@ function drawPause() {
 }
 
 const TIPS = {
-  glider: 'Gliders fly straight to your core. Only FLAK can bring them down. Build FLAK under the flight line.',
+  glider: 'Gliders fly straight to your core. Only FLAK and LANCE can bring them down. Build FLAK under the flight line.',
   nobounty: 'No Bounty level: enemies drop no gold. Build Mints early and upgrade them. They are your only income.',
   grunt: 'Build at bends in the path. One tower there covers two lanes.',
   scout: 'Darts are fast. Frost slows them so your towers get more shots.',
@@ -5170,6 +5595,7 @@ function runSummary(result) {
     board: G.towers.map(t => t.type + (t.lv + 1)), peakTowers: Math.max(R.peakTowers, G.towers.length),
     dmg: round(R.dmg), killBy: R.killBy, kills: G.kills, combo: G.bestCombo, leaks: G.leaks, leakTypes: round(G.leakTypes),
     early: R.early, earlyGold: R.earlyGold, shields: R.shields, ignited: R.ignited, doused: R.doused,
+    mintGold: Math.round(R.mintGold || 0), dried: R.dried || 0, executes: R.executes || 0,
     wv: R.waves.map(x => x.concat(Math.round((G.waveStats[x[0]] && G.waveStats[x[0]].leaked) || 0))),
     secs: Math.round((Date.now() - R.t0) / 1000), sim: Math.round(G.time),
   };
@@ -5224,7 +5650,7 @@ function runLines(r, label) {
     `lives leaked ${r.leaks}: ${countStr(r.leakTypes, ENAME)}`,
     `early calls ${r.early} (+${r.earlyGold} gold) · shields/domes broken ${r.shields} · towers set alight ${r.ignited} · fires put out ${r.doused}`,
     `waves (wave:gold/lives/towers at its start, -N lives leaked in it, e = called early): ${(r.wv || []).map(w => `${w[0]}:${w[1]}/${w[2]}/${w[3]}${w[5] ? '-' + w[5] : ''}${w[4] ? 'e' : ''}`).join(' ') || '-'}`,
-  ];
+  ].concat(r.mintGold || r.dried || r.executes ? [`MINT paid ${r.mintGold || 0} gold · MINTs run dry ${r.dried || 0} · DEADEYE finishes ${r.executes || 0}`] : []);
 }
 function labReport() {
   const labs = Save.d.lab || {}, out = [];
@@ -5232,7 +5658,7 @@ function labReport() {
   out.push('SHATTERLINE LAB ANALYTICS');
   out.push(`game ${BUILD} · sent ${fmtDate(Date.now())} · ${LAB.filter(labDone).length}/${LAB.length} labs completed · ${runs} run${runs === 1 ? '' : 's'} saved (last ${RUNS_PER_LAB} per lab)`);
   LAB.forEach((lv, i) => {
-    const r = labs[lv.n], d = lv.lab, econ = lv.econ.key === 'payday' ? 'PAYDAY' : `LEAN ${Math.round(lv.econ.bounty * 100)}%`;
+    const r = labs[lv.n], d = lv.lab, econ = lv.econ.key === 'payday' ? 'PAYDAY' : lv.econ.key === 'vault' ? `VAULT MINTS (kills ${Math.round(lv.econ.bounty * 100)}%)` : `LEAN ${Math.round(lv.econ.bounty * 100)}%`;
     out.push('');
     out.push(`== LAB ${i + 1} · ${STR.en['lab_name_' + d.id]} [${d.id}${d.v ? ' v' + d.v : ''}] · ${econ} · ${lv.waves.length} waves · start ${lv.gold} gold${labDone(lv) ? ' · COMPLETED' : ''}`);
     if (!r || (!r.plays && !(r.runs || []).length)) { out.push('not played yet'); return; }
@@ -5326,16 +5752,19 @@ function drawLab() {
     ctx.fillStyle = hexA(th.bg2, 0.55); ctx.fill();
     ctx.lineWidth = 1.5; ctx.strokeStyle = hexA(col, 0.9); ctx.stroke();
     ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    setFont(8.5, FONT_UI); spacing(1.5); ctx.fillStyle = hexA(col, 0.9); ctx.fillText(levelLabel(lv.n), x + 11, y + 14); spacing(0);
-    for (let k = 0; k < 3; k++) drawStar(x + bw - 44 + k * 15, y + 14, 5.5, rec && k < (rec.stars || 0));
-    fit(tr('lab_name_' + lv.lab.id), bw - 22, 14, FONT_D, 400); ctx.fillStyle = '#ffffff'; ctx.fillText(tr('lab_name_' + lv.lab.id), x + 11, y + 36);
+    // v48: with 14 labs the cards get shorter; then their four lines share the height evenly (plays join the result line)
+    const tall = bh >= 100, yL = tall ? y + 14 : y + bh * 0.16, yN = tall ? y + 36 : y + bh * 0.4, yE = tall ? y + 55 : y + bh * 0.63, yR = tall ? y + bh - 28 : y + bh * 0.85;
+    setFont(bh < 70 ? 7.5 : 8.5, FONT_UI); spacing(1.5); ctx.fillStyle = hexA(col, 0.9); ctx.fillText(levelLabel(lv.n), x + 11, yL); spacing(0);
+    for (let k = 0; k < 3; k++) drawStar(x + bw - 44 + k * 15, yL, bh < 70 ? 5 : 5.5, rec && k < (rec.stars || 0));
+    fit(tr('lab_name_' + lv.lab.id), bw - 22, tall ? 14 : Math.min(14, bh * 0.22), FONT_D, 400); ctx.fillStyle = '#ffffff'; ctx.fillText(tr('lab_name_' + lv.lab.id), x + 11, yN);
     // economy + wave count, then the last result
-    const econ = lv.econ.key === 'payday' ? condTag('payday') : `${condTag('lean')} ${Math.round(lv.econ.bounty * 100)}%`;
+    const econ = lv.econ.key === 'payday' || lv.econ.key === 'vault' ? condTag(lv.econ.key) : `${condTag('lean')} ${Math.round(lv.econ.bounty * 100)}%`;
     fit(`${econ}  ·  ${tr('lab_card_sub', lv.waves.length).split('·').pop().trim()}`, bw - 22, 8.5); ctx.fillStyle = '#ffe38a';
-    ctx.fillText(`${econ}  ·  ${tr('lab_card_sub', lv.waves.length).split('·').pop().trim()}`, x + 11, y + 55);
-    const L = rec && rec.last, res = !L ? tr('lab_never') : L.win ? tr('lab_won_s', L.lives, L.left) : tr('lab_lost_s', L.wave, L.waves);
-    fit(res, bw - 22, 8.5); ctx.fillStyle = L ? (L.win ? '#7dffb0' : '#ff8a96') : 'rgba(230,230,255,0.45)'; ctx.fillText(res, x + 11, y + bh - 28);
-    if (rec && rec.plays) { fit(tr('lab_plays', rec.wins, rec.plays), bw - 22, 8); ctx.fillStyle = 'rgba(230,230,255,0.5)'; ctx.fillText(tr('lab_plays', rec.wins, rec.plays), x + 11, y + bh - 13); }
+    ctx.fillText(`${econ}  ·  ${tr('lab_card_sub', lv.waves.length).split('·').pop().trim()}`, x + 11, yE);
+    const L = rec && rec.last, plays = rec && rec.plays ? tr('lab_plays', rec.wins, rec.plays) : null;
+    const res = (!L ? tr('lab_never') : L.win ? tr('lab_won_s', L.lives, L.left) : tr('lab_lost_s', L.wave, L.waves)) + (!tall && plays ? '  ·  ' + plays : '');
+    fit(res, bw - 22, 8.5); ctx.fillStyle = L ? (L.win ? '#7dffb0' : '#ff8a96') : 'rgba(230,230,255,0.45)'; ctx.fillText(res, x + 11, yR);
+    if (tall && plays) { fit(plays, bw - 22, 8); ctx.fillStyle = 'rgba(230,230,255,0.5)'; ctx.fillText(plays, x + 11, y + bh - 13); }
     if (labDone(lv)) {
       // seconds since this card's stamp started falling: 9 = long since stamped, -1 = still waiting
       const k = rec.stamped ? 9 : cardOpen ? -1 : lt - (0.45 + (queue++) * 0.6);
@@ -5639,6 +6068,9 @@ function conditionIcon(kind, x, y, color) {
     ctx.lineWidth = 1.8; ctx.strokeStyle = '#ff8a96'; ctx.stroke();
   } else if (kind === 'payday') {                      // a small stack of coins: wages
     for (let i = 0; i < 3; i++) drawCoin(x + (i - 1) * 3, y + 5 - i * 5, 6);
+  } else if (kind === 'vault') {                       // v48: a MINT hex half full of gold
+    polyPath(x, y, 9, 6, 0); ctx.fillStyle = '#2a1e02'; ctx.fill();
+    mintVault(x, y, 9, 0, 0.5, G.clock); polyPath(x, y, 9, 6, 0); neon('#ffd23d', 1.6);
   } else {
     drawGlyph(ENEMIES.glider, x, y + 3, { rot: 0, scale: 0.8, dir: -Math.PI / 2, t: G.clock });
   }
@@ -5743,7 +6175,16 @@ function drawCard(rdt) {
   else if (lv.hasIce) { info = tr('info_ice'); icol = '#c8f4ff'; }
   else if (lv.hasFire) { info = tr('info_fire'); icol = '#ff9a4d'; }
   else if (lv.hasShields && !lv.shielded) { info = tr('info_light'); icol = '#9fd6ff'; }
-  if (info) { setFont(10.5, FONT_UI, 500); ctx.fillStyle = icol; wrapText(info, cx, Y + 244, cw - 36, 13); }
+  if (info) {                                  // v48: a long note (like a new tower's text) gets a smaller font and starts higher,
+    setFont(10.5, FONT_UI, 500); ctx.fillStyle = icol;   // so up to 4 lines fit between the enemies and the loadout
+    let n = wrapLines(info, cw - 36).length;
+    if (n <= 2) wrapText(info, cx, Y + 244, cw - 36, 13);
+    else {
+      let fs = 10; setFont(fs, FONT_UI, 500); n = wrapLines(info, cw - 36).length;
+      while (n > 4 && fs > 8.5) { fs -= 0.5; setFont(fs, FONT_UI, 500); n = wrapLines(info, cw - 36).length; }
+      const lh = fs + 2; wrapText(info, cx, Y + 259 - (Math.min(n, 4) - 1) * lh, cw - 36, lh);
+    }
+  }
   ctx.fillStyle = hexA(th.edge, 0.4); ctx.fillRect(x0 + 16, Y + 266, cw - 32, 1);
   // loadout
   const slots = slotsFor(Save.open());
@@ -5783,7 +6224,7 @@ function drawCard(rdt) {
         ctx.beginPath(); ctx.arc(gx + gw - 11, gy + 10, 7, 0, TAU); ctx.fillStyle = d.color; ctx.fill();
         setFont(9, FONT_UI); ctx.fillStyle = '#0b0918'; ctx.fillText(String(lo.indexOf(t) + 1), gx + gw - 11, gy + 10.5);
       }
-      if (fresh || want) {
+      if ((fresh && !on) || want) {                 // (v48: not once it's picked, where its slot number sits)
         roundRect(gx + 5, gy + 4, 30, 13, 6.5); ctx.fillStyle = want ? d.color : '#ff3d9a'; ctx.fill();
         setFont(7.5, FONT_UI); ctx.fillStyle = want ? '#0b0918' : '#ffffff'; ctx.fillText(want ? tr('need') : tr('new'), gx + 20, gy + 10.5);
       }

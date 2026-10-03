@@ -1,6 +1,6 @@
 # Shatterline — notes for Claude Code
 
-Shatterline is a neon tower defense game for phones: one HTML file with a canvas. Everything is drawn and synthesized in code (no image or audio files). It has 80 campaign levels, Playtest Lab levels (101+), and 12 towers. The text is in English, Chinese and Spanish.
+Shatterline is a neon tower defense game for phones: one HTML file with a canvas. Everything is drawn and synthesized in code (no image or audio files). It has 80 campaign levels, Playtest Lab levels (101+), and 13 towers. The text is in English, Chinese and Spanish.
 
 - **Live game (GitHub Pages):** https://dd1000.github.io/shatterline/. Pages serves `index.html` from `main`.
 - **Repo:** https://github.com/DD1000/shatterline
@@ -15,12 +15,12 @@ Shatterline is a neon tower defense game for phones: one HTML file with a canvas
 - Design goals: every tower should be worth using (none should feel useless); levels are short (Candy Crush-style); the visuals and sounds should feel juicy.
 
 ## Current state
-- **v47** is in this working tree but **not committed or pushed yet**. It contains:
-  - TIDE soaking
-  - AUTO BUILD only offered with the same towers
-  - the move from the cloud workspace to this repo: `docs/`, `history/`, `CLAUDE.md`, the newer tests and tools, and the README changes
-- The live site is still on v46 (commit b1471ec) until the user says commit.
-- An older v47 upload may still be staged in a GitHub "upload files" tab in Chrome. It is superseded by this repo; ignore it.
+- **v48** is the latest commit on `main` and the live site. It contains:
+  - LANCE, the long-range sniper (unlock 40, hits flyers, DEADEYE at level 4)
+  - a level 4 look for every tower (looks only)
+  - VAULT MINTS and SKY SHIELDS, two new Playtest Labs (the MINT vault is lab-only for now; the campaign MINT is unchanged)
+- The Claude artifact copy is still on v47 (artifact Version 49).
+- Waiting on the user: their lab runs of VAULT MINTS and SKY SHIELDS, then whether the vault and shielded flyers should go into the campaign.
 
 ## Files
 - `index.html` is **the game and the source of truth** (about 6,000 lines). Edit it directly.
@@ -33,11 +33,12 @@ Shatterline is a neon tower defense game for phones: one HTML file with a canvas
 ## Where things are in index.html (search for these names)
 - `const BUILD = 'vNN'`: the version label (title screen, lab screen, lab analytics). **Bump it in every version.**
 - `ENEMIES`, `BOSS_VERSIONS`: enemy recipes. `ELEC`, `ICE`, `FIRE`, `SOAK`: the electric, ice, fire and soak rules.
-- `TOWERS`: tower data. Each `lv[]` entry is one level; level 4 can carry special flags (`master`, `wire`, `supernova`). `TOWER_ORDER` sets the menu order.
+- `TOWERS`: tower data. Each `lv[]` entry is one level; level 4 can carry special flags (`master`, `wire`, `supernova`, `deadeye`). `TOWER_ORDER` sets the menu order.
 - `ECON`, `LEVELS`, `LEVEL_CAL` (difficulty per level), `LAB_DEFS` (Playtest Labs, ids start at 101).
 - `STR` holds the strings for `en`, `zh` and `es`; `tr(id, ...args)` looks them up. Tower and enemy descriptions are also in `desc` fields and in the per-language `tower`/`enemy` blocks.
-- Tower attacks are in `fire(tw, tg)`, with special cases nearby (`supernovaVolley`, `tideFire`, `launchPulse`/`updatePulses`, `fireRail`, `mintPulse`, `frostNeed`). Hits go through `damage(e, amt, opts)`, which handles armor, brittle, soak, dome and shield. `DMG_SRC` holds the tower type currently dealing damage.
-- The main loop is `update(dt)`. Drawing: `drawGlyph` (enemies), `drawTowerGlyph` (towers, including the level 4 looks), `drawTooltip`.
+- Tower attacks are in `fire(tw, tg)`, with special cases nearby (`supernovaVolley`, `tideFire`, `launchPulse`/`updatePulses`, `fireRail`, `lanceFire`/`deadeyeShot`, `mintPulse`, `frostNeed`). Hits go through `damage(e, amt, opts)`, which handles armor, brittle, soak, dome and shield. `DMG_SRC` holds the tower type currently dealing damage.
+- The main loop is `update(dt)`. Drawing: `drawGlyph` (enemies), `drawTowerGlyph` (towers; every tower has its own level 4 look, `l4`), `drawTooltip`.
+- MINT vault (v48): `MINT_VAULT`, `vaultOn()`, `mintPulse`/`mintDry`, `mintVault` (the gold level drawing), `ECON_VAULT` (the lab economy that turns it on).
 - Upgrades: `upgradeTower` (level 4 transformation effects); `menuLayout` (radial menus).
 - AUTO BUILD: `recAct`, `saveReplay`, `sameTowers`, `beginReplay`, `replayStep`, `drawAutoAsk`.
 - Test hooks: `window.__TD` exposes `G`, `startLevel`, `buildTower`, `upgradeTower`, `spawnEnemy`, `update` and more. Dev mode is on when localStorage `shatterline.dev` equals `String(DEV_HASH)`; the tests set that.

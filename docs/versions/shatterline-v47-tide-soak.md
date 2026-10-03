@@ -51,5 +51,5 @@
 
 ## Publishing
 - Artifact Version 49 (version id 1790877294-c1de).
-- GitHub: staged with the message "Shatterline v47: TIDE soaks enemies; auto build needs the same towers". Not committed; commit only when the user says so.
+- GitHub: committed as 48bee0a "Shatterline v47: TIDE soaking, AUTO BUILD only with the same towers, repo docs and tests" when the user said commit (together with the move from the cloud workspace to this repo). The live Pages site was confirmed serving v47.
 - Files are in `/home/claude/live/v47/`: `patch24.py`, `soaktest.js` and `unlocktide.js`.
