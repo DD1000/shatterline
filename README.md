@@ -19,7 +19,12 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 | `history/` | The patch scripts that made v28 to v47 (each one edits the game with exact find-and-replace anchors), plus retired tests. For reference only. |
 | `CLAUDE.md` | How to work on the game with Claude Code. |
 
-## Current version (v48)
+## Current version (v49)
+- LANCE has a new target mode, **AIR**: it shoots the toughest flyer in range, and with no flyers in range the toughest ground enemy. LANCE's target button now cycles STRONG (its default) → AIR → CLOSE → FIRST. On AIR the button shows a Glider in its crosshair.
+- LANCE never shoots the same enemy twice in a row, unless that enemy is the only one it can shoot (on AIR, the only flyer) or a boss. With two enemies in range it alternates between them; a boss takes every shot.
+- EMP lasers do 4.62x the damage (3.3x, then doubled, then 30% less): 5.78 / 6.37 / 6.97 / 7.67 a laser (was 1.25 / 1.38 / 1.51 / 1.66). In 10 s a level 1 EMP does 64 damage to a lone enemy (was 14), or 254 spread over four enemies (was 55). Its text now says "Light damage", and the Glider's says EMP lasers "only chip it".
+
+### v48
 - New tower: **LANCE** (unlocks at level 40), a long-range sniper. One big shot every 2.5 s that lands at once, aimed at the toughest enemy (the target button switches it), on the ground or in the air. 120 gold; 60 damage (+10% per upgrade, so 24 to 31.9 damage a second); range 6 / 6.5 / 7 / 7.5 tiles. Big hits shrug off most armor: a Titan takes 53 of the 60. A laser sight and a closing reticle show what it's aiming at.
 - LANCE level 4 is **DEADEYE** (300 gold): any shot that leaves a non-boss enemy under 25% health shatters it. It has its own look: a turning red crosshair and an eye.
 - Every tower now has its own level 4 look: FROST, EMP, MINT, PRISM, RAIL, BEACON, FLAK, PYRO and TIDE join MASTER BOLT, LIVE WIRE and SUPERNOVA (and DEADEYE). These are looks only, with no new abilities. Reaching level 4 plays a bigger burst.
@@ -117,7 +122,7 @@ Progress is saved in the browser on each device (localStorage), so it doesn't ca
 - Restart and retry go back to tower select, with the towers you used already picked.
 - The Playtest Lab and Test Mode ask for a tester password.
 
-**Note:** `src/` is still at v25. The v26 to v48 changes were made directly in the built HTML, so `index.html` is the up-to-date game and the file to edit. Don't run `build.sh`: it rebuilds from the old `src/` and would overwrite `index.html` with the older version.
+**Note:** `src/` is still at v25. The v26 to v49 changes were made directly in the built HTML, so `index.html` is the up-to-date game and the file to edit. Don't run `build.sh`: it rebuilds from the old `src/` and would overwrite `index.html` with the older version.
 
 ## Making a change
 1. Edit `index.html` (and bump `const BUILD = 'vNN'` near the top of the script).

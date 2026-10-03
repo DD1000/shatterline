@@ -15,7 +15,8 @@ Shatterline is a neon tower defense game for phones: one HTML file with a canvas
 - Design goals: every tower should be worth using (none should feel useless); levels are short (Candy Crush-style); the visuals and sounds should feel juicy.
 
 ## Current state
-- **v48** is the latest commit on `main` and the live site. It contains:
+- **v49** is the latest commit on `main` and the live site: LANCE's AIR target mode and its no-repeat rule, and EMP's damage (3.3x, then doubled, then 30% less: 4.62x v48).
+- **v48** (7e81de4) added:
   - LANCE, the long-range sniper (unlock 40, hits flyers, DEADEYE at level 4)
   - a level 4 look for every tower (looks only)
   - VAULT MINTS and SKY SHIELDS, two new Playtest Labs (the MINT vault is lab-only for now; the campaign MINT is unchanged)
@@ -39,6 +40,7 @@ Shatterline is a neon tower defense game for phones: one HTML file with a canvas
 - Tower attacks are in `fire(tw, tg)`, with special cases nearby (`supernovaVolley`, `tideFire`, `launchPulse`/`updatePulses`, `fireRail`, `lanceFire`/`deadeyeShot`, `mintPulse`, `frostNeed`). Hits go through `damage(e, amt, opts)`, which handles armor, brittle, soak, dome and shield. `DMG_SRC` holds the tower type currently dealing damage.
 - The main loop is `update(dt)`. Drawing: `drawGlyph` (enemies), `drawTowerGlyph` (towers; every tower has its own level 4 look, `l4`), `drawTooltip`.
 - MINT vault (v48): `MINT_VAULT`, `vaultOn()`, `mintPulse`/`mintDry`, `mintVault` (the gold level drawing), `ECON_VAULT` (the lab economy that turns it on).
+- Targeting: `findTarget`; LANCE uses `sniperTarget` (AIR mode, no repeat). Target modes: `MODES`, `modesOf(tw)` (a tower's own list, `TOWERS[t].modes`), `nextMode`.
 - Upgrades: `upgradeTower` (level 4 transformation effects); `menuLayout` (radial menus).
 - AUTO BUILD: `recAct`, `saveReplay`, `sameTowers`, `beginReplay`, `replayStep`, `drawAutoAsk`.
 - Test hooks: `window.__TD` exposes `G`, `startLevel`, `buildTower`, `upgradeTower`, `spawnEnemy`, `update` and more. Dev mode is on when localStorage `shatterline.dev` equals `String(DEV_HASH)`; the tests set that.

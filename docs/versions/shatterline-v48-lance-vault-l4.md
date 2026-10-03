@@ -161,5 +161,5 @@
 - **Full suite:** all 35 tests pass.
 
 ## Publishing
-- GitHub: committed as "Shatterline v48: LANCE sniper, level 4 looks for every tower, VAULT MINTS and SKY SHIELDS labs" when the user said commit.
+- GitHub: committed as 7e81de4 "Shatterline v48: LANCE sniper, level 4 looks for every tower, VAULT MINTS and SKY SHIELDS labs" when the user said commit. The live Pages site was confirmed serving v48.
 - The Claude artifact copy was not updated; it is still on v47 (artifact Version 49).

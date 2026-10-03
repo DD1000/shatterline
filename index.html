@@ -28,7 +28,7 @@ const COLS = 9, ROWS = 13;     // map grid
 const HUD_H = 50, BAR_H = 78;  // top HUD + bottom control bar
 const MIN_H = HUD_H + ROWS * TILE + BAR_H;
 const LEVELS_PER_WORLD = 10;
-const BUILD = 'v48';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
+const BUILD = 'v49';          // the game's version: shown on the title screen, the lab screen and in lab analytics reports
 
 // Title-screen showcase map
 const DEMO_PATH = [[1,0],[1,2],[7,2],[7,5],[1,5],[1,8],[7,8],[7,10],[4,10],[4,12]];
@@ -70,7 +70,7 @@ const ENEMIES = {
   mender:   { name:'Mender',  sides:0, r:10,  color:'#ff9ce0', speed:0.85, hp:60,  gold:10, armor:0, leak:1, spin:0, plus:true, heal:{ every:2.6, radius:1.8, pct:0.12 }, intro:21,
               desc:'Heals nearby enemies. Take it out first.' },
   glider:   { name:'Glider',  sides:3, r:9,   color:'#9fe8ff', speed:0.95, hp:36,  gold:5,  armor:0, leak:1, spin:0, eye:true, point:true, flying:true, intro:32,
-              desc:'Flies straight over the path. Only FLAK and LANCE can bring it down (EMP lasers reach it but barely hurt).' },
+              desc:'Flies straight over the path. Only FLAK and LANCE can bring it down (EMP lasers reach it but only chip it).' },
   titan:    { name:'Titan',   sides:8, r:17,  color:'#ff8a3d', speed:0.45, hp:420, gold:28, armor:7, leak:3, spin:0.2, eye:true, thick:true, inner:{ sides:4, scale:0.5, spin:0.8 }, intro:25,
               desc:'Huge, slow and heavily armored.' },
   volt:     { name:'Volt',    sides:3, star:true, r:10, color:'#f6ff3d', speed:1.0, hp:48, gold:8, armor:0, leak:1, spin:1.6, eye:true, elec:true, intro:37,
@@ -217,12 +217,12 @@ TOWERS.flak = { name:'FLAK', color:'#ff6f61', sides:3, cost:90, unlock:32, air:t
                  { cost:160, dmg:24.2, rate:1.3, range:3.8, splash:0.8 },
                  { cost:240, dmg:26.62, rate:1.3, range:4.1, splash:0.9 } ] };
 // EMP: up to 4 lasers per shot that go for shields first (personal shields, Aegis domes, electrified
-// enemies). A hit strips the shield for good, pops the dome, or shorts out the electricity. Tiny damage.
-TOWERS.emp = { name:'EMP', color:'#3d7bff', sides:5, cost:75, unlock:12, shieldBreak:true, beams:4, desc:'Up to 4 lasers that hunt shields, on the ground or in the air: strips them, pops domes, shorts out electrified enemies (they can\'t shut it down). Barely any damage.',
-            lv:[ { dmg:1.25,   rate:1.1, range:2.4, beams:4 },
-                 { cost:85,  dmg:1.38, rate:1.1, range:2.7, beams:4 },
-                 { cost:140, dmg:1.51,   rate:1.1, range:3.0, beams:4 },
-                 { cost:200, dmg:1.66,   rate:1.1, range:3.3, beams:4 } ] };
+// enemies). A hit strips the shield for good, pops the dome, or shorts out the electricity. Light damage.
+TOWERS.emp = { name:'EMP', color:'#3d7bff', sides:5, cost:75, unlock:12, shieldBreak:true, beams:4, desc:'Up to 4 lasers that hunt shields, on the ground or in the air: strips them, pops domes, shorts out electrified enemies (they can\'t shut it down). Light damage.',
+            lv:[ { dmg:5.78, rate:1.1, range:2.4, beams:4 },              // v49 (user): 3.3x the damage, then 2x, then 30% less
+                 { cost:85,  dmg:6.37, rate:1.1, range:2.7, beams:4 },     // (4.62x v48's 1.25 / 1.38 / 1.51 / 1.66)
+                 { cost:140, dmg:6.97, rate:1.1, range:3.0, beams:4 },
+                 { cost:200, dmg:7.67, rate:1.1, range:3.3, beams:4 } ] };
 // PYRO (fire): a short flame jet with a little splash; burns cold enemies (Yetis, iced enemies) for triple damage.
 TOWERS.pyro = { name:'PYRO', color:'#ff4a12', sides:3, cost:95, unlock:47, cold:3, desc:'Flame jet with a little splash. Triple damage to cold enemies.',
             lv:[ { dmg:11.25,  rate:2.0, range:2.0, splash:0.6 },
@@ -239,7 +239,9 @@ TOWERS.tide = { name:'TIDE', color:'#1ec8a5', sides:6, cost:80, unlock:52, douse
 // v48 (user): LANCE, the long-range sniper. One slow, heavy shot at a time that lands at once (no travel), aimed at the
 // toughest enemy by default, on the ground or in the air (hitsAir). Big hits shrug off most armor. Upgrades add range and the
 // usual +10% damage. Level 4 is DEADEYE: a hit that leaves a non-boss enemy under `execute` of its health shatters it.
-TOWERS.lance = { name:'LANCE', color:'#c08bff', sides:4, cost:120, unlock:40, hitsAir:true, sniper:true, desc:'Sniper: slow, huge shots at the toughest enemy, ground or air. Armor barely dents them. Level 4: DEADEYE, shatters non-bosses it leaves under 25% health.',
+// v49 (user): its own target modes, with AIR added (the toughest flyer in range; with none, the toughest ground enemy), and it
+// never shoots the same enemy twice in a row unless that is the only one it can shoot, or a boss (see sniperTarget).
+TOWERS.lance = { name:'LANCE', color:'#c08bff', sides:4, cost:120, unlock:40, hitsAir:true, sniper:true, modes:['first', 'strong', 'air', 'close'], desc:'Sniper: slow, huge shots at the toughest enemy, ground or air. Armor barely dents them. Level 4: DEADEYE, shatters non-bosses it leaves under 25% health.',
             lv:[ { dmg:60,    rate:0.4, range:6.0 },
                  { cost:130, dmg:66,    rate:0.4, range:6.5 },
                  { cost:200, dmg:72.6,  rate:0.4, range:7.0 },
@@ -307,8 +309,9 @@ const STR = {
     m_10: 'NICE', m_25: 'AWESOME', m_50: 'UNREAL', m_100: 'LEGENDARY', m_200: 'GODLIKE',
     combo_gold: '{0} COMBO  +{1} GOLD', combo_only: '{0} COMBO', shattered: 'SHATTERED', warden_down: 'WARDEN DOWN', warden_down_gold: 'WARDEN DOWN  +{0}',
     wave_clear: 'WAVE {0} CLEAR', wave_clear_gold: 'WAVE {0} CLEAR  +{1}',
-    mode_first: 'FIRST', mode_strong: 'STRONG', mode_close: 'CLOSE',
+    mode_first: 'FIRST', mode_strong: 'STRONG', mode_close: 'CLOSE', mode_air: 'AIR',
     mdesc_first: 'Shoots the enemy closest to your core', mdesc_strong: 'Shoots the toughest enemy in range', mdesc_close: 'Shoots the nearest enemy',
+    mdesc_air: 'Shoots the toughest flyer in range; with no flyers, the toughest ground enemy',
     start: 'START', send_wave: 'SEND WAVE {0}', next_wave: 'NEXT WAVE', next_sub: '+{0} GOLD · {1}s', incoming: 'INCOMING',
     hold_slide: 'HOLD, THEN SLIDE', need_gold: 'NEED {0} MORE GOLD', aim: 'AIM {0}', target_x: 'TARGET {0}', max: 'MAX',
     letgo_build: 'LET GO TO BUILD', letgo_upgrade: 'LET GO TO UPGRADE', letgo_turn: 'LET GO TO TURN', letgo_switch: 'LET GO TO SWITCH', letgo_sell: 'LET GO TO SELL',
@@ -385,8 +388,9 @@ const STR = {
     m_10: '漂亮', m_25: '太棒了', m_50: '不可思议', m_100: '传奇', m_200: '神级',
     combo_gold: '{0} 连击  +{1} 金币', combo_only: '{0} 连击', shattered: '粉碎！', warden_down: '守卫者被击碎', warden_down_gold: '守卫者被击碎  +{0}',
     wave_clear: '第 {0} 波清除', wave_clear_gold: '第 {0} 波清除  +{1}',
-    mode_first: '最前', mode_strong: '最强', mode_close: '最近',
+    mode_first: '最前', mode_strong: '最强', mode_close: '最近', mode_air: '空中',
     mdesc_first: '攻击最接近核心的敌人', mdesc_strong: '攻击范围内最强的敌人', mdesc_close: '攻击最近的敌人',
+    mdesc_air: '攻击范围内最强的飞行敌人；没有飞行敌人时，攻击最强的地面敌人',
     start: '开始', send_wave: '派出第 {0} 波', next_wave: '下一波', next_sub: '+{0} 金币 · {1}秒', incoming: '来袭中',
     hold_slide: '按住，再滑动', need_gold: '还需 {0} 金币', aim: '瞄准 {0}', target_x: '目标：{0}', max: '满级',
     letgo_build: '松手即可建造', letgo_upgrade: '松手即可升级', letgo_turn: '松手即可转向', letgo_switch: '松手即可切换', letgo_sell: '松手即可出售',
@@ -464,8 +468,9 @@ const STR = {
     m_10: 'BIEN', m_25: 'GENIAL', m_50: 'INCREÍBLE', m_100: 'LEGENDARIO', m_200: 'DIVINO',
     combo_gold: 'COMBO {0}  +{1} ORO', combo_only: 'COMBO {0}', shattered: 'HECHO AÑICOS', warden_down: 'GUARDIÁN DERRIBADO', warden_down_gold: 'GUARDIÁN DERRIBADO  +{0}',
     wave_clear: 'OLEADA {0} SUPERADA', wave_clear_gold: 'OLEADA {0} SUPERADA  +{1}',
-    mode_first: 'PRIMERO', mode_strong: 'FUERTE', mode_close: 'CERCANO',
+    mode_first: 'PRIMERO', mode_strong: 'FUERTE', mode_close: 'CERCANO', mode_air: 'AIRE',
     mdesc_first: 'Dispara al enemigo más cerca de tu núcleo', mdesc_strong: 'Dispara al enemigo más resistente a su alcance', mdesc_close: 'Dispara al enemigo más cercano',
+    mdesc_air: 'Dispara al volador más resistente; si no hay voladores, al enemigo de tierra más resistente',
     start: 'EMPEZAR', send_wave: 'ENVIAR OLEADA {0}', next_wave: 'SIGUIENTE', next_sub: '+{0} ORO · {1}s', incoming: 'EN CAMINO',
     hold_slide: 'MANTÉN Y DESLIZA', need_gold: 'FALTAN {0} DE ORO', aim: 'APUNTAR {0}', target_x: 'OBJETIVO: {0}', max: 'MÁX',
     letgo_build: 'SUELTA PARA CONSTRUIR', letgo_upgrade: 'SUELTA PARA MEJORAR', letgo_turn: 'SUELTA PARA GIRAR', letgo_switch: 'SUELTA PARA CAMBIAR', letgo_sell: 'SUELTA PARA VENDER',
@@ -544,7 +549,7 @@ const ZH = {
   tower: { bolt: '光弹', frost: '冰霜', nova: '新星', arc: '电弧', emp: '电磁', mint: '铸币', prism: '棱镜', rail: '轨道炮', beacon: '信标', flak: '防空', lance: '光矛', pyro: '烈焰', tide: '潮汐' },
   towerDesc: {
     bolt: '快速光弹。每第 4 发暴击，每次升级多一发暴击。4 级：大师光弹，射速 +35%。', frost: '冰冻脉冲，减速附近所有敌人。不会着火，还能扑灭紧挨着的塔上的火。', nova: '等离子炸弹，范围伤害，无视护甲。4 级：超新星，额外抛射 3 发小炮弹覆盖更多敌人。', arc: '连锁闪电，每次升级射速更快。带电敌人会让它超载，但免疫它的伤害。4 级：高压电网，每次攻击还会沿所有道路发出脉冲。',
-    emp: '最多 4 道激光专找护盾，地面和空中都能打：剥除护盾、击破护罩、让带电敌人短路。几乎没有伤害。带电敌人无法让它短路。', mint: '波次进行时不断产出金币。', prism: '光束越烧越强，穿透护甲和护盾。',
+    emp: '最多 4 道激光专找护盾，地面和空中都能打：剥除护盾、击破护罩、让带电敌人短路。伤害较低。带电敌人无法让它短路。', mint: '波次进行时不断产出金币。', prism: '光束越烧越强，穿透护甲和护盾。',
     rail: '沿一条固定直线射击，贯穿线上所有敌人。', beacon: '提升相邻塔的伤害。', flak: '防空导弹，带小范围爆炸。能击落飞行敌人（光矛也能狙击它们）。', lance: '远程狙击：缓慢而强力的射击，优先打最强的敌人，地面和空中都能打。护甲几乎挡不住。4 级：鹰眼，射击后生命低于 25% 的非首领敌人会当场粉碎。',
     pyro: '短程火焰喷射，带少量溅射。对寒冷敌人造成三倍伤害。', tide: '水柱让敌人永久浸湿：电弧对其伤害 +20%，烈焰 -20%，冰霜每 3 次冲击将其冻住（被强化或 4 级时更快）。能灭火。',
   },
@@ -552,7 +557,7 @@ const ZH = {
   enemyDesc: {
     grunt: '最基础的行走者。', scout: '速度快但很脆弱。', splitter: '被摧毁时分裂成 3 只螨虫。抵达核心会扣 4 条命：它自己加体内的 3 只螨虫。', mite: '小而快。', brute: '重甲：小伤害几乎无效。',
     boss: '首领：厚重护甲，生命值极高。行进时会不断召唤敌人。', aegis: '投射随行护罩，罩内敌人只受 20% 伤害。电磁可将其击破。', blink: '每隔几秒向前瞬移。',
-    mender: '治疗附近的敌人。优先消灭它。', titan: '巨大、缓慢且重甲。', glider: '直线飞越道路。只有防空塔和光矛能击落它（电磁激光能打到它，但几乎没有伤害）。',
+    mender: '治疗附近的敌人。优先消灭它。', titan: '巨大、缓慢且重甲。', glider: '直线飞越道路。只有防空塔和光矛能击落它（电磁激光能打到它，但伤害有限）。',
     volt: '带电：紧挨着它的塔会短路 4 秒（电磁除外，电弧塔反而会超载）。免疫电弧。电磁能让它短路。',
     yeti: '每秒向范围内所有塔扔雪球。被击中的塔 5 秒内攻速大减。冰霜塔反而会超载。',
     scorch: '着火：每隔几秒向附近的塔扔一个火球。被击中的塔会烧毁（返还 25%），除非潮汐塔或紧挨着的冰霜塔把火扑灭。',
@@ -598,7 +603,7 @@ const ES = {
   towerDesc: {
     bolt: 'Láser rápido. Cada 4.º disparo es crítico; cada mejora añade otro. Nivel 4: RAYO MAESTRO, 35% más rápido.', frost: 'Pulso helado que frena a todos los cercanos. Nunca arde y apaga el fuego de las torres de al lado.',
     nova: 'Bomba de plasma. Daño en área, atraviesa armadura. Nivel 4: SUPERNOVA, lanza 3 proyectiles extra más pequeños para cubrir más enemigos.', arc: 'Relámpago en cadena, más rápido con cada mejora. Los eléctricos lo sobrecargan y son inmunes. Nivel 4: ALTA TENSIÓN, cada ataque lanza un pulso por los caminos.',
-    emp: 'Hasta 4 láseres que buscan escudos, en tierra o en el aire: los quita, rompe cúpulas y cortocircuita a los eléctricos. Casi sin daño. Los eléctricos no pueden apagarlo.',
+    emp: 'Hasta 4 láseres que buscan escudos, en tierra o en el aire: los quita, rompe cúpulas y cortocircuita a los eléctricos. Poco daño. Los eléctricos no pueden apagarlo.',
     mint: 'Genera oro mientras hay oleadas.', prism: 'Rayo que se calienta sobre un objetivo. Atraviesa armadura y escudos.',
     rail: 'Dispara en una línea fija y atraviesa todo lo que hay en ella.', beacon: 'Aumenta el daño de las torres de al lado.',
     flak: 'Misiles antiaéreos con algo de área. Derriban voladores (LANZA también puede abatirlos).',
@@ -610,7 +615,7 @@ const ES = {
     grunt: 'El caminante básico.', scout: 'Rápido pero frágil.', splitter: 'Se divide en 3 ácaros al destruirlo. Si llega al núcleo quita 4 vidas: ella y los 3 ácaros de dentro.', mite: 'Pequeño y veloz.',
     brute: 'Blindado. Los golpes pequeños apenas le hacen nada.', boss: 'Jefe. Blindaje pesado y muchísima vida. Llama a más enemigos mientras avanza.',
     aegis: 'Proyecta una cúpula que viaja con él. Los enemigos dentro reciben el 20% del daño. EMP la revienta.', blink: 'Se teletransporta hacia delante cada pocos segundos.',
-    mender: 'Cura a los enemigos cercanos. Acaba con él primero.', titan: 'Enorme, lento y muy blindado.', glider: 'Vuela en línea recta sobre el camino. Solo FLAK y LANZA pueden derribarlo (los láseres de EMP lo alcanzan, pero apenas le hacen daño).',
+    mender: 'Cura a los enemigos cercanos. Acaba con él primero.', titan: 'Enorme, lento y muy blindado.', glider: 'Vuela en línea recta sobre el camino. Solo FLAK y LANZA pueden derribarlo (los láseres de EMP lo alcanzan, pero solo lo rozan).',
     volt: 'Eléctrico: las torres junto a él se apagan 4 s (menos EMP; ARCO se sobrecarga). Inmune a ARCO. EMP lo cortocircuita.',
     yeti: 'Lanza bolas de nieve a todas las torres a su alcance cada segundo. Las alcanzadas disparan mucho más lento 5 s. HIELO se sobrecarga.',
     scorch: 'En llamas: cada pocos segundos lanza una bola de fuego a una torre cercana. La torre alcanzada arde hasta caer (se recupera el 25%) salvo que MAREA o un HIELO de al lado la apaguen.',
@@ -3415,12 +3420,31 @@ function inRange(tw, e, range) {
   return (e.x - tw.x) ** 2 + (e.y - tw.y) ** 2 <= rr * rr;
 }
 function findTarget(tw, range) {
+  if (TOWERS[tw.type].sniper) return sniperTarget(tw, range);
   let best = null, bestV = -Infinity;
   const air = !!TOWERS[tw.type].air, both = tw.type === 'emp' || !!TOWERS[tw.type].hitsAir;   // v44: EMP lasers reach flyers as well; v48: so does LANCE
   for (const e of G.enemies) {
     if (!e.alive || e.age < 0.15 || (!both && !!e.rc.flying !== air) || !inRange(tw, e, range)) continue;
     if (tw.type === 'arc' && isLiveElec(e)) continue;                 // v42: electrified enemies are immune to ARC
     const mode = tw.mode;
+    const v = mode === 'first' ? e.dist / e.path.len * 1e4 : mode === 'strong' ? e.hp + e.shield : -((e.x - tw.x) ** 2 + (e.y - tw.y) ** 2);
+    if (v > bestV) { bestV = v; best = e; }
+  }
+  return best;
+}
+
+// v49 (user): LANCE's targets. AIR: the toughest flyer in range; with no flyer in range, the toughest ground enemy. In every
+// mode it never shoots the same enemy twice in a row (tw.lastShot), unless that enemy is the only one it could shoot (in AIR,
+// the only flyer) or a boss.
+function sniperTarget(tw, range) {
+  const list = G.enemies.filter(e => e.alive && e.age >= 0.15 && inRange(tw, e, range));
+  if (!list.length) return null;
+  const pool = tw.mode === 'air' && list.some(e => e.rc.flying) ? list.filter(e => e.rc.flying) : list;
+  const last = tw.lastShot, again = !last || !last.alive || last.rc.boss || pool.length < 2;
+  const mode = tw.mode === 'air' ? 'strong' : tw.mode;
+  let best = null, bestV = -Infinity;
+  for (const e of pool) {
+    if (!again && e === last) continue;
     const v = mode === 'first' ? e.dist / e.path.len * 1e4 : mode === 'strong' ? e.hp + e.shield : -((e.x - tw.x) ** 2 + (e.y - tw.y) ** 2);
     if (v > bestV) { bestV = v; best = e; }
   }
@@ -3543,6 +3567,7 @@ function lanceFire(tw, tg, L, boost) {
   FX.flash(bx, by, 26, c, 0.14); FX.flash(tg.x, ty, 22, '#ffffff', 0.1);
   FX.spark(tg.x, ty, c, 7, 240, 0.3);
   for (let i = 0; i < 3; i++) FX.dot(bx, by, '#f3e8ff', 2, 0.3, ca * rand(20, 60) - sa * rand(-40, 40), sa * rand(20, 60) + ca * rand(-40, 40));
+  tw.lastShot = tg; tw.retT = 0;                                       // v49: the next shot looks for someone else
   damage(tg, L.dmg * boost, { big: true });
   if (L.execute && tg.alive && !tg.rc.boss && tg.hp <= L.execute * tg.maxHp) deadeyeShot(tg);
   addShake(0.05); snd('snipe', !!L.deadeye);
@@ -4719,6 +4744,8 @@ const levelLabel = n => isLab(n) ? tr('lab_n', n - LAB_START + 1) : tr('level_n'
 const leaveLevel = () => isLab(G.levelNum) ? toLab() : toMap();          // back to the lab or the level map
 const MODES = ['first', 'strong', 'close'];
 const MODE_LABEL = new Proxy({}, { get: (_, k) => tr('mode_' + k) });
+const modesOf = tw => TOWERS[tw.type].modes || MODES;                 // v49: LANCE has its own list (with AIR)
+const nextMode = tw => { const ms = modesOf(tw); return ms[(ms.indexOf(tw.mode) + 1) % ms.length]; };
 
 function pillButton(cx, cy, w, h, label, color, cb, o = {}) {
   const pulse = o.pulse ? Math.sin(G.clock * 5) * 0.5 + 0.5 : 0;
@@ -4971,7 +4998,7 @@ function commitOption(m, id) {
     Sound.play('tap'); return false;
   }
   if (id === 'mode') {
-    tw.mode = MODES[(MODES.indexOf(tw.mode) + 1) % MODES.length]; tw.target = null; recAct('m', { c: tw.c, r: tw.r, type: tw.type, mode: tw.mode });
+    tw.mode = nextMode(tw); tw.target = null; recAct('m', { c: tw.c, r: tw.r, type: tw.type, mode: tw.mode });
     FX.text(tw.x, tw.y - 26, tr('target_x', MODE_LABEL[tw.mode]), TOWERS[tw.type].color, 11, { life: 0.8 });
     Sound.play('tap'); return false;
   }
@@ -5091,7 +5118,7 @@ function drawTooltip(L, m) {
       line2 = tr('rail_turn');
       line3 = tr('letgo_turn');
     } else if (m.sel === 'mode') {
-      const nx = MODES[(MODES.indexOf(tw.mode) + 1) % MODES.length];
+      const nx = nextMode(tw);
       title = tr('target_title', MODE_LABEL[tw.mode], MODE_LABEL[nx]);
       line2 = tr('mdesc_' + nx);
       line3 = tr('letgo_switch');
@@ -5153,9 +5180,11 @@ function drawMenu() {
       const ex = x + Math.cos(Math.PI * 0.55) * 8, ey = y + Math.sin(Math.PI * 0.55) * 8;
       ctx.beginPath(); ctx.moveTo(ex - 5, ey - 1); ctx.lineTo(ex, ey + 1); ctx.lineTo(ex - 1, ey - 5); ctx.stroke();
     } else {
-      ctx.beginPath(); ctx.arc(x, y, 8, 0, TAU); ctx.moveTo(x + 3, y); ctx.arc(x, y, 3, 0, TAU);
+      const air = m.tw.mode === 'air';                     // v49: AIR shows a Glider in the crosshair
+      ctx.beginPath(); ctx.arc(x, y, 8, 0, TAU); if (!air) { ctx.moveTo(x + 3, y); ctx.arc(x, y, 3, 0, TAU); }
       ctx.moveTo(x - 12, y); ctx.lineTo(x - 5, y); ctx.moveTo(x + 5, y); ctx.lineTo(x + 12, y); ctx.moveTo(x, y - 12); ctx.lineTo(x, y - 5); ctx.moveTo(x, y + 5); ctx.lineTo(x, y + 12);
       ctx.lineWidth = 1.6; ctx.strokeStyle = color; ctx.stroke();
+      if (air) drawGlyph(ENEMIES.glider, x, y + 1, { rot: 0, scale: 0.5, dir: -Math.PI / 2, t: G.clock, noGlow: true });
     }
     ctx.globalAlpha = 1;
     if (cost != null) costPill(x, y + r + 5, cost, afford);
